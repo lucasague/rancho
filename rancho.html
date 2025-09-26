@@ -917,6 +917,8 @@ function borrar() {
     if (c) { c.textContent = ''; c.style.display = 'none'; }
     if (r) { r.style.display = 'none'; }
   });
+  const clienteInput = document.getElementById('cliente');
+  if (clienteInput) clienteInput.value = '';
   actualizarResumen();
 }
 
