@@ -174,10 +174,17 @@
   }
 
   /* Tabs */
-  .tabs { display:flex; gap:8px; align-items:center; justify-content:center; margin:10px auto; width:min(1200px,95%); }
+  .tabs {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:flex-start;
+    margin:10px 0 10px 34%;
+    width:66%;
+  }
   .tab-btn { padding:8px 14px; border:1px solid #ccc; background:#f9f9f9; cursor:pointer; border-radius:6px; }
   .tab-btn.active { font-weight:bold; background:#eee; }
-  .tab-content { width:min(1200px,95%); margin:10px auto; }
+  .tab-content { width:100%; margin:10px 0; }
 
   /* Distribución especial para pedidos en tablet horizontal */
   .pedidos-layout {
@@ -210,21 +217,88 @@
 
   /* Grid productos */
   .productos-grid-wrapper {
-    display:grid;
-    grid-template-columns:1fr auto;
-    align-items:start;
+    display:flex;
+    flex-wrap:wrap;
     gap:16px;
+    align-items:flex-start;
+  }
+  .variantes-panel {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:220px;
+    max-width:260px;
+    background:#ffffff;
+    border:1px solid #d0d0d0;
+    border-radius:12px;
+    padding:14px 16px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+  }
+  .variantes-panel[hidden] { display:none; }
+  .variantes-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .variantes-titulo { font-weight:700; font-size:15px; color:#2e3135; }
+  .variantes-cerrar {
+    border:none;
+    background:transparent;
+    font-size:20px;
+    line-height:1;
+    cursor:pointer;
+    color:#666;
+    padding:4px;
+  }
+  .variantes-indicacion {
+    margin:0;
+    font-size:12px;
+    color:#666;
+  }
+  .variantes-lista {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .variante-btn {
+    padding:10px 12px;
+    margin:0;
+    border-radius:10px;
+    border:2px solid #2e7d32;
+    background:#f1f8e9;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    text-align:left;
+  }
+  .variante-btn:hover {
+    transform:translateX(2px);
+    box-shadow:0 4px 12px rgba(46,125,50,0.25);
+    background:#e8f5e9;
+  }
+  .variante-btn:active {
+    transform:translateX(0);
+    box-shadow:none;
+    background:#c8e6c9;
   }
   .grid {
     display:grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap:10px;
+    flex:1 1 360px;
   }
   .producto {
     border:1px solid #999; padding:9px; position:relative; font-weight:bold; font-size:14px; border-radius:6px;
     display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; /* centrado */
     min-height:60px;
     user-select:none;
+    transition:box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .producto.activo {
+    box-shadow:0 0 0 3px rgba(46,125,50,0.45);
+    transform:translateY(-2px);
   }
   .icono { display:block; font-size:30px; margin-bottom:4px; line-height:1; text-align:center; }
   .contador {
@@ -411,14 +485,6 @@
     flex-direction:column;
     gap:18px;
   }
-  .metodo-pago {
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    justify-content:flex-start;
-    align-items:center;
-    justify-content:center;
-  }
   .metodo-toggle {
     display:flex;
     gap:6px;
@@ -426,7 +492,8 @@
     border-radius:999px;
     padding:6px;
     box-shadow:inset 0 1px 3px rgba(0,0,0,0.08);
-    width:min(320px, 100%);
+    flex:1 1 220px;
+    max-width:320px;
   }
   .metodo-toggle input[type="radio"] {
     display:none;
@@ -442,15 +509,12 @@
     color:#555;
     transition:background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
-  .metodo-pago .cuenta-abierta-btn {
-    flex:0 0 auto;
-    margin:0;
-  }
-  .metodos-acciones .botones-acciones {
+  .botones-acciones {
     display:flex;
     align-items:center;
-    gap:12px;
-    position:relative;
+    gap:14px;
+    flex-wrap:wrap;
+  }
   #pagoEfectivo:checked + label {
     background:#d9f2d9;
     color:#1b5e20;
@@ -460,12 +524,6 @@
     background:#e0ebff;
     color:#1b3c8a;
     box-shadow:0 4px 12px rgba(27,60,138,0.25);
-  }
-  .acciones-circulares {
-    display:flex;
-    justify-content:center;
-    gap:22px;
-    flex-wrap:wrap;
   }
   .accion-redonda {
     width:60px;
@@ -498,18 +556,11 @@
     background-color:#2e7d32;
     color:#fff;
   }
-  .cuenta-abierta-btn.accion-redonda {
+  .boton-pendiente {
+    border:3px solid #fbc02d;
     background:#fbc02d;
     color:#4e342e;
     font-weight:700;
-  }
-  .boton-limpiar-flotante {
-    position:fixed;
-    bottom:24px;
-    right:24px;
-    background:#546e7a;
-    color:#fff;
-    z-index:2400;
   }
 
   @media (max-width: 1024px) {
@@ -518,9 +569,11 @@
       height:54px;
       font-size:10px;
     }
-    .boton-limpiar-flotante {
-      bottom:18px;
-      right:18px;
+    .botones-acciones { justify-content:flex-start; }
+    .variantes-panel {
+      min-width:100%;
+      max-width:none;
+      order:-1;
     }
   }
   @media (max-width: 640px) {
@@ -536,10 +589,6 @@
       width:50px;
       height:50px;
       font-size:9px;
-    }
-    .boton-limpiar-flotante {
-      bottom:12px;
-      right:12px;
     }
   }
   .btn-cierre-caja {
@@ -561,12 +610,28 @@
       margin-left:0;
       width:100%;
     }
+    .tab-content {
+      width:95%;
+      margin:10px auto;
+    }
+    .tabs {
+      margin:10px auto;
+      width:95%;
+      justify-content:center;
+    }
     .productos-grid-wrapper {
-      grid-template-columns:1fr;
-      justify-items:center;
+      justify-content:center;
+    }
+    .variantes-panel {
+      order:-1;
+      width:100%;
+      max-width:none;
+    }
+    .grid {
+      flex:1 1 260px;
     }
     .limpiar-btn {
-      justify-self:center;
+      align-self:center;
     }
   }
 
@@ -604,27 +669,6 @@
   .nombre-input { width:100%; }
   .variantes-input { width:100%; }
   .help { font-size:12px; color:#666; margin-top:-4px; }
-
-  /* Menú radial de variantes (columna izquierda) */
-  .radial-overlay {
-    position:fixed; inset:0; background:rgba(0,0,0,0.25);
-    z-index:9999;
-    touch-action:none;
-  }
-  .radial-center {
-    position:absolute; width:0; height:0; /* punto de referencia */
-  }
-  .rad-item {
-    position:absolute; transform:translate(-50%, -50%);
-    background:#fff; border:1px solid #ccc; border-radius:20px; padding:6px 10px; cursor:pointer;
-    white-space:nowrap; font-size:14px; box-shadow:0 6px 16px rgba(0,0,0,0.15);
-    text-align:center;
-  }
-  .rad-item.active {
-    border-color:#007bff;
-    background:#e0f0ff;
-    font-weight:bold;
-  }
 
   /* Paneles con tercio en blanco */
   .panel-tercio {
@@ -932,6 +976,14 @@
     <div class="pedidos-right">
       <div class="panel-nuevo-pedido">
         <div class="productos-grid-wrapper">
+          <div id="variantesPanel" class="variantes-panel" hidden>
+            <div class="variantes-header">
+              <span class="variantes-titulo" id="variantesTitulo">Variantes</span>
+              <button type="button" class="variantes-cerrar" aria-label="Cerrar variantes">×</button>
+            </div>
+            <p class="variantes-indicacion">Toca una variante para añadirla.</p>
+            <div id="variantesLista" class="variantes-lista"></div>
+          </div>
           <div class="grid" id="productosGrid"></div>
           <button type="button" class="limpiar-btn" onclick="borrar()">
             <span class="limpiar-icono" aria-hidden="true">🗑️</span>
@@ -941,26 +993,15 @@
 
         <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
         <div class="metodos-acciones">
-          <div id="metodoPago" class="metodo-pago">
-            <label class="pago-label active"><input type="radio" name="pago" value="efectivo" checked>Efectivo</label>
-            <label class="pago-label"><input type="radio" name="pago" value="sinpe">Sinpe</label>
-            <button class="cuenta-abierta-btn accion-redonda" onclick="anadirACuentaAbierta()">Pendiente</button>
-          </div>
-
           <div class="botones-acciones">
-            <button class="boton-enviar accion-redonda" onclick="enviar()">Enviar</button>
-            <button class="accion-redonda boton-limpiar-flotante" onclick="borrar()" aria-label="Limpiar selección">Limpiar</button>
             <div class="metodo-toggle" role="radiogroup" aria-label="Método de pago">
               <input type="radio" id="pagoEfectivo" name="pago" value="efectivo" checked>
               <label for="pagoEfectivo">Efectivo</label>
               <input type="radio" id="pagoSinpe" name="pago" value="sinpe">
               <label for="pagoSinpe">Sinpe</label>
             </div>
-          </div>
-
-          <div class="acciones-circulares">
-            <button type="button" class="accion-circular accion-enviar" onclick="enviar()">Enviar</button>
-            <button type="button" class="accion-circular accion-pendiente" onclick="anadirACuentaAbierta()">Pendiente</button>
+            <button class="accion-redonda boton-enviar" onclick="enviar()">Enviar</button>
+            <button class="accion-redonda boton-pendiente" onclick="anadirACuentaAbierta()">Pendiente</button>
           </div>
         </div>
 
@@ -1318,6 +1359,7 @@ function mostrarTab(nombre) {
     const boton = document.getElementById(tab.buttonId);
     if (boton) boton.classList.toggle('active', activo);
     if (activo && typeof tab.onShow === 'function') tab.onShow();
+    if (!activo && tab.name === 'pedidos') ocultarPanelVariantes();
   });
 }
 
@@ -1426,51 +1468,52 @@ function crearProductos() {
 
   productosNodos = Array.from(document.querySelectorAll('.producto'));
   productosNodos.forEach(p => configurarHandlersProducto(p));
+
+  if (panelVariantes && !panelVariantes.hidden && productoVariantesActivo) {
+    const prodActual = PRODS.find(prod => prod.nombre === productoVariantesActivo);
+    if (prodActual && Array.isArray(prodActual.variantes) && prodActual.variantes.length) {
+      mostrarPanelVariantes(productoVariantesActivo, prodActual.variantes);
+    } else {
+      ocultarPanelVariantes();
+    }
+  } else if (productoVariantesActivo) {
+    marcarProductoActivo(productoVariantesActivo);
+  }
 }
 
 function configurarHandlersProducto(p) {
   const nombre = p.dataset.nombre;
   const contador = p.querySelector('.contador');
   const restar = p.querySelector('.restar');
-  let pressTimer = null, longFired = false, pressPoint = null;
 
-  function getPointFromEvent(e) {
-    if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    return { x: e.clientX, y: e.clientY };
-  }
-
-  function esDesdeRestar(evt) {
-    return evt.target instanceof Element && evt.target.closest('.restar');
-  }
-
-  function startPress(e) {
-    if (esDesdeRestar(e)) return;
-    e.preventDefault();
-    longFired = false;
-    pressPoint = getPointFromEvent(e);
-
-    pressTimer = setTimeout(() => {
-      longFired = true;
-      abrirRadial(nombre, pressPoint, p);
-    }, 225); // umbral pulsación larga
-  }
-  function endPress(e) {
-    if (esDesdeRestar(e)) return;
-    if (pressTimer) clearTimeout(pressTimer);
-    if (!longFired) incProducto(nombre, null); // clic corto
-  }
-
-  p.addEventListener('mousedown', startPress);
-  p.addEventListener('touchstart', startPress, {passive:false});
-  p.addEventListener('mouseup', endPress);
-  p.addEventListener('mouseleave', ()=> pressTimer && clearTimeout(pressTimer));
-  p.addEventListener('touchend', endPress);
-  p.addEventListener('touchcancel', ()=> pressTimer && clearTimeout(pressTimer));
-
-  restar.onclick = (e) => {
-    e.stopPropagation();
-    decProducto(nombre);
+  const obtenerVariantes = () => {
+    try {
+      const parsed = JSON.parse(p.dataset.variantes || '[]');
+      return Array.isArray(parsed)
+        ? parsed.map(v => String(v).trim()).filter(Boolean)
+        : [];
+    } catch {
+      return [];
+    }
   };
+
+  p.addEventListener('click', (e) => {
+    if (e.target instanceof Element && e.target.closest('.restar')) return;
+    const variantes = obtenerVariantes();
+    if (variantes.length) {
+      mostrarPanelVariantes(nombre, variantes);
+    } else {
+      ocultarPanelVariantes();
+      incProducto(nombre, null);
+    }
+  });
+
+  if (restar) {
+    restar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      decProducto(nombre);
+    });
+  }
 
   // render contador por si hay selección previa
   renderContador(nombre, contador, restar);
@@ -1519,127 +1562,65 @@ function renderContador(nombre, contador, restar) {
   restar.style.display = total ? 'inline-block' : 'none';
 }
 
-/* Menú radial (columna a la izquierda con selección por arrastre) */
-function abrirRadial(nombre, punto, anchorEl) {
-  const PRODS = cargarProductos();
-  const prod = PRODS.find(p=>p.nombre===nombre);
-  const variantes = (prod?.variantes)||[];
-  if (!variantes.length) { incProducto(nombre, null); return; }
+/* Panel lateral para variantes */
+const panelVariantes = document.getElementById('variantesPanel');
+const variantesLista = document.getElementById('variantesLista');
+const variantesTitulo = document.getElementById('variantesTitulo');
+let productoVariantesActivo = null;
 
-  // Determinar punto (si no viene, usar centro del producto)
-  let cx, cy;
-  if (punto && typeof punto.x === 'number' && typeof punto.y === 'number') {
-    cx = punto.x; cy = punto.y;
-  } else if (anchorEl) {
-    const rect = anchorEl.getBoundingClientRect();
-    cx = rect.left + rect.width/2;
-    cy = rect.top + rect.height/2;
-  } else {
-    cx = window.innerWidth/2; cy = window.innerHeight/2;
+function marcarProductoActivo(nombre) {
+  productosNodos.forEach(nodo => {
+    const coincide = nombre && nodo.dataset.nombre === nombre;
+    nodo.classList.toggle('activo', Boolean(coincide));
+  });
+}
+
+function ocultarPanelVariantes() {
+  if (!panelVariantes) return;
+  panelVariantes.hidden = true;
+  if (variantesLista) variantesLista.innerHTML = '';
+  productoVariantesActivo = null;
+  marcarProductoActivo(null);
+}
+
+function mostrarPanelVariantes(nombre, variantes) {
+  if (!panelVariantes || !variantesLista) {
+    incProducto(nombre, null);
+    return;
+  }
+  const lista = Array.isArray(variantes)
+    ? variantes.map(v => String(v).trim()).filter(Boolean)
+    : [];
+  if (!lista.length) {
+    ocultarPanelVariantes();
+    incProducto(nombre, null);
+    return;
   }
 
-  const overlay = document.createElement('div');
-  overlay.className = 'radial-overlay';
-  overlay.addEventListener('contextmenu', (e)=> e.preventDefault());
+  productoVariantesActivo = nombre;
+  panelVariantes.hidden = false;
+  if (variantesTitulo) variantesTitulo.textContent = `Variantes de ${nombre}`;
+  variantesLista.innerHTML = '';
 
-  let overlayActivo = true;
-  const cerrarOverlay = () => {
-    if (!overlayActivo) return;
-    overlayActivo = false;
-    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-  };
-
-  // Punto centro
-  const center = document.createElement('div');
-  center.className = 'radial-center';
-  center.style.left = cx + 'px';
-  center.style.top = cy + 'px';
-  center.style.position = 'absolute';
-
-  const N = variantes.length;
-  const OFFSET_X = 55;
-  const OFFSET_Y = 48;
-  const itemsMeta = [];
-
-  variantes.forEach((v, i) => {
-    const idxOffset = i - (N - 1) / 2;
-    const x = cx - OFFSET_X;
-    const y = cy + idxOffset * OFFSET_Y;
-    const item = document.createElement('div');
-    item.className = 'rad-item';
-    item.dataset.variante = v;
-    item.style.left = x + 'px';
-    item.style.top = y + 'px';
-    item.textContent = v;
-    overlay.appendChild(item);
-    itemsMeta.push({ el:item, cx:x, cy:y, variante:v });
+  lista.forEach(variante => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'variante-btn';
+    btn.textContent = variante;
+    btn.addEventListener('click', () => {
+      incProducto(nombre, variante);
+    });
+    variantesLista.appendChild(btn);
   });
 
-  overlay.appendChild(center);
-  document.body.appendChild(overlay);
+  marcarProductoActivo(nombre);
+}
 
-  let activo = null;
-  const setActivo = (item) => {
-    if (activo === item) return;
-    if (activo) activo.classList.remove('active');
-    activo = item;
-    if (activo) activo.classList.add('active');
-  };
-
-  const puntoDesdeEvento = (e) => {
-    if (!e) return null;
-    if (e.touches && e.touches[0]) return { x:e.touches[0].clientX, y:e.touches[0].clientY };
-    if (e.changedTouches && e.changedTouches[0]) return { x:e.changedTouches[0].clientX, y:e.changedTouches[0].clientY };
-    if (typeof e.clientX === 'number' && typeof e.clientY === 'number') return { x:e.clientX, y:e.clientY };
-    return null;
-  };
-
-  const actualizarDesdePunto = (pt) => {
-    if (!pt) return;
-    let cercano = null;
-    let distanciaMin = Infinity;
-    for (const meta of itemsMeta) {
-      const dx = pt.x - meta.cx;
-      const dy = pt.y - meta.cy;
-      const dist = Math.hypot(dx, dy);
-      if (dist < distanciaMin) {
-        distanciaMin = dist;
-        cercano = meta;
-      }
-    }
-    const UMBRAL = Math.min(OFFSET_X * 0.8, 50);
-    setActivo(cercano && distanciaMin <= UMBRAL ? cercano.el : null);
-  };
-
-  const moverHandler = (e) => {
-    if (e.type === 'mousemove' && e.buttons === 0) return;
-    const pt = puntoDesdeEvento(e);
-    if (pt) actualizarDesdePunto(pt);
-    if (e.cancelable) e.preventDefault();
-  };
-
-  const finalizarHandler = (e) => {
-    const pt = puntoDesdeEvento(e);
-    if (pt) actualizarDesdePunto(pt);
-    if (activo) {
-      const variante = activo.dataset.variante;
-      incProducto(nombre, variante);
-    }
-    if (e.cancelable) e.preventDefault();
-    cerrarOverlay();
-  };
-
-  const cancelarHandler = (e) => {
-    if (e && e.cancelable) e.preventDefault();
-    cerrarOverlay();
-  };
-
-  overlay.addEventListener('touchmove', moverHandler, { passive:false });
-  overlay.addEventListener('mousemove', moverHandler);
-  overlay.addEventListener('touchend', finalizarHandler);
-  overlay.addEventListener('mouseup', finalizarHandler);
-  overlay.addEventListener('touchcancel', cancelarHandler);
-  overlay.addEventListener('click', (e)=>{ if (e.target === overlay) cerrarOverlay(); });
+if (panelVariantes) {
+  const cerrarBtnVariantes = panelVariantes.querySelector('.variantes-cerrar');
+  if (cerrarBtnVariantes) {
+    cerrarBtnVariantes.addEventListener('click', () => ocultarPanelVariantes());
+  }
 }
 
 /* Resumen de pedido (incluye variantes) */
@@ -2294,6 +2275,7 @@ function borrar() {
     if (c) { c.textContent = ''; c.style.display = 'none'; }
     if (r) { r.style.display = 'none'; }
   });
+  ocultarPanelVariantes();
   const clienteInput = document.getElementById('cliente');
   if (clienteInput) clienteInput.value = '';
   actualizarResumen();
@@ -2615,6 +2597,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     cancelarEliminarTodos();
     cerrarPendientes();
+    ocultarPanelVariantes();
   }
 });
 
