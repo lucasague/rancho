@@ -197,7 +197,7 @@
   }
   .grid {
     display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap:10px;
   }
   .producto {
@@ -393,6 +393,10 @@
   }
   .metodo-pago {
     display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+    align-items:center;
     justify-content:center;
   }
   .metodo-toggle {
@@ -418,6 +422,15 @@
     color:#555;
     transition:background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
+  .metodo-pago .cuenta-abierta-btn {
+    flex:0 0 auto;
+    margin:0;
+  }
+  .metodos-acciones .botones-acciones {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    position:relative;
   #pagoEfectivo:checked + label {
     background:#d9f2d9;
     color:#1b5e20;
@@ -434,35 +447,80 @@
     gap:22px;
     flex-wrap:wrap;
   }
-  .accion-circular {
-    width:140px;
-    height:140px;
+  .accion-redonda {
+    width:60px;
+    height:60px;
     border-radius:50%;
-    border:none;
     display:flex;
     align-items:center;
     justify-content:center;
-    text-align:center;
     font-weight:700;
-    font-size:18px;
-    letter-spacing:0.6px;
-    text-transform:uppercase;
-    cursor:pointer;
-    box-shadow:0 6px 16px rgba(0,0,0,0.2);
+    font-size:11px;
+    line-height:1.1;
+    text-align:center;
+    word-break:break-word;
+    padding:0 8px;
+    border:none;
+    margin:0;
+    box-shadow:0 6px 20px rgba(0,0,0,0.18);
     transition:transform 0.2s ease, box-shadow 0.2s ease;
-    padding:0;
   }
-  .accion-circular:hover { transform:translateY(-3px); box-shadow:0 10px 20px rgba(0,0,0,0.22); }
-  .accion-circular:active { transform:translateY(0); box-shadow:0 4px 12px rgba(0,0,0,0.2); }
-  .accion-enviar {
-    background:#dcf7e1;
-    color:#1b5e20;
+  .accion-redonda:active { transform:scale(0.96); }
+  .accion-redonda:hover { box-shadow:0 8px 24px rgba(0,0,0,0.22); }
+  .accion-redonda:focus-visible {
+    outline:3px solid #fff;
+    outline-offset:2px;
+    box-shadow:0 0 0 4px rgba(57,73,171,0.45);
+  }
+
+  .boton-enviar {
     border:3px solid #2e7d32;
+    background-color:#2e7d32;
+    color:#fff;
   }
-  .accion-pendiente {
-    background:#fff4cc;
-    color:#7a5700;
-    border:3px solid #c28b00;
+  .cuenta-abierta-btn.accion-redonda {
+    background:#fbc02d;
+    color:#4e342e;
+    font-weight:700;
+  }
+  .boton-limpiar-flotante {
+    position:fixed;
+    bottom:24px;
+    right:24px;
+    background:#546e7a;
+    color:#fff;
+    z-index:2400;
+  }
+
+  @media (max-width: 1024px) {
+    .accion-redonda {
+      width:54px;
+      height:54px;
+      font-size:10px;
+    }
+    .boton-limpiar-flotante {
+      bottom:18px;
+      right:18px;
+    }
+  }
+  @media (max-width: 640px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 420px) {
+    .grid {
+      grid-template-columns:1fr;
+    }
+    .accion-redonda {
+      width:50px;
+      height:50px;
+      font-size:9px;
+    }
+    .boton-limpiar-flotante {
+      bottom:12px;
+      right:12px;
+    }
   }
   .btn-cierre-caja {
     background:#fdeaea;
@@ -864,6 +922,14 @@
         <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
         <div class="metodos-acciones">
           <div id="metodoPago" class="metodo-pago">
+            <label class="pago-label active"><input type="radio" name="pago" value="efectivo" checked>Efectivo</label>
+            <label class="pago-label"><input type="radio" name="pago" value="sinpe">Sinpe</label>
+            <button class="cuenta-abierta-btn accion-redonda" onclick="anadirACuentaAbierta()">Pendiente</button>
+          </div>
+
+          <div class="botones-acciones">
+            <button class="boton-enviar accion-redonda" onclick="enviar()">Enviar</button>
+            <button class="accion-redonda boton-limpiar-flotante" onclick="borrar()" aria-label="Limpiar selección">Limpiar</button>
             <div class="metodo-toggle" role="radiogroup" aria-label="Método de pago">
               <input type="radio" id="pagoEfectivo" name="pago" value="efectivo" checked>
               <label for="pagoEfectivo">Efectivo</label>
