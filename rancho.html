@@ -132,9 +132,29 @@
     gap:8px;
     flex-wrap:wrap;
   }
+  .pendiente-completar {
+    margin-left:auto;
+    background:#2e7d32;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:4px 10px;
+    font-size:12px;
+    cursor:pointer;
+    transition:background 0.2s ease;
+  }
+  .pendiente-completar:hover { background:#1b5e20; }
   .pendientes-variantes {
     font-size:12px;
     color:#555;
+    margin-left:4px;
+  }
+  .pendientes-variante {
+    font-size:12px;
+    color:#3949ab;
+    background:#e8eaf6;
+    border-radius:10px;
+    padding:2px 8px;
     margin-left:4px;
   }
   .pendientes-fecha {
@@ -745,6 +765,10 @@ function restablecerProductos() {
 }
 function setEstadoGuardado(txt) { document.getElementById('estadoGuardado').textContent = txt || ''; }
 function html(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fechaTextoToMs(texto) {
+  const ms = new Date(texto).getTime();
+  return Number.isFinite(ms) ? ms : Date.now();
+}
 function formatearColones(valor) {
   const numero = Number(valor || 0);
   return Number.isFinite(numero) ? numero.toLocaleString('es-CR') : '0';
@@ -1142,6 +1166,19 @@ function toggleEntregaMaestro(fecha) {
   actualizarTabla();
 }
 
+function marcarPendienteComoServido(fecha, nombreProducto) {
+  if (!fecha || !nombreProducto) return;
+  let ordenes = cargarTabla();
+  const idx = ordenes.findIndex(o => o.fecha === fecha);
+  if (idx === -1) return;
+  const orden = ordenes[idx];
+  if (!orden.entregas) orden.entregas = {};
+  if (orden.entregas[nombreProducto]) return;
+  orden.entregas[nombreProducto] = true;
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+
 function actualizarTabla() {
   const PRODS = cargarProductos();
   const prodMap = new Map(PRODS.map(p => [p.nombre, p]));
@@ -1150,6 +1187,35 @@ function actualizarTabla() {
   let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
   const pendientesCliente = new Map();
   const pendientesProducto = new Map();
+  const registrarPendienteProducto = (productoNombre, varianteNombre, cantidad, icono, clienteNombre, fechaTexto, fechaValor) => {
+    if (!cantidad) return;
+    const clave = `${productoNombre}__${varianteNombre || ''}`;
+    const valorFecha = Number.isFinite(fechaValor) ? fechaValor : fechaTextoToMs(fechaTexto);
+    if (!pendientesProducto.has(clave)) {
+      pendientesProducto.set(clave, {
+        nombre: productoNombre,
+        icono,
+        total: 0,
+        clientes: [],
+        variante: varianteNombre || null,
+        primeraFecha: valorFecha
+      });
+    }
+    const prodPendiente = pendientesProducto.get(clave);
+    prodPendiente.total += cantidad;
+    prodPendiente.primeraFecha = Math.min(prodPendiente.primeraFecha, valorFecha);
+    const variantesDetalle = varianteNombre ? { [varianteNombre]: cantidad } : null;
+    prodPendiente.clientes.push({
+      cliente: clienteNombre,
+      cantidad,
+      fecha: fechaTexto,
+      fechaValor: valorFecha,
+      variantes: variantesDetalle,
+      pedidoFecha: fechaTexto,
+      producto: productoNombre
+    });
+  };
+
   tbody.innerHTML = '';
 
   ordenes.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).forEach(o => {
@@ -1177,7 +1243,8 @@ function actualizarTabla() {
         const desglose = l.variantes
           ? `<div class="productos-nombre indentado">${
               Object.keys(l.variantes).map(v=>`${html(v)}: ${l.variantes[v]}`).join(' · ')
-            }</div>` : '';
+            }</div>`
+          : '';
         const nombreProducto = l.tieneIcono
           ? ''
           : `<span class="productos-nombre">${html(l.nombre)}</span>`;
@@ -1187,6 +1254,8 @@ function actualizarTabla() {
           const cantidadPendiente = l.cantidad || 0;
           const iconoProd = prodInfo?.icono || '';
           const variantesPendientes = l.variantes ? { ...l.variantes } : null;
+          const fechaTexto = o.fecha;
+          const fechaValor = fechaTextoToMs(fechaTexto);
 
           if (!pendientesCliente.has(clienteNombre)) pendientesCliente.set(clienteNombre, []);
           pendientesCliente.get(clienteNombre).push({
@@ -1194,20 +1263,26 @@ function actualizarTabla() {
             cantidad: cantidadPendiente,
             icono: iconoProd,
             variantes: variantesPendientes,
-            fecha: o.fecha
+            fecha: fechaTexto,
+            fechaValor,
+            pedidoFecha: o.fecha
           });
 
-          if (!pendientesProducto.has(l.nombre)) {
-            pendientesProducto.set(l.nombre, { nombre: l.nombre, icono: iconoProd, total: 0, clientes: [] });
+          if (variantesPendientes && Object.keys(variantesPendientes).length) {
+            let acumulado = 0;
+            Object.entries(variantesPendientes).forEach(([varNombre, cantVar]) => {
+              const cantNum = Number(cantVar) || 0;
+              if (!cantNum) return;
+              acumulado += cantNum;
+              registrarPendienteProducto(l.nombre, varNombre, cantNum, iconoProd, clienteNombre, fechaTexto, fechaValor);
+            });
+            const restante = cantidadPendiente - acumulado;
+            if (restante > 0) {
+              registrarPendienteProducto(l.nombre, null, restante, iconoProd, clienteNombre, fechaTexto, fechaValor);
+            }
+          } else {
+            registrarPendienteProducto(l.nombre, null, cantidadPendiente, iconoProd, clienteNombre, fechaTexto, fechaValor);
           }
-          const prodPendiente = pendientesProducto.get(l.nombre);
-          prodPendiente.total += cantidadPendiente;
-          prodPendiente.clientes.push({
-            cliente: clienteNombre,
-            cantidad: cantidadPendiente,
-            fecha: o.fecha,
-            variantes: variantesPendientes
-          });
         }
         productosHTML += `
           <div class="productos-linea">
@@ -1265,16 +1340,35 @@ function actualizarTabla() {
     }
   }
 
-  const pendientesPorCliente = Array.from(pendientesCliente.entries()).map(([cliente, items]) => ({
-    cliente,
-    total: items.reduce((sum, item) => sum + (item.cantidad || 0), 0),
-    items: items.slice().sort((a, b) => a.nombre.localeCompare(b.nombre))
-  })).sort((a, b) => a.cliente.localeCompare(b.cliente));
+  const pendientesPorCliente = Array.from(pendientesCliente.entries()).map(([cliente, items]) => {
+    const itemsOrdenados = items.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.nombre.localeCompare(b.nombre));
+    const primeraFecha = itemsOrdenados.length ? itemsOrdenados[0].fechaValor : Number.POSITIVE_INFINITY;
+    return {
+      cliente,
+      total: items.reduce((sum, item) => sum + (item.cantidad || 0), 0),
+      items: itemsOrdenados,
+      primeraFecha
+    };
+  }).sort((a, b) => (a.primeraFecha - b.primeraFecha) || a.cliente.localeCompare(b.cliente));
 
-  const pendientesPorProducto = Array.from(pendientesProducto.values()).map(entry => ({
-    ...entry,
-    clientes: entry.clientes.slice().sort((a, b) => a.cliente.localeCompare(b.cliente))
-  })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  const pendientesPorProducto = Array.from(pendientesProducto.values()).map(entry => {
+    const clientesOrdenados = entry.clientes.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.cliente.localeCompare(b.cliente));
+    const primeraFecha = clientesOrdenados.length ? clientesOrdenados[0].fechaValor : entry.primeraFecha;
+    return {
+      nombre: entry.nombre,
+      icono: entry.icono,
+      total: entry.total,
+      variante: entry.variante,
+      clientes: clientesOrdenados,
+      primeraFecha
+    };
+  }).sort((a, b) => {
+    const fechaDiff = a.primeraFecha - b.primeraFecha;
+    if (fechaDiff !== 0) return fechaDiff;
+    const nombreDiff = a.nombre.localeCompare(b.nombre);
+    if (nombreDiff !== 0) return nombreDiff;
+    return (a.variante || '').localeCompare(b.variante || '');
+  });
 
   pendientesData = { porCliente: pendientesPorCliente, porProducto: pendientesPorProducto };
   actualizarPendientesUI();
@@ -1366,7 +1460,8 @@ function actualizarPendientesUI() {
           const icono = item.icono ? `<span class="pendientes-icono">${html(item.icono)}</span>` : '';
           const variantes = variantesPendientesTexto(item.variantes);
           const fecha = item.fecha ? `<span class="pendientes-fecha">Pedido: ${html(item.fecha)}</span>` : '';
-          return `<li><div class="fila-principal">${icono}<span><strong>${item.cantidad}</strong> × ${html(item.nombre)}</span>${variantes}</div>${fecha}</li>`;
+          const completar = `<button type="button" class="pendiente-completar" data-fecha="${html(item.pedidoFecha)}" data-producto="${html(item.nombre)}" title="Marcar como completado">Completar</button>`;
+          return `<li><div class="fila-principal">${icono}<span><strong>${item.cantidad}</strong> × ${html(item.nombre)}</span>${variantes}${completar}</div>${fecha}</li>`;
         }).join('');
         return `
           <article class="pendiente-card">
@@ -1387,17 +1482,19 @@ function actualizarPendientesUI() {
     } else {
       contProducto.innerHTML = pendientesData.porProducto.map(prod => {
         const icono = prod.icono ? `<span class="pendientes-icono">${html(prod.icono)}</span>` : '';
+        const variante = prod.variante ? `<span class="pendientes-variante">${html(prod.variante)}</span>` : '';
         const clientesDetalle = prod.clientes.map(cli => {
           const variantes = variantesPendientesTexto(cli.variantes);
           const fecha = cli.fecha ? `<span class="pendientes-fecha">Pedido: ${html(cli.fecha)}</span>` : '';
           const clienteNombre = (cli.cliente || 'Sin nombre');
           const unidades = cli.cantidad === 1 ? 'unidad' : 'unidades';
-          return `<li><div class="fila-principal"><span><strong>${cli.cantidad}</strong> ${unidades}</span><span>para ${html(clienteNombre)}</span>${variantes}</div>${fecha}</li>`;
+          const completar = `<button type="button" class="pendiente-completar" data-fecha="${html(cli.pedidoFecha)}" data-producto="${html(cli.producto)}" title="Marcar como completado">Completar</button>`;
+          return `<li><div class="fila-principal"><span><strong>${cli.cantidad}</strong> ${unidades}</span><span>para ${html(clienteNombre)}</span>${variantes}${completar}</div>${fecha}</li>`;
         }).join('');
         return `
           <article class="pendiente-card">
             <div class="pendiente-card-header">
-              <div class="header-left">${icono}<span><strong>${html(prod.nombre)}</strong></span></div>
+              <div class="header-left">${icono}<span><strong>${html(prod.nombre)}</strong></span>${variante}</div>
               <span class="pendientes-total">${prod.total} pendiente${prod.total === 1 ? '' : 's'}</span>
             </div>
             <ul class="pendientes-list">${clientesDetalle}</ul>
@@ -1439,6 +1536,13 @@ function cambiarTabPendientes(tab) {
   if (productoPane) productoPane.hidden = tab !== 'producto';
   overlay.dataset.activeTab = tab;
 }
+
+document.addEventListener('click', event => {
+  const btn = event.target.closest('.pendiente-completar');
+  if (!btn) return;
+  const { fecha, producto } = btn.dataset;
+  marcarPendienteComoServido(fecha, producto);
+});
 
 /* Enviar / recoger selección */
 function recogerSeleccionProductosBase() {
