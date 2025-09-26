@@ -19,8 +19,40 @@
   .tab-btn.active { font-weight:bold; background:#eee; }
   .tab-content { width:min(1200px,95%); margin:10px auto; }
 
+  /* Distribución especial para pedidos en tablet horizontal */
+  .pedidos-layout {
+    display:flex;
+    gap:20px;
+    align-items:flex-start;
+  }
+  .pedidos-left,
+  .pedidos-right {
+    flex:1;
+    min-width:0;
+  }
+  .pedidos-left {
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .pedidos-right {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .panel-nuevo-pedido {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
   /* Grid productos */
-  .grid { display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-bottom:20px; }
+  .grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap:10px;
+  }
   .producto {
     border:1px solid #999; padding:12px; position:relative; font-weight:bold; font-size:14px; border-radius:6px;
     display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; /* centrado */
@@ -40,7 +72,7 @@
   button { padding:8px 14px; margin:6px; cursor:pointer; }
   table { margin:16px auto; width:100%; border-collapse:collapse; }
   th, td { border:1px solid #ddd; padding:8px; vertical-align: middle; text-align:left; }
-  #resumenOrden { text-align:left; margin:10px auto; width:100%; }
+  #resumenOrden { text-align:left; width:100%; }
   .indentado { padding-left:20px; color:#555; font-size:90%; text-align:left; }
 
   /* Método de pago */
@@ -57,11 +89,66 @@
     border:1px solid #ccc; border-radius:6px; font-size:14px;
   }
 
-  .productos-linea { display:block; margin-bottom:6px; }
+  .productos-linea {
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:8px;
+    margin-bottom:6px;
+    flex-wrap:wrap;
+    text-align:right;
+  }
   .productos-nombre { font-size:12px; color:#666; margin-left:6px; }
-  .productos-maestro { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .productos-linea .productos-nombre.indentado {
+    width:100%;
+    margin-left:0;
+    text-align:right;
+  }
+  .productos-maestro {
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+    text-align:right;
+  }
   .master-checkbox { width:20px; height:20px; cursor:pointer; transform:scale(1.2); transform-origin:left center; }
   .master-label { font-weight:bold; font-size:14px; color:#333; }
+
+  .metodos-acciones {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .metodo-pago {
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+  }
+  .metodo-pago .pago-label {
+    flex:1 1 140px;
+    text-align:center;
+  }
+  .metodos-acciones .botones-acciones {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap:8px;
+  }
+  .metodos-acciones button {
+    margin:0;
+  }
+
+  @media (max-width: 1024px) {
+    .pedidos-layout { flex-direction:column; }
+  }
+
+  @media (max-width: 900px) {
+    .productos-editor {
+      margin-left:0;
+      width:100%;
+    }
+  }
 
   /* Cuentas abiertas */
   #cuentasPanel { display:none; width:100%; margin:16px 0 8px 0; text-align:left; }
@@ -76,6 +163,13 @@
   .muted { color:#666; font-size:12px; }
 
   /* Editor de productos */
+  #tabProductos {
+    position:relative;
+  }
+  .productos-editor {
+    margin-left:34%;
+    width:66%;
+  }
   .editor-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; margin:8px 0; }
   .small { font-size:12px; color:#555; }
   .number { width:110px; }
@@ -111,80 +205,92 @@
 
 <!-- TAB: PEDIDOS (por defecto activa) -->
 <section id="tabPedidos" class="tab-content">
-  <div class="grid" id="productosGrid"></div>
+  <div class="pedidos-layout">
+    <div class="pedidos-left">
+      <table id="tabla">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Importe</th>
+            <th>Método</th>
+            <th>Productos / Entrega</th>
+            <th>Eliminar</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
-  <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
-
-  <div id="metodoPago" style="text-align:center;">
-    <label class="pago-label active"><input type="radio" name="pago" value="efectivo" checked>Efectivo</label>
-    <label class="pago-label"><input type="radio" name="pago" value="sinpe">Sinpe</label>
-  </div>
-
-  <div style="text-align:center;">
-    <button onclick="enviar()">Enviar</button>
-    <button onclick="borrar()">Limpiar</button>
-    <button onclick="anadirACuentaAbierta()">Añadir a cuenta abierta</button>
-    <button onclick="cerrarCaja()">Cierre de caja</button>
-  </div>
-
-  <div id="resumenOrden"><strong>Resumen de Orden:</strong></div>
-  <div id="total"><strong>Total: 0₡</strong></div>
-
-  <section id="cuentasPanel">
-    <div id="cuentasHeader">
-      <h2 style="margin:0;font-size:16px;">Cuentas abiertas</h2>
-      <span class="muted">Crea cuentas con “Añadir a cuenta abierta” usando el nombre del campo Cliente.</span>
+      <table id="tablaResumen">
+        <thead><tr><th>Resumen</th><th>Valor</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
-    <div id="cuentasLista"></div>
-  </section>
 
-  <table id="tabla">
-    <thead>
-      <tr>
-        <th>Fecha</th>
-        <th>Cliente</th>
-        <th>Importe</th>
-        <th>Método</th>
-        <th>Productos / Entrega</th>
-        <th>Eliminar</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <div class="pedidos-right">
+      <div class="panel-nuevo-pedido">
+        <div class="grid" id="productosGrid"></div>
 
-  <table id="tablaResumen">
-    <thead><tr><th>Resumen</th><th>Valor</th></tr></thead>
-    <tbody></tbody>
-  </table>
+        <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
+
+        <div class="metodos-acciones">
+          <div id="metodoPago" class="metodo-pago">
+            <label class="pago-label active"><input type="radio" name="pago" value="efectivo" checked>Efectivo</label>
+            <label class="pago-label"><input type="radio" name="pago" value="sinpe">Sinpe</label>
+          </div>
+
+          <div class="botones-acciones">
+            <button onclick="enviar()">Enviar</button>
+            <button onclick="borrar()">Limpiar</button>
+            <button onclick="anadirACuentaAbierta()">Añadir a cuenta abierta</button>
+            <button onclick="cerrarCaja()">Cierre de caja</button>
+          </div>
+        </div>
+
+        <div id="resumenOrden"><strong>Resumen de Orden:</strong></div>
+        <div id="total"><strong>Total: 0₡</strong></div>
+      </div>
+
+      <section id="cuentasPanel">
+        <div id="cuentasHeader">
+          <h2 style="margin:0;font-size:16px;">Cuentas abiertas</h2>
+          <span class="muted">Crea cuentas con “Añadir a cuenta abierta” usando el nombre del campo Cliente.</span>
+        </div>
+        <div id="cuentasLista"></div>
+      </section>
+    </div>
+  </div>
 </section>
 
 <!-- TAB: PRODUCTOS (editor) -->
 <section id="tabProductos" class="tab-content" style="display:none;">
-  <h2 style="margin:0 0 10px 0; text-align:center;">Editor de productos</h2>
-  <p class="help" style="text-align:center;">Puedes añadir <strong>variantes</strong> separadas por comas (p. ej. “Queso, Frijol, Mixta”). Pulsación larga en el producto abre el menú radial.</p>
+  <div class="productos-editor">
+    <h2 style="margin:0 0 10px 0; text-align:center;">Editor de productos</h2>
+    <p class="help" style="text-align:center;">Puedes añadir <strong>variantes</strong> separadas por comas (p. ej. “Queso, Frijol, Mixta”). Pulsación larga en el producto abre el menú radial.</p>
 
-  <div class="editor-actions">
-    <button onclick="agregarFilaProducto()">Añadir fila</button>
-    <button onclick="guardarProductosDesdeTabla()">Guardar cambios</button>
-    <button onclick="restablecerProductos()">Restablecer por defecto</button>
-    <span class="small" id="estadoGuardado"></span>
+    <div class="editor-actions">
+      <button onclick="agregarFilaProducto()">Añadir fila</button>
+      <button onclick="guardarProductosDesdeTabla()">Guardar cambios</button>
+      <button onclick="restablecerProductos()">Restablecer por defecto</button>
+      <span class="small" id="estadoGuardado"></span>
+    </div>
+
+    <table id="tablaProductos">
+      <thead>
+        <tr>
+          <th style="width:24%;">Nombre</th>
+          <th style="width:14%;">Precio (₡)</th>
+          <th style="width:14%;">Tipo</th>
+          <th style="width:14%;">Icono(s)</th>
+          <th style="width:30%;">Variantes (coma)</th>
+          <th style="width:4%;">Borrar</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="help" style="text-align:center;">Los cambios guardados aparecen en la pestaña “Pedidos”.</div>
   </div>
-
-  <table id="tablaProductos">
-    <thead>
-      <tr>
-        <th style="width:24%;">Nombre</th>
-        <th style="width:14%;">Precio (₡)</th>
-        <th style="width:14%;">Tipo</th>
-        <th style="width:14%;">Icono(s)</th>
-        <th style="width:30%;">Variantes (coma)</th>
-        <th style="width:4%;">Borrar</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div class="help" style="text-align:center;">Los cambios guardados aparecen en la pestaña “Pedidos”.</div>
 </section>
 
 <!-- EmailJS -->
