@@ -71,6 +71,11 @@
   }
 
   button { padding:8px 14px; margin:6px; cursor:pointer; }
+  .boton-enviar {
+    border:3px solid #2e7d32;
+    background-color:#2e7d32;
+    color:#fff;
+  }
   table { margin:16px auto; width:100%; border-collapse:collapse; }
   th, td { border:1px solid #ddd; padding:8px; vertical-align: middle; text-align:left; }
   #resumenOrden { text-align:left; width:100%; }
@@ -86,7 +91,7 @@
   tr.servido { opacity:0.35; }
 
   #cliente {
-    padding:10px; width:min(520px, 100%); margin:10px 0 0 0; display:block;
+    padding:7px 10px; width:min(520px, 100%); margin:10px 0 0 0; display:block;
     border:1px solid #ccc; border-radius:6px; font-size:14px;
   }
 
@@ -131,6 +136,7 @@
   .metodo-pago .pago-label {
     flex:1 1 140px;
     text-align:center;
+    padding:7px 20px;
   }
   .metodo-pago .cuenta-abierta-btn {
     flex:1 1 140px;
@@ -146,7 +152,16 @@
     margin:0;
   }
   .metodos-acciones .botones-acciones button {
-    padding:6px 14px;
+    padding:4.2px 14px;
+  }
+  .btn-cierre-caja {
+    background:#fdeaea;
+    border:2px solid #d64b4b;
+    color:#8a1e1e;
+  }
+  .btn-cierre-caja:hover {
+    background:#f8d0d0;
+    border-color:#c03a3a;
   }
 
   @media (max-width: 1024px) {
@@ -923,6 +938,8 @@ function borrar() {
     if (c) { c.textContent = ''; c.style.display = 'none'; }
     if (r) { r.style.display = 'none'; }
   });
+  const clienteInput = document.getElementById('cliente');
+  if (clienteInput) clienteInput.value = '';
   actualizarResumen();
 }
 
