@@ -189,6 +189,12 @@
   }
 
   /* Grid productos */
+  .productos-grid-wrapper {
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:start;
+    gap:16px;
+  }
   .grid {
     display:grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -226,10 +232,35 @@
     transition:background 0.2s ease;
   }
   .eliminar-todos-btn:hover { background:#b71c1c; }
-  .boton-enviar {
-    border:3px solid #2e7d32;
-    background-color:#2e7d32;
-    color:#fff;
+  .limpiar-btn {
+    width:108px;
+    height:108px;
+    border-radius:50%;
+    border:none;
+    background:#e0e0e0;
+    color:#424242;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+    margin:0;
+    padding:0;
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .limpiar-btn:hover { transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,0.2); }
+  .limpiar-btn:active { transform:translateY(0); box-shadow:0 2px 6px rgba(0,0,0,0.18); }
+  .limpiar-icono {
+    font-size:36px;
+    line-height:1;
+  }
+  .limpiar-texto {
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
   }
   table { margin:16px auto; width:100%; border-collapse:collapse; }
   th, td { border:1px solid #ddd; padding:8px; vertical-align: middle; text-align:left; }
@@ -319,11 +350,6 @@
     to { transform:scale(1); opacity:1; }
   }
 
-  /* Método de pago */
-  .pago-label input[type="radio"] { display:none; }
-  .pago-label { display:inline-block; padding:10px 20px; margin:5px; cursor:pointer; border:2px solid #ccc; border-radius:6px; }
-  .pago-label.active { border-color:#007bff; background-color:#e0f0ff; font-weight:bold; }
-
   .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
 
   tr.servido { opacity:0.35; }
@@ -363,35 +389,80 @@
   .metodos-acciones {
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:18px;
   }
   .metodo-pago {
     display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    justify-content:flex-start;
-    align-items:stretch;
+    justify-content:center;
   }
-  .metodo-pago .pago-label {
-    flex:1 1 140px;
+  .metodo-toggle {
+    display:flex;
+    gap:6px;
+    background:#e5e5e5;
+    border-radius:999px;
+    padding:6px;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,0.08);
+    width:min(320px, 100%);
+  }
+  .metodo-toggle input[type="radio"] {
+    display:none;
+  }
+  .metodo-toggle label {
+    flex:1;
     text-align:center;
-    padding:7px 20px;
+    padding:10px 0;
+    border-radius:999px;
+    font-weight:600;
+    letter-spacing:0.4px;
+    cursor:pointer;
+    color:#555;
+    transition:background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
-  .metodo-pago .cuenta-abierta-btn {
-    flex:1 1 140px;
-    padding:10px 20px;
-    margin:5px;
+  #pagoEfectivo:checked + label {
+    background:#d9f2d9;
+    color:#1b5e20;
+    box-shadow:0 4px 12px rgba(27,94,32,0.25);
   }
-  .metodos-acciones .botones-acciones {
-    display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap:8px;
+  #pagoSinpe:checked + label {
+    background:#e0ebff;
+    color:#1b3c8a;
+    box-shadow:0 4px 12px rgba(27,60,138,0.25);
   }
-  .metodos-acciones button {
-    margin:0;
+  .acciones-circulares {
+    display:flex;
+    justify-content:center;
+    gap:22px;
+    flex-wrap:wrap;
   }
-  .metodos-acciones .botones-acciones button {
-    padding:4.2px 14px;
+  .accion-circular {
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-weight:700;
+    font-size:18px;
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,0.2);
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+    padding:0;
+  }
+  .accion-circular:hover { transform:translateY(-3px); box-shadow:0 10px 20px rgba(0,0,0,0.22); }
+  .accion-circular:active { transform:translateY(0); box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+  .accion-enviar {
+    background:#dcf7e1;
+    color:#1b5e20;
+    border:3px solid #2e7d32;
+  }
+  .accion-pendiente {
+    background:#fff4cc;
+    color:#7a5700;
+    border:3px solid #c28b00;
   }
   .btn-cierre-caja {
     background:#fdeaea;
@@ -411,6 +482,13 @@
     .productos-editor {
       margin-left:0;
       width:100%;
+    }
+    .productos-grid-wrapper {
+      grid-template-columns:1fr;
+      justify-items:center;
+    }
+    .limpiar-btn {
+      justify-self:center;
     }
   }
 
@@ -775,19 +853,28 @@
 
     <div class="pedidos-right">
       <div class="panel-nuevo-pedido">
-        <div class="grid" id="productosGrid"></div>
+        <div class="productos-grid-wrapper">
+          <div class="grid" id="productosGrid"></div>
+          <button type="button" class="limpiar-btn" onclick="borrar()">
+            <span class="limpiar-icono" aria-hidden="true">🗑️</span>
+            <span class="limpiar-texto">Borrar</span>
+          </button>
+        </div>
 
         <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
         <div class="metodos-acciones">
           <div id="metodoPago" class="metodo-pago">
-            <label class="pago-label active"><input type="radio" name="pago" value="efectivo" checked>Efectivo</label>
-            <label class="pago-label"><input type="radio" name="pago" value="sinpe">Sinpe</label>
-            <button class="cuenta-abierta-btn" onclick="anadirACuentaAbierta()">Pendiente</button>
+            <div class="metodo-toggle" role="radiogroup" aria-label="Método de pago">
+              <input type="radio" id="pagoEfectivo" name="pago" value="efectivo" checked>
+              <label for="pagoEfectivo">Efectivo</label>
+              <input type="radio" id="pagoSinpe" name="pago" value="sinpe">
+              <label for="pagoSinpe">Sinpe</label>
+            </div>
           </div>
 
-          <div class="botones-acciones">
-            <button onclick="enviar()">Enviar</button>
-            <button onclick="borrar()">Limpiar</button>
+          <div class="acciones-circulares">
+            <button type="button" class="accion-circular accion-enviar" onclick="enviar()">Enviar</button>
+            <button type="button" class="accion-circular accion-pendiente" onclick="anadirACuentaAbierta()">Pendiente</button>
           </div>
         </div>
 
@@ -1464,15 +1551,6 @@ function abrirRadial(nombre, punto, anchorEl) {
   overlay.addEventListener('touchcancel', cancelarHandler);
   overlay.addEventListener('click', (e)=>{ if (e.target === overlay) cerrarOverlay(); });
 }
-
-/* Pago UI */
-document.addEventListener('click', (ev) => {
-  const lbl = ev.target.closest('#metodoPago .pago-label');
-  if (!lbl) return;
-  document.querySelectorAll('#metodoPago .pago-label').forEach(l => l.classList.remove('active'));
-  lbl.classList.add('active');
-  const inp = lbl.querySelector('input'); if (inp) inp.checked = true;
-});
 
 /* Resumen de pedido (incluye variantes) */
 function actualizarResumen() {
