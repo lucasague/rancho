@@ -144,7 +144,13 @@
 
   @media (max-width: 1024px) {
     .pedidos-layout { flex-direction:column; }
-    .pedidos-right { max-height:none; overflow:visible; }
+  }
+
+  @media (max-width: 900px) {
+    .productos-editor {
+      margin-left:0;
+      width:100%;
+    }
   }
 
   /* Cuentas abiertas */
@@ -160,6 +166,13 @@
   .muted { color:#666; font-size:12px; }
 
   /* Editor de productos */
+  #tabProductos {
+    position:relative;
+  }
+  .productos-editor {
+    margin-left:34%;
+    width:66%;
+  }
   .editor-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; margin:8px 0; }
   .small { font-size:12px; color:#555; }
   .number { width:110px; }
@@ -222,7 +235,6 @@
         <div class="grid" id="productosGrid"></div>
 
         <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
-
         <div class="metodos-acciones">
           <div id="metodoPago" class="metodo-pago">
             <label class="pago-label active"><input type="radio" name="pago" value="efectivo" checked>Efectivo</label>
@@ -240,7 +252,6 @@
         <div id="resumenOrden"><strong>Resumen de Orden:</strong></div>
         <div id="total"><strong>Total: 0₡</strong></div>
       </div>
-
       <section id="cuentasPanel">
         <div id="cuentasHeader">
           <h2 style="margin:0;font-size:16px;">Cuentas abiertas</h2>
@@ -254,31 +265,33 @@
 
 <!-- TAB: PRODUCTOS (editor) -->
 <section id="tabProductos" class="tab-content" style="display:none;">
-  <h2 style="margin:0 0 10px 0; text-align:center;">Editor de productos</h2>
-  <p class="help" style="text-align:center;">Puedes añadir <strong>variantes</strong> separadas por comas (p. ej. “Queso, Frijol, Mixta”). Pulsación larga en el producto abre el menú radial.</p>
+  <div class="productos-editor">
+    <h2 style="margin:0 0 10px 0; text-align:center;">Editor de productos</h2>
+    <p class="help" style="text-align:center;">Puedes añadir <strong>variantes</strong> separadas por comas (p. ej. “Queso, Frijol, Mixta”). Pulsación larga en el producto abre el menú radial.</p>
 
-  <div class="editor-actions">
-    <button onclick="agregarFilaProducto()">Añadir fila</button>
-    <button onclick="guardarProductosDesdeTabla()">Guardar cambios</button>
-    <button onclick="restablecerProductos()">Restablecer por defecto</button>
-    <span class="small" id="estadoGuardado"></span>
+    <div class="editor-actions">
+      <button onclick="agregarFilaProducto()">Añadir fila</button>
+      <button onclick="guardarProductosDesdeTabla()">Guardar cambios</button>
+      <button onclick="restablecerProductos()">Restablecer por defecto</button>
+      <span class="small" id="estadoGuardado"></span>
+    </div>
+
+    <table id="tablaProductos">
+      <thead>
+        <tr>
+          <th style="width:24%;">Nombre</th>
+          <th style="width:14%;">Precio (₡)</th>
+          <th style="width:14%;">Tipo</th>
+          <th style="width:14%;">Icono(s)</th>
+          <th style="width:30%;">Variantes (coma)</th>
+          <th style="width:4%;">Borrar</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="help" style="text-align:center;">Los cambios guardados aparecen en la pestaña “Pedidos”.</div>
   </div>
-
-  <table id="tablaProductos">
-    <thead>
-      <tr>
-        <th style="width:24%;">Nombre</th>
-        <th style="width:14%;">Precio (₡)</th>
-        <th style="width:14%;">Tipo</th>
-        <th style="width:14%;">Icono(s)</th>
-        <th style="width:30%;">Variantes (coma)</th>
-        <th style="width:4%;">Borrar</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div class="help" style="text-align:center;">Los cambios guardados aparecen en la pestaña “Pedidos”.</div>
 </section>
 
 <!-- EmailJS -->
