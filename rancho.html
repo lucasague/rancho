@@ -1741,6 +1741,7 @@ function actualizarTabla() {
           const cantidadPendiente = l.cantidad || 0;
           const iconoProd = prodInfo?.icono || '';
           const variantesPendientes = l.variantes ? { ...l.variantes } : null;
+          const fechaValor = new Date(o.fecha).getTime() || Number.POSITIVE_INFINITY;
 
           if (!pendientesCliente.has(clienteNombre)) pendientesCliente.set(clienteNombre, []);
           pendientesCliente.get(clienteNombre).push({
@@ -1748,19 +1749,22 @@ function actualizarTabla() {
             cantidad: cantidadPendiente,
             icono: iconoProd,
             variantes: variantesPendientes,
-            fecha: o.fecha
+            fecha: o.fecha,
+            fechaValor
           });
 
           if (!pendientesProducto.has(l.nombre)) {
-            pendientesProducto.set(l.nombre, { nombre: l.nombre, icono: iconoProd, total: 0, clientes: [] });
+            pendientesProducto.set(l.nombre, { nombre: l.nombre, icono: iconoProd, total: 0, clientes: [], primeraFecha: Number.POSITIVE_INFINITY });
           }
           const prodPendiente = pendientesProducto.get(l.nombre);
           prodPendiente.total += cantidadPendiente;
+          prodPendiente.primeraFecha = Math.min(prodPendiente.primeraFecha || Number.POSITIVE_INFINITY, fechaValor);
           prodPendiente.clientes.push({
             cliente: clienteNombre,
             cantidad: cantidadPendiente,
             fecha: o.fecha,
-            variantes: variantesPendientes
+            variantes: variantesPendientes,
+            fechaValor
           });
         }
         productosHTML += `
@@ -1805,14 +1809,38 @@ function actualizarTabla() {
     }
   });
 
-  pendientesData = {
-    porCliente: normalizarPendientesPorCliente(pendientesCliente),
-    porProducto: normalizarPendientesPorProducto(pendientesProducto)
-  };
-  const overlay = document.getElementById('pendientesOverlay');
-  if (overlay && overlay.classList.contains('active')) {
-    actualizarPendientesUI();
-  }
+  const pendientesPorCliente = Array.from(pendientesCliente.entries()).map(([cliente, items]) => {
+    const itemsOrdenados = items.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.nombre.localeCompare(b.nombre));
+    const primeraFecha = itemsOrdenados.length ? itemsOrdenados[0].fechaValor : Number.POSITIVE_INFINITY;
+    return {
+      cliente,
+      total: items.reduce((sum, item) => sum + (item.cantidad || 0), 0),
+      items: itemsOrdenados,
+      primeraFecha
+    };
+  }).sort((a, b) => (a.primeraFecha - b.primeraFecha) || a.cliente.localeCompare(b.cliente));
+
+  const pendientesPorProducto = Array.from(pendientesProducto.values()).map(entry => {
+    const clientesOrdenados = entry.clientes.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.cliente.localeCompare(b.cliente));
+    const primeraFecha = clientesOrdenados.length ? clientesOrdenados[0].fechaValor : entry.primeraFecha;
+    return {
+      nombre: entry.nombre,
+      icono: entry.icono,
+      total: entry.total,
+      variante: entry.variante,
+      clientes: clientesOrdenados,
+      primeraFecha
+    };
+  }).sort((a, b) => {
+    const fechaDiff = a.primeraFecha - b.primeraFecha;
+    if (fechaDiff !== 0) return fechaDiff;
+    const nombreDiff = a.nombre.localeCompare(b.nombre);
+    if (nombreDiff !== 0) return nombreDiff;
+    return (a.variante || '').localeCompare(b.variante || '');
+  });
+
+  pendientesData = { porCliente: pendientesPorCliente, porProducto: pendientesPorProducto };
+  actualizarPendientesUI();
 
   let resumenTbody = document.querySelector('#tablaResumen tbody');
   resumenTbody.innerHTML = '';
