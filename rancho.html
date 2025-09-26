@@ -73,7 +73,31 @@
   button { padding:8px 14px; margin:6px; cursor:pointer; }
   table { margin:16px auto; width:100%; border-collapse:collapse; }
   th, td { border:1px solid #ddd; padding:8px; vertical-align: middle; text-align:left; }
-  #resumenOrden { text-align:left; width:100%; }
+  .resumen-panel {
+    display:grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap:12px;
+    width:100%;
+    align-items:flex-start;
+  }
+  .resumen-panel > div {
+    background:#f9f9f9;
+    border:1px solid #ddd;
+    border-radius:6px;
+    padding:10px;
+  }
+  #resumenOrden,
+  #total,
+  #sugerenciaCambio {
+    text-align:left;
+    width:100%;
+  }
+  #sugerenciaCambio ul {
+    list-style:none;
+    padding:0;
+    margin:8px 0 0 0;
+  }
+  #sugerenciaCambio li { margin-bottom:4px; }
   .indentado { padding-left:20px; color:#555; font-size:90%; text-align:left; }
 
   /* Método de pago */
@@ -151,6 +175,12 @@
     .productos-editor {
       margin-left:0;
       width:100%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .resumen-panel {
+      grid-template-columns:1fr;
     }
   }
 
@@ -256,8 +286,11 @@
           </div>
         </div>
 
-        <div id="resumenOrden"><strong>Resumen de Orden:</strong></div>
-        <div id="total"><strong>Total: 0₡</strong></div>
+        <div class="resumen-panel">
+          <div id="resumenOrden"><span class="muted">Sin productos seleccionados</span></div>
+          <div id="total"><strong>Total: 0₡</strong></div>
+          <div id="sugerenciaCambio"><strong>Cambio sugerido</strong><br><span class="muted">Añade productos para ver sugerencias.</span></div>
+        </div>
       </div>
       <section id="cuentasPanel">
         <div id="cuentasHeader">
@@ -314,6 +347,7 @@ const STORAGE_KEYS = {
 };
 
 const PRECIO_COMBO = 999999; // tu valor actual
+const CAMBIOS_SUGERIDOS = [1000, 2000, 5000, 10000];
 
 const PRODUCTOS_POR_DEFECTO = [
   { nombre: 'Café', precio: 500, tipo: 'bebida', icono: '☕', variantes: [] },
@@ -444,6 +478,10 @@ function restablecerProductos() {
 }
 function setEstadoGuardado(txt) { document.getElementById('estadoGuardado').textContent = txt || ''; }
 function html(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function formatearColones(valor) {
+  const numero = Number(valor || 0);
+  return Number.isFinite(numero) ? numero.toLocaleString('es-CR') : '0';
+}
 
 /* =================== PEDIDOS: selección con variantes =================== */
 let productosNodos = [];              // nodos de la grilla
@@ -698,6 +736,8 @@ document.addEventListener('click', (ev) => {
 function actualizarResumen() {
   const PRODS = cargarProductos();
   let resumen = document.getElementById('resumenOrden');
+  let totalNodo = document.getElementById('total');
+  let sugerenciaCambio = document.getElementById('sugerenciaCambio');
   let total = 0;
 
   // Mapa de cantidades por producto base para combos y precio
@@ -705,11 +745,10 @@ function actualizarResumen() {
   Object.keys(seleccionActual).forEach(nombre => mapaBase[nombre] = (mapaBase[nombre] || 0) + (seleccionActual[nombre].total || 0));
 
   const calc = calcularTotalDesdeMapa(mapaBase, PRODS);
-
-  resumen.innerHTML = '<strong>Resumen de Orden:</strong><br>';
+  const lineasResumen = [];
   for (let combo in calc.comboCantidades) {
-    resumen.innerHTML += `${calc.comboCantidades[combo]} Combo - ${calc.comboCantidades[combo] * PRECIO_COMBO}₡<br>`;
-    resumen.innerHTML += `<div class='indentado'>- ${combo}</div>`;
+    lineasResumen.push(`${calc.comboCantidades[combo]} Combo - ${formatearColones(calc.comboCantidades[combo] * PRECIO_COMBO)}₡<br>`);
+    lineasResumen.push(`<div class='indentado'>- ${html(combo)}</div>`);
   }
 
   for (let p in calc.individuales) {
@@ -717,18 +756,34 @@ function actualizarResumen() {
     if ((cantidadIndiv || 0) > 0) {
       const precioUnitario = (PRODS.find(x=>x.nombre===p)||{}).precio || 0;
       const precio = cantidadIndiv * precioUnitario;
-      resumen.innerHTML += `${cantidadIndiv} ${html(p)} - ${precio}₡<br>`;
+      lineasResumen.push(`${cantidadIndiv} ${html(p)} - ${formatearColones(precio)}₡<br>`);
       const varsObj = (seleccionActual[p]?.variantes)||{};
       const nombresVar = Object.keys(varsObj);
       if (nombresVar.length) {
-        const detalle = nombresVar.map(v=>`${v}: ${varsObj[v]}`).join(' · ');
-        resumen.innerHTML += `<div class="indentado">${detalle}</div>`;
+        const detalle = nombresVar.map(v=>`${html(v)}: ${varsObj[v]}`).join(' · ');
+        lineasResumen.push(`<div class="indentado">${detalle}</div>`);
       }
     }
   }
 
   total = calc.total;
-  document.getElementById('total').innerHTML = `<strong>Total: ${total}₡</strong>`;
+  resumen.innerHTML = lineasResumen.length ? lineasResumen.join('') : '<span class="muted">Sin productos seleccionados</span>';
+  totalNodo.innerHTML = `<strong>Total: ${formatearColones(total)}₡</strong>`;
+
+  if (total <= 0) {
+    sugerenciaCambio.innerHTML = '<strong>Cambio sugerido</strong><br><span class="muted">Añade productos para ver sugerencias.</span>';
+  } else {
+    const opciones = CAMBIOS_SUGERIDOS.filter(monto => monto >= total);
+    if (!opciones.length) {
+      sugerenciaCambio.innerHTML = '<strong>Cambio sugerido</strong><br><span class="muted">Sin opciones disponibles.</span>';
+    } else {
+      const items = opciones.map(monto => {
+        const cambio = monto - total;
+        return `<li>${formatearColones(monto)}₡ → ${formatearColones(cambio)}₡</li>`;
+      }).join('');
+      sugerenciaCambio.innerHTML = `<strong>Cambio sugerido</strong><ul>${items}</ul>`;
+    }
+  }
 }
 
 /* Tabla de historial y resumen global (acumula variantes) */
