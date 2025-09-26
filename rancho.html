@@ -126,10 +126,16 @@
     gap:10px;
     flex-wrap:wrap;
     justify-content:flex-start;
+    align-items:stretch;
   }
   .metodo-pago .pago-label {
     flex:1 1 140px;
     text-align:center;
+  }
+  .metodo-pago .cuenta-abierta-btn {
+    flex:1 1 140px;
+    padding:10px 20px;
+    margin:5px;
   }
   .metodos-acciones .botones-acciones {
     display:grid;
@@ -246,12 +252,12 @@
           <div id="metodoPago" class="metodo-pago">
             <label class="pago-label active"><input type="radio" name="pago" value="efectivo" checked>Efectivo</label>
             <label class="pago-label"><input type="radio" name="pago" value="sinpe">Sinpe</label>
+            <button class="cuenta-abierta-btn" onclick="anadirACuentaAbierta()">Añadir a cuenta abierta</button>
           </div>
 
           <div class="botones-acciones">
             <button onclick="enviar()">Enviar</button>
             <button onclick="borrar()">Limpiar</button>
-            <button onclick="anadirACuentaAbierta()">Añadir a cuenta abierta</button>
             <button onclick="cerrarCaja()">Cierre de caja</button>
           </div>
         </div>
