@@ -469,6 +469,163 @@
     background:#e0f0ff;
     font-weight:bold;
   }
+
+  /* Paneles con tercio en blanco */
+  .panel-tercio {
+    margin-left:34%;
+    width:66%;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+  .apertura-card,
+  .cierre-card {
+    background:#f9f9f9;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:18px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.04);
+  }
+  .apertura-card h2,
+  .cierre-card h2 {
+    margin-top:0;
+  }
+
+  .tabla-responsables {
+    width:100%;
+    border-collapse:collapse;
+  }
+  .tabla-responsables td {
+    border:1px solid #ddd;
+    padding:10px;
+  }
+  .responsable-label {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .responsable-label input {
+    width:18px;
+    height:18px;
+  }
+  .responsable-icon {
+    font-size:28px;
+  }
+  .apertura-resumen {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-size:15px;
+  }
+
+  .fondo-input-group {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+  }
+  .fondo-input-group input[type="text"] {
+    padding:8px 10px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    min-width:160px;
+  }
+  .toggle-breakdown {
+    padding:8px 14px;
+    border:1px solid #999;
+    border-radius:6px;
+    background:#fff;
+    cursor:pointer;
+  }
+  .toggle-breakdown[aria-expanded="true"] {
+    background:#e0f0ff;
+    border-color:#007bff;
+    font-weight:bold;
+  }
+
+  .cash-breakdown {
+    display:none;
+    margin-top:12px;
+  }
+  .cash-breakdown.open {
+    display:block;
+  }
+  .cash-breakdown table {
+    width:100%;
+    border-collapse:collapse;
+  }
+  .cash-breakdown th,
+  .cash-breakdown td {
+    border:1px solid #ddd;
+    padding:8px;
+    text-align:center;
+  }
+  .den-label {
+    font-weight:bold;
+  }
+  .billete-1000 { background:#ffe0e0; }
+  .billete-2000 { background:#e0ecff; }
+  .billete-5000 { background:#fff9db; }
+  .billete-10000 { background:#e0ffe0; }
+  .billete-20000 { background:#ffe9d6; }
+  .cash-total {
+    margin-top:10px;
+    text-align:right;
+    font-weight:bold;
+  }
+  .cash-count {
+    width:80px;
+    padding:6px;
+    border:1px solid #ccc;
+    border-radius:6px;
+  }
+  .cash-breakdown caption {
+    caption-side:top;
+    text-align:left;
+    font-weight:bold;
+    padding-bottom:6px;
+  }
+
+  .cierre-layout {
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
+  }
+  .cierre-left,
+  .cierre-right {
+    flex:1 1 320px;
+  }
+  .cierre-datos {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-top:16px;
+    font-size:15px;
+  }
+  .diferencia {
+    font-weight:bold;
+  }
+  .diferencia-positivo { color:#2e7d32; }
+  .diferencia-negativo { color:#c62828; }
+  .diferencia-neutro { color:#37474f; }
+
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance:none;
+    margin:0;
+  }
+  input[type=number] {
+    -moz-appearance:textfield;
+  }
+
+  @media (max-width: 768px) {
+    .panel-tercio {
+      margin-left:0;
+      width:100%;
+    }
+  }
 </style>
 </head>
 <body>
@@ -477,9 +634,107 @@
 
 <!-- TABS -->
 <div class="tabs">
+  <button id="tabAperturaBtn" class="tab-btn" onclick="mostrarTab('apertura')">Apertura</button>
   <button id="tabProductosBtn" class="tab-btn" onclick="mostrarTab('productos')">Productos</button>
   <button id="tabPedidosBtn" class="tab-btn active" onclick="mostrarTab('pedidos')">Pedidos</button>
+  <button id="tabCierreBtn" class="tab-btn" onclick="mostrarTab('cierre')">Cierre</button>
 </div>
+
+<!-- TAB: APERTURA -->
+<section id="tabApertura" class="tab-content" style="display:none;">
+  <div class="panel-tercio">
+    <div class="apertura-card">
+      <h2>Apertura de caja</h2>
+      <p>Selecciona el responsable de hoy:</p>
+      <table class="tabla-responsables">
+        <tbody>
+          <tr>
+            <td>
+              <label class="responsable-label">
+                <input type="radio" name="responsableHoy" value="Marijuan">
+                <span class="responsable-icon">💑</span>
+                <span>Marijuan</span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label class="responsable-label">
+                <input type="radio" name="responsableHoy" value="Gabymario">
+                <span class="responsable-icon">💑</span>
+                <span>Gabymario</span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label class="responsable-label">
+                <input type="radio" name="responsableHoy" value="Glorilucas" checked>
+                <span class="responsable-icon">💑</span>
+                <span>Glorilucas</span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label class="responsable-label">
+                <input type="radio" name="responsableHoy" value="Edurrosa">
+                <span class="responsable-icon">💑</span>
+                <span>Edurrosa</span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label class="responsable-label">
+                <input type="radio" name="responsableHoy" value="Coridaniel">
+                <span class="responsable-icon">💑</span>
+                <span>Coridaniel</span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label class="responsable-label">
+                <input type="radio" name="responsableHoy" value="Mausicaco">
+                <span class="responsable-icon">💑</span>
+                <span>Mausicaco</span>
+              </label>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="apertura-resumen">
+        <span>Responsable seleccionado: <strong id="aperturaResponsableActual">Glorilucas</strong></span>
+      </div>
+    </div>
+
+    <div class="apertura-card">
+      <h3>Fondo de caja</h3>
+      <p>Introduce el fondo inicial manualmente o detallando billetes y monedas.</p>
+      <div class="fondo-input-group">
+        <input id="fondoCajaInput" type="text" inputmode="numeric" value="10000" placeholder="₡" aria-label="Fondo de caja">
+        <button type="button" class="toggle-breakdown" data-target="aperturaBreakdown" aria-expanded="false">Introducir billetes y monedas</button>
+      </div>
+      <div id="aperturaBreakdown" class="cash-breakdown" data-context="apertura">
+        <table>
+          <thead>
+            <tr>
+              <th>Denominación</th>
+              <th>Cantidad</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody data-breakdown-body="apertura"></tbody>
+        </table>
+        <div class="cash-total">Total contado: <span data-breakdown-total="apertura">0₡</span></div>
+      </div>
+      <div class="apertura-resumen">
+        <span>Fondo configurado: <strong id="aperturaFondoActual">10 000₡</strong></span>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- TAB: PEDIDOS (por defecto activa) -->
 <section id="tabPedidos" class="tab-content">
@@ -499,10 +754,6 @@
         <tbody></tbody>
       </table>
 
-      <table id="tablaResumen">
-        <thead><tr><th>Resumen</th><th>Valor</th></tr></thead>
-        <tbody></tbody>
-      </table>
     </div>
 
     <div class="pedidos-right">
@@ -520,7 +771,6 @@
           <div class="botones-acciones">
             <button onclick="enviar()">Enviar</button>
             <button onclick="borrar()">Limpiar</button>
-            <button onclick="cerrarCaja()">Cierre de caja</button>
           </div>
         </div>
 
@@ -541,22 +791,53 @@
   </div>
 </section>
 
-<div id="pendientesOverlay" class="pendientes-overlay" role="dialog" aria-modal="true" aria-labelledby="pendientesTitulo" aria-hidden="true">
-  <div class="pendientes-dialog">
-    <div class="pendientes-header">
-      <h2 id="pendientesTitulo" style="margin:0; font-size:18px;">Productos pendientes</h2>
-      <button type="button" class="pendientes-close" onclick="cerrarPendientes()" aria-label="Cerrar">✕</button>
-    </div>
-    <div class="pendientes-tabs">
-      <button type="button" class="pendientes-tab active" data-tab="cliente" onclick="cambiarTabPendientes('cliente')">Por cliente</button>
-      <button type="button" class="pendientes-tab" data-tab="producto" onclick="cambiarTabPendientes('producto')">Por producto</button>
-    </div>
-    <div class="pendientes-panes">
-      <div id="pendientesPorCliente" class="pendientes-pane"></div>
-      <div id="pendientesPorProducto" class="pendientes-pane" hidden></div>
+<!-- TAB: CIERRE -->
+<section id="tabCierre" class="tab-content" style="display:none;">
+  <div class="panel-tercio">
+    <div class="cierre-layout">
+      <div class="cierre-left cierre-card">
+        <h2>Resumen del día</h2>
+        <table id="tablaResumen">
+          <thead><tr><th>Resumen</th><th>Valor</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="cierre-datos">
+          <span>Responsable: <strong id="cierreResponsable">Glorilucas</strong></span>
+          <span>Fondo inicial: <strong id="cierreFondoInicial">10 000₡</strong></span>
+          <span>Efectivo esperado en caja: <strong id="cierreEsperado">10 000₡</strong></span>
+        </div>
+      </div>
+      <div class="cierre-right cierre-card">
+        <h2>Conteo de caja</h2>
+        <p>Ingresa el efectivo contado directamente o detállalo por denominaciones.</p>
+        <div class="fondo-input-group">
+          <input id="cierreEfectivoInput" type="text" inputmode="numeric" placeholder="₡" aria-label="Efectivo contado">
+          <button type="button" class="toggle-breakdown" data-target="cierreBreakdown" aria-expanded="false">Introducir billetes y monedas</button>
+        </div>
+        <div id="cierreBreakdown" class="cash-breakdown" data-context="cierre">
+          <table>
+            <thead>
+              <tr>
+                <th>Denominación</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody data-breakdown-body="cierre"></tbody>
+          </table>
+          <div class="cash-total">Total contado: <span data-breakdown-total="cierre">0₡</span></div>
+        </div>
+        <div class="cierre-datos">
+          <span>Efectivo contado: <strong id="cierreEfectivoContado">0₡</strong></span>
+          <span>Diferencia con fondo inicial: <strong id="cierreNeto">0₡</strong></span>
+          <span>Ventas en efectivo registradas: <strong id="cierreVentasEfectivo">0₡</strong></span>
+          <span class="diferencia diferencia-neutro" id="cierreDiferencia">Cuadra (0₡)</span>
+        </div>
+        <button class="btn-cierre-caja" onclick="cerrarCaja()">Cierre de caja</button>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
 <!-- TAB: PRODUCTOS (editor) -->
 <section id="tabProductos" class="tab-content" style="display:none;">
@@ -610,7 +891,8 @@
 const STORAGE_KEYS = {
   productos: 'ignis_productos_v2', // v2 por variantes
   ordenes: 'ordenes_v2',
-  cuentas: 'cuentas_abiertas_v2'
+  cuentas: 'cuentas_abiertas_v2',
+  apertura: 'config_apertura_caja_v1'
 };
 
 const PRECIO_COMBO = 999999; // tu valor actual
@@ -628,6 +910,176 @@ const PRODUCTOS_POR_DEFECTO = [
   { nombre: 'Empanada de pizza', precio: 1000, tipo: 'comida', icono: '🍕', variantes: [] },
   { nombre: 'Gallo', precio: 1000, tipo: 'comida', icono: '🌭', variantes: [] }
 ];
+
+const RESPONSABLES = ['Marijuan', 'Gabymario', 'Glorilucas', 'Edurrosa', 'Coridaniel', 'Mausicaco'];
+const DENOMINACIONES = [
+  { valor: 20000, tipo: 'billete', clase: 'billete-20000' },
+  { valor: 10000, tipo: 'billete', clase: 'billete-10000' },
+  { valor: 5000, tipo: 'billete', clase: 'billete-5000' },
+  { valor: 2000, tipo: 'billete', clase: 'billete-2000' },
+  { valor: 1000, tipo: 'billete', clase: 'billete-1000' },
+  { valor: 500, tipo: 'moneda', clase: '' },
+  { valor: 100, tipo: 'moneda', clase: '' },
+  { valor: 50, tipo: 'moneda', clase: '' },
+  { valor: 25, tipo: 'moneda', clase: '' },
+  { valor: 10, tipo: 'moneda', clase: '' }
+];
+
+let configApertura = cargarConfigApertura();
+let ultimoResumen = { efectivo: 0, sinpe: 0, total: 0 };
+
+function cargarConfigApertura() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.apertura);
+    if (!raw) return { responsable: 'Glorilucas', fondo: 10000 };
+    const data = JSON.parse(raw);
+    const responsable = RESPONSABLES.includes(data?.responsable) ? data.responsable : 'Glorilucas';
+    const fondo = Number.parseInt(data?.fondo, 10);
+    return {
+      responsable,
+      fondo: Number.isFinite(fondo) && fondo >= 0 ? fondo : 10000
+    };
+  } catch {
+    return { responsable: 'Glorilucas', fondo: 10000 };
+  }
+}
+function guardarConfigApertura() {
+  localStorage.setItem(STORAGE_KEYS.apertura, JSON.stringify({
+    responsable: configApertura.responsable,
+    fondo: configApertura.fondo
+  }));
+}
+function parseColones(valor) {
+  if (valor === null || valor === undefined) return 0;
+  const limpio = String(valor).replace(/[^\d]/g, '');
+  return limpio ? Number.parseInt(limpio, 10) : 0;
+}
+function obtenerFondoInicial() {
+  return Number.isFinite(configApertura?.fondo) ? Number(configApertura.fondo) : 0;
+}
+function etiquetaDenominacion(den) {
+  const prefijo = den.tipo === 'billete' ? 'Billete' : 'Moneda';
+  return `${prefijo} ₡${formatearColones(den.valor)}`;
+}
+function aplicarConfigApertura() {
+  const fondoInput = document.getElementById('fondoCajaInput');
+  if (fondoInput) fondoInput.value = obtenerFondoInicial().toString();
+  const radios = document.querySelectorAll('input[name="responsableHoy"]');
+  radios.forEach(radio => {
+    radio.checked = radio.value === configApertura.responsable;
+  });
+}
+function actualizarResumenApertura() {
+  const responsableActual = configApertura.responsable || 'Glorilucas';
+  const fondo = obtenerFondoInicial();
+  const respSpan = document.getElementById('aperturaResponsableActual');
+  if (respSpan) respSpan.textContent = responsableActual;
+  const fondoSpan = document.getElementById('aperturaFondoActual');
+  if (fondoSpan) fondoSpan.textContent = `${formatearColones(fondo)}₡`;
+  actualizarPanelCierre();
+}
+function inicializarBreakdown(contexto) {
+  const tbody = document.querySelector(`tbody[data-breakdown-body="${contexto}"]`);
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  DENOMINACIONES.forEach(den => {
+    const tr = document.createElement('tr');
+    const claseExtra = den.clase ? ` ${den.clase}` : '';
+    tr.innerHTML = `
+      <td class="den-label${claseExtra}">${etiquetaDenominacion(den)}</td>
+      <td><input type="number" min="0" step="1" class="cash-count" data-context="${contexto}" data-valor="${den.valor}"></td>
+      <td class="cash-subtotal">0₡</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll(`.cash-count[data-context="${contexto}"]`).forEach(input => {
+    input.addEventListener('input', () => actualizarBreakdown(contexto));
+  });
+}
+function actualizarBreakdown(contexto) {
+  const inputs = Array.from(document.querySelectorAll(`.cash-count[data-context="${contexto}"]`));
+  if (inputs.length === 0) return;
+  let total = 0;
+  let hayValores = false;
+  inputs.forEach(input => {
+    const cantidadStr = (input.value || '').trim();
+    const cantidad = Number.parseInt(cantidadStr, 10);
+    if (cantidadStr !== '') hayValores = true;
+    const valor = Number(input.dataset.valor || 0);
+    const subtotal = Number.isFinite(cantidad) && cantidad > 0 ? cantidad * valor : 0;
+    total += subtotal;
+    const celda = input.closest('tr')?.querySelector('.cash-subtotal');
+    if (celda) celda.textContent = `${formatearColones(subtotal)}₡`;
+  });
+  const totalSpan = document.querySelector(`[data-breakdown-total="${contexto}"]`);
+  if (totalSpan) totalSpan.textContent = `${formatearColones(total)}₡`;
+  if (!hayValores) {
+    if (contexto === 'apertura') {
+      actualizarResumenApertura();
+    } else {
+      actualizarPanelCierre();
+    }
+    return;
+  }
+  const targetInputId = contexto === 'apertura' ? 'fondoCajaInput' : 'cierreEfectivoInput';
+  const targetInput = document.getElementById(targetInputId);
+  if (targetInput) targetInput.value = total.toString();
+  if (contexto === 'apertura') {
+    configApertura.fondo = total;
+    guardarConfigApertura();
+    actualizarResumenApertura();
+  } else {
+    actualizarPanelCierre();
+  }
+}
+function toggleBreakdownById(id, boton) {
+  const panel = document.getElementById(id);
+  if (!panel) return;
+  const activo = !panel.classList.contains('open');
+  panel.classList.toggle('open', activo);
+  if (boton) boton.setAttribute('aria-expanded', activo ? 'true' : 'false');
+  if (activo) {
+    const primerInput = panel.querySelector('input.cash-count');
+    if (primerInput) primerInput.focus();
+  }
+}
+function actualizarPanelCierre() {
+  const fondo = obtenerFondoInicial();
+  const ventasEfectivo = Number(ultimoResumen.efectivo || 0);
+  const cierreInput = document.getElementById('cierreEfectivoInput');
+  const contado = cierreInput ? parseColones(cierreInput.value) : 0;
+  const neto = contado - fondo;
+  const esperado = fondo + ventasEfectivo;
+  const diferencia = contado - esperado;
+
+  const responsableSpan = document.getElementById('cierreResponsable');
+  if (responsableSpan) responsableSpan.textContent = configApertura.responsable || 'Glorilucas';
+  const fondoSpan = document.getElementById('cierreFondoInicial');
+  if (fondoSpan) fondoSpan.textContent = `${formatearColones(fondo)}₡`;
+  const esperadoSpan = document.getElementById('cierreEsperado');
+  if (esperadoSpan) esperadoSpan.textContent = `${formatearColones(esperado)}₡`;
+  const contadoSpan = document.getElementById('cierreEfectivoContado');
+  if (contadoSpan) contadoSpan.textContent = `${formatearColones(contado)}₡`;
+  const netoSpan = document.getElementById('cierreNeto');
+  if (netoSpan) netoSpan.textContent = `${formatearColones(neto)}₡`;
+  const ventasSpan = document.getElementById('cierreVentasEfectivo');
+  if (ventasSpan) ventasSpan.textContent = `${formatearColones(ventasEfectivo)}₡`;
+
+  const diffSpan = document.getElementById('cierreDiferencia');
+  if (diffSpan) {
+    diffSpan.classList.remove('diferencia-positivo', 'diferencia-negativo', 'diferencia-neutro');
+    if (diferencia === 0) {
+      diffSpan.textContent = 'Cuadra (0₡)';
+      diffSpan.classList.add('diferencia-neutro');
+    } else if (diferencia > 0) {
+      diffSpan.textContent = `Sobra ${formatearColones(diferencia)}₡`;
+      diffSpan.classList.add('diferencia-positivo');
+    } else {
+      diffSpan.textContent = `Faltan ${formatearColones(Math.abs(diferencia))}₡`;
+      diffSpan.classList.add('diferencia-negativo');
+    }
+  }
+}
 
 function cargarProductos() {
   try {
@@ -651,25 +1103,32 @@ function guardarProductos(arr) {
 }
 
 /* =================== TABS =================== */
+const TAB_INFOS = [
+  { name: 'apertura', contentId: 'tabApertura', buttonId: 'tabAperturaBtn', onShow: () => actualizarResumenApertura() },
+  { name: 'productos', contentId: 'tabProductos', buttonId: 'tabProductosBtn', onShow: () => renderEditorProductos() },
+  {
+    name: 'pedidos',
+    contentId: 'tabPedidos',
+    buttonId: 'tabPedidosBtn',
+    onShow: () => {
+      crearProductos();
+      actualizarResumen();
+      actualizarTabla();
+      renderCuentas();
+    }
+  },
+  { name: 'cierre', contentId: 'tabCierre', buttonId: 'tabCierreBtn', onShow: () => actualizarPanelCierre() }
+];
 function mostrarTab(nombre) {
-  const productosTab = document.getElementById('tabProductos');
-  const pedidosTab = document.getElementById('tabPedidos');
-  const btnProd = document.getElementById('tabProductosBtn');
-  const btnPed = document.getElementById('tabPedidosBtn');
-  if (nombre === 'productos') {
-    productosTab.style.display = '';
-    pedidosTab.style.display = 'none';
-    btnProd.classList.add('active'); btnPed.classList.remove('active');
-    renderEditorProductos();
-  } else {
-    productosTab.style.display = 'none';
-    pedidosTab.style.display = '';
-    btnProd.classList.remove('active'); btnPed.classList.add('active');
-    crearProductos();
-    actualizarResumen();
-    actualizarTabla();
-    renderCuentas();
-  }
+  const objetivo = nombre || 'pedidos';
+  TAB_INFOS.forEach(tab => {
+    const activo = tab.name === objetivo;
+    const contenido = document.getElementById(tab.contentId);
+    if (contenido) contenido.style.display = activo ? '' : 'none';
+    const boton = document.getElementById(tab.buttonId);
+    if (boton) boton.classList.toggle('active', activo);
+    if (activo && typeof tab.onShow === 'function') tab.onShow();
+  });
 }
 
 /* =================== EDITOR DE PRODUCTOS =================== */
@@ -1265,19 +1724,12 @@ function actualizarTabla() {
     }
   }
 
-  const pendientesPorCliente = Array.from(pendientesCliente.entries()).map(([cliente, items]) => ({
-    cliente,
-    total: items.reduce((sum, item) => sum + (item.cantidad || 0), 0),
-    items: items.slice().sort((a, b) => a.nombre.localeCompare(b.nombre))
-  })).sort((a, b) => a.cliente.localeCompare(b.cliente));
-
-  const pendientesPorProducto = Array.from(pendientesProducto.values()).map(entry => ({
-    ...entry,
-    clientes: entry.clientes.slice().sort((a, b) => a.cliente.localeCompare(b.cliente))
-  })).sort((a, b) => a.nombre.localeCompare(b.nombre));
-
-  pendientesData = { porCliente: pendientesPorCliente, porProducto: pendientesPorProducto };
-  actualizarPendientesUI();
+  ultimoResumen = {
+    efectivo: resumen.efectivo || 0,
+    sinpe: resumen.sinpe || 0,
+    total: resumen.total || 0
+  };
+  actualizarPanelCierre();
 }
 
 function eliminarOrden(fecha) {
@@ -1809,6 +2261,45 @@ if (overlayEliminarTodos) {
     if (event.target === overlayEliminarTodos) cancelarEliminarTodos();
   });
 }
+
+aplicarConfigApertura();
+inicializarBreakdown('apertura');
+inicializarBreakdown('cierre');
+
+document.querySelectorAll('.toggle-breakdown').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.target;
+    if (target) toggleBreakdownById(target, btn);
+  });
+});
+
+document.querySelectorAll('input[name="responsableHoy"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    if (!radio.checked) return;
+    configApertura.responsable = radio.value;
+    guardarConfigApertura();
+    actualizarResumenApertura();
+  });
+});
+
+const fondoInput = document.getElementById('fondoCajaInput');
+if (fondoInput) {
+  fondoInput.addEventListener('input', () => {
+    configApertura.fondo = parseColones(fondoInput.value);
+    guardarConfigApertura();
+    actualizarResumenApertura();
+  });
+}
+
+const cierreInput = document.getElementById('cierreEfectivoInput');
+if (cierreInput) {
+  cierreInput.addEventListener('input', () => {
+    actualizarPanelCierre();
+  });
+}
+
+actualizarResumenApertura();
+actualizarPanelCierre();
 
 /* =================== ARRANQUE (Pedidos por defecto) =================== */
 crearProductos();
