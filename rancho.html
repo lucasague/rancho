@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ignis Latte</title>
+<style>
+  /* Base mínimo; puedes sobreescribir desde fuera */
+  body { font-family: Arial, sans-serif; }
+
+  /* Inputs/controles con fondo transparente */
+  input, select, textarea {
+    background: transparent;
+  }
+
+  /* Tabs */
+  .tabs { display:flex; gap:8px; align-items:center; justify-content:center; margin:10px auto; width:min(1200px,95%); }
+  .tab-btn { padding:8px 14px; border:1px solid #ccc; background:#f9f9f9; cursor:pointer; border-radius:6px; }
+  .tab-btn.active { font-weight:bold; background:#eee; }
+  .tab-content { width:min(1200px,95%); margin:10px auto; }
+
+  /* Grid productos */
+  .grid { display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-bottom:20px; }
+  .producto {
+    border:1px solid #999; padding:12px; position:relative; font-weight:bold; font-size:14px; border-radius:6px;
+    display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; /* centrado */
+    min-height:94px;
+    user-select:none;
+  }
+  .icono { display:block; font-size:30px; margin-bottom:4px; line-height:1; text-align:center; }
+  .contador {
+    position:absolute; top:6px; right:6px; background:#000; color:#fff; border-radius:50%; width:22px; height:22px; line-height:22px;
+    display:none; text-align:center; font-size:12px;
+  }
+  .restar {
+    position:absolute; bottom:6px; right:6px; background:#c00; color:#fff; border-radius:50%; width:22px; height:22px; line-height:22px;
+    text-align:center; cursor:pointer; display:none; font-size:14px;
+  }
+
+  button { padding:8px 14px; margin:6px; cursor:pointer; }
+  table { margin:16px auto; width:100%; border-collapse:collapse; }
+  th, td { border:1px solid #ddd; padding:8px; vertical-align: middle; text-align:left; }
+  #resumenOrden { text-align:left; margin:10px auto; width:100%; }
+  .indentado { padding-left:20px; color:#555; font-size:90%; text-align:left; }
+
+  /* Método de pago */
+  .pago-label input[type="radio"] { display:none; }
+  .pago-label { display:inline-block; padding:10px 20px; margin:5px; cursor:pointer; border:2px solid #ccc; border-radius:6px; }
+  .pago-label.active { border-color:#007bff; background-color:#e0f0ff; font-weight:bold; }
+
+  .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
+
+  tr.servido { opacity:0.35; }
+
+  #cliente {
+    padding:10px; width:min(520px, 100%); margin:10px 0 0 0; display:block;
+    border:1px solid #ccc; border-radius:6px; font-size:14px;
+  }
+
+  .productos-linea { display:block; margin-bottom:6px; }
+  .productos-nombre { font-size:12px; color:#666; margin-left:6px; }
+  .productos-maestro { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .master-checkbox { width:20px; height:20px; cursor:pointer; transform:scale(1.2); transform-origin:left center; }
+  .master-label { font-weight:bold; font-size:14px; color:#333; }
+
+  /* Cuentas abiertas */
+  #cuentasPanel { display:none; width:100%; margin:16px 0 8px 0; text-align:left; }
+  #cuentasHeader { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  #cuentasLista { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:8px; }
+  .cta-card { border:1px solid #ddd; border-radius:8px; padding:8px 10px; background:#fafafa; line-height:1.2; }
+  .cta-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; font-size:14px; font-weight:bold; }
+  .cta-sub { font-size:12px; color:#555; margin-bottom:6px; }
+  .cta-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .cta-actions button { padding:6px 10px; margin:0; font-size:12px; }
+  .cta-actions select { padding:4px 6px; font-size:12px; }
+  .muted { color:#666; font-size:12px; }
+
+  /* Editor de productos */
+  .editor-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; margin:8px 0; }
+  .small { font-size:12px; color:#555; }
+  .number { width:110px; }
+  .tipo-select { width:130px; }
+  .icono-input { width:100px; }
+  .nombre-input { width:100%; }
+  .variantes-input { width:100%; }
+  .help { font-size:12px; color:#666; margin-top:-4px; }
+
+  /* Menú radial de variantes (semicírculo izquierdo) */
+  .radial-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.25);
+    z-index:9999;
+  }
+  .radial-center {
+    position:absolute; width:0; height:0; /* punto de referencia */
+  }
+  .rad-item {
+    position:absolute; transform:translate(-50%, -50%);
+    background:#fff; border:1px solid #ccc; border-radius:20px; padding:6px 10px; cursor:pointer;
+    white-space:nowrap; font-size:14px; box-shadow:0 6px 16px rgba(0,0,0,0.15);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<!-- TABS -->
+<div class="tabs">
+  <button id="tabProductosBtn" class="tab-btn" onclick="mostrarTab('productos')">Productos</button>
+  <button id="tabPedidosBtn" class="tab-btn active" onclick="mostrarTab('pedidos')">Pedidos</button>
+</div>
+
+<!-- TAB: PEDIDOS (por defecto activa) -->
+<section id="tabPedidos" class="tab-content">
+  <div class="grid" id="productosGrid"></div>
+
+  <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
+
+  <div id="metodoPago" style="text-align:center;">
+    <label class="pago-label active"><input type="radio" name="pago" value="efectivo" checked>Efectivo</label>
+    <label class="pago-label"><input type="radio" name="pago" value="sinpe">Sinpe</label>
+  </div>
+
+  <div style="text-align:center;">
+    <button onclick="enviar()">Enviar</button>
+    <button onclick="borrar()">Limpiar</button>
+    <button onclick="anadirACuentaAbierta()">Añadir a cuenta abierta</button>
+    <button onclick="cerrarCaja()">Cierre de caja</button>
+  </div>
+
+  <div id="resumenOrden"><strong>Resumen de Orden:</strong></div>
+  <div id="total"><strong>Total: 0₡</strong></div>
+
+  <section id="cuentasPanel">
+    <div id="cuentasHeader">
+      <h2 style="margin:0;font-size:16px;">Cuentas abiertas</h2>
+      <span class="muted">Crea cuentas con “Añadir a cuenta abierta” usando el nombre del campo Cliente.</span>
+    </div>
+    <div id="cuentasLista"></div>
+  </section>
+
+  <table id="tabla">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Cliente</th>
+        <th>Importe</th>
+        <th>Método</th>
+        <th>Productos / Entrega</th>
+        <th>Eliminar</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <table id="tablaResumen">
+    <thead><tr><th>Resumen</th><th>Valor</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<!-- TAB: PRODUCTOS (editor) -->
+<section id="tabProductos" class="tab-content" style="display:none;">
+  <h2 style="margin:0 0 10px 0; text-align:center;">Editor de productos</h2>
+  <p class="help" style="text-align:center;">Puedes añadir <strong>variantes</strong> separadas por comas (p. ej. “Queso, Frijol, Mixta”). Pulsación larga en el producto abre el menú radial.</p>
+
+  <div class="editor-actions">
+    <button onclick="agregarFilaProducto()">Añadir fila</button>
+    <button onclick="guardarProductosDesdeTabla()">Guardar cambios</button>
+    <button onclick="restablecerProductos()">Restablecer por defecto</button>
+    <span class="small" id="estadoGuardado"></span>
+  </div>
+
+  <table id="tablaProductos">
+    <thead>
+      <tr>
+        <th style="width:24%;">Nombre</th>
+        <th style="width:14%;">Precio (₡)</th>
+        <th style="width:14%;">Tipo</th>
+        <th style="width:14%;">Icono(s)</th>
+        <th style="width:30%;">Variantes (coma)</th>
+        <th style="width:4%;">Borrar</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="help" style="text-align:center;">Los cambios guardados aparecen en la pestaña “Pedidos”.</div>
+</section>
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>(function(){ emailjs.init({ publicKey: "rzMljmZB066lvsYyE" }); })();</script>
+
+<script>
+/* =================== CONFIG / ALMACEN =================== */
+const STORAGE_KEYS = {
+  productos: 'ignis_productos_v2', // v2 por variantes
+  ordenes: 'ordenes_v2',
+  cuentas: 'cuentas_abiertas_v2'
+};
+
+const PRECIO_COMBO = 999999; // tu valor actual
+
+const PRODUCTOS_POR_DEFECTO = [
+  { nombre: 'Café', precio: 500, tipo: 'bebida', icono: '☕', variantes: [] },
+  { nombre: 'Fresco', precio: 500, tipo: 'bebida', icono: '🥤', variantes: [] },
+  { nombre: 'Helado', precio: 700, tipo: 'bebida', icono: '🍧', variantes: [] },
+  // Empanada unificada con variantes
+  { nombre: 'Empanada', precio: 700, tipo: 'comida', icono: '🥟', variantes: ['Queso', 'Frijol', 'Mixta'] },
+  { nombre: 'Gallo', precio: 1000, tipo: 'comida', icono: '🌭', variantes: [] },
+  { nombre: 'Arroz con leche', precio: 300, tipo: 'comida', icono: '🥛', variantes: [] },
+  { nombre: 'Galletas', precio: 300, tipo: 'comida', icono: '🍪', variantes: [] },
+  { nombre: 'Queque', precio: 300, tipo: 'comida', icono: '🥧', variantes: [] },
+  { nombre: 'Chocolate', precio: 600, tipo: 'comida', icono: '🍫', variantes: [] }
+];
+
+function cargarProductos() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.productos);
+    if (!raw) return PRODUCTOS_POR_DEFECTO.slice();
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr) || arr.length === 0) return PRODUCTOS_POR_DEFECTO.slice();
+    return arr.map(p => ({
+      nombre: String(p.nombre ?? '').trim() || 'Sin nombre',
+      precio: Number(p.precio ?? 0) || 0,
+      tipo: (p.tipo === 'bebida' || p.tipo === 'comida') ? p.tipo : 'comida',
+      icono: String(p.icono ?? ''),
+      variantes: Array.isArray(p.variantes)
+        ? p.variantes.map(v => String(v).trim()).filter(Boolean)
+        : String(p.variantes || '').split(',').map(v => v.trim()).filter(Boolean)
+    }));
+  } catch { return PRODUCTOS_POR_DEFECTO.slice(); }
+}
+function guardarProductos(arr) {
+  localStorage.setItem(STORAGE_KEYS.productos, JSON.stringify(arr));
+}
+
+/* =================== TABS =================== */
+function mostrarTab(nombre) {
+  const productosTab = document.getElementById('tabProductos');
+  const pedidosTab = document.getElementById('tabPedidos');
+  const btnProd = document.getElementById('tabProductosBtn');
+  const btnPed = document.getElementById('tabPedidosBtn');
+  if (nombre === 'productos') {
+    productosTab.style.display = '';
+    pedidosTab.style.display = 'none';
+    btnProd.classList.add('active'); btnPed.classList.remove('active');
+    renderEditorProductos();
+  } else {
+    productosTab.style.display = 'none';
+    pedidosTab.style.display = '';
+    btnProd.classList.remove('active'); btnPed.classList.add('active');
+    crearProductos();
+    actualizarResumen();
+    actualizarTabla();
+    renderCuentas();
+  }
+}
+
+/* =================== EDITOR DE PRODUCTOS =================== */
+function renderEditorProductos() {
+  const tbody = document.querySelector('#tablaProductos tbody');
+  tbody.innerHTML = '';
+  const datos = cargarProductos();
+  datos.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input class="nombre-input" type="text" value="${html(p.nombre)}" placeholder="Nombre"></td>
+      <td><input class="number" type="number" min="0" step="1" value="${Number(p.precio)}"></td>
+      <td>
+        <select class="tipo-select">
+          <option value="bebida" ${p.tipo === 'bebida' ? 'selected' : ''}>bebida</option>
+          <option value="comida" ${p.tipo === 'comida' ? 'selected' : ''}>comida</option>
+        </select>
+      </td>
+      <td><input class="icono-input" type="text" value="${html(p.icono)}" placeholder="☕"></td>
+      <td><input class="variantes-input" type="text" value="${html(p.variantes.join(', '))}" placeholder="Queso, Frijol, Mixta"></td>
+      <td style="text-align:center;"><button onclick="borrarFilaProducto(this)">🗑️</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  setEstadoGuardado('');
+}
+function agregarFilaProducto() {
+  const tbody = document.querySelector('#tablaProductos tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="nombre-input" type="text" value="" placeholder="Nombre"></td>
+    <td><input class="number" type="number" min="0" step="1" value="0"></td>
+    <td>
+      <select class="tipo-select">
+        <option value="bebida">bebida</option>
+        <option value="comida" selected>comida</option>
+      </select>
+    </td>
+    <td><input class="icono-input" type="text" value="" placeholder="🍪"></td>
+    <td><input class="variantes-input" type="text" value="" placeholder="Queso, Frijol"></td>
+    <td style="text-align:center;"><button onclick="borrarFilaProducto(this)">🗑️</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+function borrarFilaProducto(btn) { btn.closest('tr')?.remove(); }
+
+function guardarProductosDesdeTabla() {
+  const rows = Array.from(document.querySelectorAll('#tablaProductos tbody tr'));
+  const nuevos = [];
+  const nombres = new Set();
+  for (const r of rows) {
+    const nombre = (r.querySelector('.nombre-input')?.value || '').trim();
+    const precio = Number(r.querySelector('.number')?.value || 0);
+    const tipo = r.querySelector('.tipo-select')?.value === 'bebida' ? 'bebida' : 'comida';
+    const icono = (r.querySelector('.icono-input')?.value || '').trim();
+    const variantesStr = (r.querySelector('.variantes-input')?.value || '').trim();
+    const variantes = variantesStr ? variantesStr.split(',').map(v => v.trim()).filter(Boolean) : [];
+
+    if (!nombre) continue;
+    if (nombres.has(nombre)) { alert(`Nombre duplicado: "${nombre}". Cambia alguno antes de guardar.`); return; }
+    nombres.add(nombre);
+
+    nuevos.push({ nombre, precio: Math.max(0, Math.floor(precio)), tipo, icono, variantes });
+  }
+  guardarProductos(nuevos);
+  setEstadoGuardado('Cambios guardados.');
+}
+function restablecerProductos() {
+  if (!confirm('¿Restablecer el listado por defecto?')) return;
+  guardarProductos(PRODUCTOS_POR_DEFECTO.slice());
+  renderEditorProductos();
+  setEstadoGuardado('Restablecido a valores por defecto.');
+}
+function setEstadoGuardado(txt) { document.getElementById('estadoGuardado').textContent = txt || ''; }
+function html(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* =================== PEDIDOS: selección con variantes =================== */
+let productosNodos = [];              // nodos de la grilla
+let seleccionActual = {};             // { [producto]: { total:number, variantes: { [var]: number } } }
+
+function crearProductos() {
+  const grid = document.getElementById('productosGrid');
+  grid.innerHTML = '';
+  const PRODS = cargarProductos();
+
+  PRODS.forEach((prod) => {
+    const div = document.createElement('div');
+    div.className = 'producto';
+    div.dataset.nombre = prod.nombre;
+    div.dataset.precio = prod.precio;
+    div.dataset.tipo = prod.tipo;
+    div.dataset.variantes = JSON.stringify(prod.variantes || []);
+    div.innerHTML = `<span class="icono">${html(prod.icono)}</span><span>${html(prod.nombre)} (${prod.precio})</span><span class="contador"></span><span class="restar">-</span>`;
+    grid.appendChild(div);
+  });
+
+  productosNodos = Array.from(document.querySelectorAll('.producto'));
+  productosNodos.forEach(p => configurarHandlersProducto(p));
+}
+
+function configurarHandlersProducto(p) {
+  const nombre = p.dataset.nombre;
+  const contador = p.querySelector('.contador');
+  const restar = p.querySelector('.restar');
+  let pressTimer = null, longFired = false, pressPoint = null;
+
+  function getPointFromEvent(e) {
+    if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function startPress(e) {
+    e.preventDefault();
+    longFired = false;
+    pressPoint = getPointFromEvent(e);
+
+    pressTimer = setTimeout(() => {
+      longFired = true;
+      abrirRadial(nombre, pressPoint, p);
+    }, 450); // umbral pulsación larga
+  }
+  function endPress(e) {
+    if (pressTimer) clearTimeout(pressTimer);
+    if (!longFired) incProducto(nombre, null); // clic corto
+  }
+
+  p.addEventListener('mousedown', startPress);
+  p.addEventListener('touchstart', startPress, {passive:false});
+  p.addEventListener('mouseup', endPress);
+  p.addEventListener('mouseleave', ()=> pressTimer && clearTimeout(pressTimer));
+  p.addEventListener('touchend', endPress);
+  p.addEventListener('touchcancel', ()=> pressTimer && clearTimeout(pressTimer));
+
+  restar.onclick = (e) => {
+    e.stopPropagation();
+    decProducto(nombre);
+  };
+
+  // render contador por si hay selección previa
+  renderContador(nombre, contador, restar);
+}
+
+function incProducto(nombre, variante) {
+  if (!seleccionActual[nombre]) seleccionActual[nombre] = { total:0, variantes:{} };
+  seleccionActual[nombre].total += 1;
+  if (variante) {
+    seleccionActual[nombre].variantes[variante] = (seleccionActual[nombre].variantes[variante] || 0) + 1;
+  }
+  renderContadorNombre(nombre);
+  actualizarResumen();
+}
+function decProducto(nombre) {
+  const obj = seleccionActual[nombre];
+  if (!obj || obj.total <= 0) return;
+  const totalVariantes = Object.values(obj.variantes).reduce((a,b)=>a+b,0);
+  const sinEspecificar = obj.total - totalVariantes;
+  if (sinEspecificar > 0) {
+    obj.total -= 1;
+  } else {
+    const vNames = Object.keys(obj.variantes).filter(v => obj.variantes[v] > 0);
+    if (vNames.length) {
+      const v = vNames[vNames.length-1];
+      obj.variantes[v] -= 1;
+      obj.total -= 1;
+      if (obj.variantes[v] === 0) delete obj.variantes[v];
+    } else {
+      obj.total -= 1;
+    }
+  }
+  if (obj.total <= 0) delete seleccionActual[nombre];
+  renderContadorNombre(nombre);
+  actualizarResumen();
+}
+function renderContadorNombre(nombre) {
+  const p = productosNodos.find(n=>n.dataset.nombre===nombre);
+  if (!p) return;
+  renderContador(nombre, p.querySelector('.contador'), p.querySelector('.restar'));
+}
+function renderContador(nombre, contador, restar) {
+  const total = seleccionActual[nombre]?.total || 0;
+  contador.textContent = total ? String(total) : '';
+  contador.style.display = total ? 'inline-block' : 'none';
+  restar.style.display = total ? 'inline-block' : 'none';
+}
+
+/* Menú radial (semicírculo izquierdo anclado al punto) */
+function abrirRadial(nombre, punto, anchorEl) {
+  const PRODS = cargarProductos();
+  const prod = PRODS.find(p=>p.nombre===nombre);
+  const variantes = (prod?.variantes)||[];
+  if (!variantes.length) { incProducto(nombre, null); return; }
+
+  // Determinar punto (si no viene, usar centro del producto)
+  let cx, cy;
+  if (punto && typeof punto.x === 'number' && typeof punto.y === 'number') {
+    cx = punto.x; cy = punto.y;
+  } else if (anchorEl) {
+    const rect = anchorEl.getBoundingClientRect();
+    cx = rect.left + rect.width/2;
+    cy = rect.top + rect.height/2;
+  } else {
+    cx = window.innerWidth/2; cy = window.innerHeight/2;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'radial-overlay';
+  overlay.onclick = (e)=>{ if (e.target===overlay) document.body.removeChild(overlay); };
+
+  // Punto centro
+  const center = document.createElement('div');
+  center.className = 'radial-center';
+  center.style.left = cx + 'px';
+  center.style.top = cy + 'px';
+  center.style.position = 'absolute';
+
+  // Distribuir N elementos en 180° (semicírculo hacia la izquierda)
+  const N = variantes.length;
+  const R = 110; // radio
+  // Si N=1, ángulo 270° (izquierda pura). Si N>1, de 180° (abajo-izq) a 360° (arriba-izq).
+  const angleAt = (i) => {
+    if (N === 1) return 270;
+    return 180 + (i * 180/(N-1)); // 180..360
+  };
+
+  variantes.forEach((v, i) => {
+    const ang = angleAt(i) * Math.PI/180;
+    const x = cx + R * Math.cos(ang);
+    const y = cy + R * Math.sin(ang);
+    const item = document.createElement('div');
+    item.className = 'rad-item';
+    item.style.left = x + 'px';
+    item.style.top = y + 'px';
+    item.textContent = v;
+    item.onclick = (e)=>{ e.stopPropagation(); incProducto(nombre, v); document.body.removeChild(overlay); };
+    overlay.appendChild(item);
+  });
+
+  overlay.appendChild(center);
+  document.body.appendChild(overlay);
+}
+
+/* Pago UI */
+document.addEventListener('click', (ev) => {
+  const lbl = ev.target.closest('#metodoPago .pago-label');
+  if (!lbl) return;
+  document.querySelectorAll('#metodoPago .pago-label').forEach(l => l.classList.remove('active'));
+  lbl.classList.add('active');
+  const inp = lbl.querySelector('input'); if (inp) inp.checked = true;
+});
+
+/* Resumen de pedido (incluye variantes) */
+function actualizarResumen() {
+  const PRODS = cargarProductos();
+  let resumen = document.getElementById('resumenOrden');
+  let total = 0;
+
+  // Mapa de cantidades por producto base para combos y precio
+  const mapaBase = {};
+  Object.keys(seleccionActual).forEach(nombre => mapaBase[nombre] = (mapaBase[nombre] || 0) + (seleccionActual[nombre].total || 0));
+
+  const calc = calcularTotalDesdeMapa(mapaBase, PRODS);
+
+  resumen.innerHTML = '<strong>Resumen de Orden:</strong><br>';
+  for (let combo in calc.comboCantidades) {
+    resumen.innerHTML += `${calc.comboCantidades[combo]} Combo - ${calc.comboCantidades[combo] * PRECIO_COMBO}₡<br>`;
+    resumen.innerHTML += `<div class='indentado'>- ${combo}</div>`;
+  }
+
+  for (let p in calc.individuales) {
+    const cantidadIndiv = calc.individuales[p];
+    if ((cantidadIndiv || 0) > 0) {
+      const precioUnitario = (PRODS.find(x=>x.nombre===p)||{}).precio || 0;
+      const precio = cantidadIndiv * precioUnitario;
+      resumen.innerHTML += `${cantidadIndiv} ${html(p)} - ${precio}₡<br>`;
+      const varsObj = (seleccionActual[p]?.variantes)||{};
+      const nombresVar = Object.keys(varsObj);
+      if (nombresVar.length) {
+        const detalle = nombresVar.map(v=>`${v}: ${varsObj[v]}`).join(' · ');
+        resumen.innerHTML += `<div class="indentado">${detalle}</div>`;
+      }
+    }
+  }
+
+  total = calc.total;
+  document.getElementById('total').innerHTML = `<strong>Total: ${total}₡</strong>`;
+}
+
+/* Tabla de historial y resumen global (acumula variantes) */
+function cargarTabla() { return JSON.parse(localStorage.getItem(STORAGE_KEYS.ordenes) || '[]'); }
+function guardarTabla(data) { localStorage.setItem(STORAGE_KEYS.ordenes, JSON.stringify(data)); }
+
+function construirLineasPorProducto(o) {
+  const PRODS = cargarProductos();
+  const lineas = [];
+  for (let nombre in o.productos) {
+    const prod = PRODS.find(p => p.nombre === nombre);
+    const cant = o.productos[nombre];
+    const icono = prod?.icono || '';
+    const iconos = icono ? `${icono}×${cant}` : `${cant}x`;
+    const vars = (o.variantes && o.variantes[nombre]) ? o.variantes[nombre] : null;
+    lineas.push({ nombre, cantidad: cant, iconos, variantes: vars });
+  }
+  lineas.sort((a,b) => a.nombre.localeCompare(b.nombre));
+  return lineas;
+}
+function toggleEntrega(fecha, nombreProducto) {
+  let ordenes = cargarTabla();
+  const i = ordenes.findIndex(x => x.fecha === fecha);
+  if (i === -1) return;
+  if (!ordenes[i].entregas) ordenes[i].entregas = {};
+  ordenes[i].entregas[nombreProducto] = !ordenes[i].entregas[nombreProducto];
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+function toggleEntregaMaestro(fecha) {
+  let ordenes = cargarTabla();
+  const i = ordenes.findIndex(x => x.fecha === fecha);
+  if (i === -1) return;
+  const o = ordenes[i];
+  const lineas = construirLineasPorProducto(o);
+  if (!o.entregas) o.entregas = {};
+  const allServed = lineas.length > 0 && lineas.every(l => !!o.entregas[l.nombre]);
+  const target = !allServed;
+  lineas.forEach(l => { o.entregas[l.nombre] = target; });
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+
+function actualizarTabla() {
+  const PRODS = cargarProductos();
+  let ordenes = cargarTabla();
+  let tbody = document.querySelector('#tabla tbody');
+  let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
+  tbody.innerHTML = '';
+
+  ordenes.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).forEach(o => {
+    const lineas = construirLineasPorProducto(o);
+    o.entregas = o.entregas || {};
+    lineas.forEach(l => { if (!(l.nombre in o.entregas)) o.entregas[l.nombre] = false; });
+
+    const allServed = lineas.length > 0 && lineas.every(l => !!o.entregas[l.nombre]);
+    const masterChecked = allServed ? 'checked' : '';
+    let productosHTML = `
+      <div class="productos-maestro">
+        <input type="checkbox" class="master-checkbox" ${masterChecked}
+              title="Marcar todo el pedido"
+              onclick="toggleEntregaMaestro('${o.fecha}')">
+        <span class="master-label">Pedido completo</span>
+      </div>
+    `;
+    if (lineas.length >= 1) {
+      lineas.forEach(l => {
+        const checked = o.entregas[l.nombre] ? 'checked' : '';
+        const desglose = l.variantes
+          ? `<div class="productos-nombre indentado">${
+              Object.keys(l.variantes).map(v=>`${html(v)}: ${l.variantes[v]}`).join(' · ')
+            }</div>` : '';
+        productosHTML += `
+          <div class="productos-linea">
+            <input type="checkbox" class="pendiente-checkbox" ${checked}
+              onclick="toggleEntrega('${o.fecha}','${jsEsc(l.nombre)}')">
+            <span>${html(l.iconos)}</span>
+            <span class="productos-nombre">(${html(l.nombre)})</span>
+            ${desglose}
+          </div>
+        `;
+      });
+    }
+
+    const fila = document.createElement('tr');
+    if (allServed) fila.classList.add('servido');
+
+    fila.innerHTML = `
+      <td>${html(o.fecha)}</td>
+      <td>${html(o.cliente || '')}</td>
+      <td>${o.cantidad}₡</td>
+      <td>${html(o.metodo)}</td>
+      <td>${productosHTML}</td>
+      <td><button onclick="eliminarOrden('${jsEsc(o.fecha)}')">❌</button></td>
+    `;
+    tbody.appendChild(fila);
+
+    resumen[o.metodo] = (resumen[o.metodo] || 0) + o.cantidad;
+    resumen.total += o.cantidad;
+    for (let p in o.productos) {
+      resumen.productos[p] = (resumen.productos[p] || 0) + o.productos[p];
+    }
+    const vars = o.variantes || {};
+    Object.keys(vars).forEach(base=>{
+      resumen.variantes[base] = resumen.variantes[base] || {};
+      Object.keys(vars[base]).forEach(vn=>{
+        resumen.variantes[base][vn] = (resumen.variantes[base][vn] || 0) + vars[base][vn];
+      });
+    });
+  });
+
+  let resumenTbody = document.querySelector('#tablaResumen tbody');
+  resumenTbody.innerHTML = '';
+  resumenTbody.innerHTML += `<tr><td>Total Recaudado</td><td>${resumen.total}₡</td></tr>`;
+  resumenTbody.innerHTML += `<tr><td>Total Efectivo</td><td>${resumen.efectivo || 0}₡</td></tr>`;
+  resumenTbody.innerHTML += `<tr><td>Total Sinpe</td><td>${resumen.sinpe || 0}₡</td></tr>`;
+  for (let p in resumen.productos) {
+    resumenTbody.innerHTML += `<tr><td>Ventas de ${html(p)}</td><td>${resumen.productos[p]}</td></tr>`;
+    const vars = resumen.variantes[p];
+    if (vars && Object.keys(vars).length) {
+      const detalle = Object.keys(vars).map(v=>`${html(v)}: ${vars[v]}`).join(' · ');
+      resumenTbody.innerHTML += `<tr><td class="indentado">— ${html(p)} (variantes)</td><td>${detalle}</td></tr>`;
+    }
+  }
+}
+
+function eliminarOrden(fecha) {
+  if (!confirm('¿Estás seguro de eliminar esta orden?')) return;
+  let ordenes = cargarTabla();
+  ordenes = ordenes.filter(o => o.fecha !== fecha);
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+
+/* Enviar / recoger selección */
+function recogerSeleccionProductosBase() {
+  const out = {};
+  Object.keys(seleccionActual).forEach(nombre => out[nombre] = seleccionActual[nombre].total || 0);
+  return out;
+}
+function recogerSeleccionVariantes() {
+  const out = {};
+  Object.keys(seleccionActual).forEach(nombre => {
+    const vars = seleccionActual[nombre].variantes || {};
+    if (Object.keys(vars).length) out[nombre] = {...vars};
+  });
+  return out;
+}
+function enviar() {
+  const PRODS = cargarProductos();
+  const totalNum = +document.getElementById('total').innerText.replace(/[^\d]/g, '');
+  if (totalNum == 0) { alert('Añade productos'); return; }
+
+  const metodo = document.querySelector('input[name="pago"]:checked').value;
+  const productosVendidos = recogerSeleccionProductosBase();
+  const variantesVendidas = recogerSeleccionVariantes();
+  const cliente = (document.getElementById('cliente').value || '').trim();
+
+  let ordenes = cargarTabla();
+  const entregas = {};
+  for (let nombre in productosVendidos) entregas[nombre] = false;
+
+  ordenes.push({
+    fecha: new Date().toLocaleString(),
+    cliente,
+    cantidad: calcularTotalDesdeMapa(productosVendidos, PRODS).total,
+    metodo,
+    productos: productosVendidos,
+    variantes: variantesVendidas,
+    entregas
+  });
+
+  guardarTabla(ordenes);
+  actualizarTabla();
+  borrar();
+}
+
+/* Limpiar selección */
+function borrar() {
+  seleccionActual = {};
+  productosNodos.forEach(p => {
+    const c = p.querySelector('.contador'), r = p.querySelector('.restar');
+    if (c) { c.textContent = ''; c.style.display = 'none'; }
+    if (r) { r.style.display = 'none'; }
+  });
+  actualizarResumen();
+}
+
+/* =================== CUENTAS ABIERTAS (con variantes) =================== */
+function cargarCuentas() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEYS.cuentas) || '{}'); // { nombre: {productos:{}, variantes:{}, creado:ts} }
+}
+function guardarCuentas(obj) { localStorage.setItem(STORAGE_KEYS.cuentas, JSON.stringify(obj)); }
+
+function anadirACuentaAbierta() {
+  const base = recogerSeleccionProductosBase();
+  const vars = recogerSeleccionVariantes();
+  const hayAlgo = Object.values(base).some(v => v > 0);
+  if (!hayAlgo) { alert('Añade productos para pasar a la cuenta abierta'); return; }
+
+  let nombre = (document.getElementById('cliente').value || '').trim();
+  if (!nombre) nombre = nombreSugerido();
+
+  const cuentas = cargarCuentas();
+  if (!cuentas[nombre]) cuentas[nombre] = { productos:{}, variantes:{}, creado: Date.now() };
+
+  for (let n in base) cuentas[nombre].productos[n] = (cuentas[nombre].productos[n] || 0) + base[n];
+  Object.keys(vars).forEach(p=>{
+    cuentas[nombre].variantes[p] = cuentas[nombre].variantes[p] || {};
+    Object.keys(vars[p]).forEach(vn=>{
+      cuentas[nombre].variantes[p][vn] = (cuentas[nombre].variantes[p][vn] || 0) + vars[p][vn];
+    });
+  });
+
+  guardarCuentas(cuentas);
+  renderCuentas();
+  borrar();
+}
+function nombreSugerido() {
+  const base = 'Misionero';
+  const cuentas = cargarCuentas();
+  if (!cuentas[base]) return base;
+  let i = 2;
+  while (cuentas[`${base} ${i}`]) i++;
+  return `${base} ${i}`;
+}
+
+function resumenLineaProductosCuenta(productosMapa, variantesMapa) {
+  const PRODS = cargarProductos();
+  const partes = [];
+  const nombres = Object.keys(productosMapa).sort((a,b)=>a.localeCompare(b));
+  nombres.forEach(nombre => {
+    const prod = PRODS.find(p => p.nombre === nombre);
+    const cant = productosMapa[nombre];
+    const icono = prod?.icono || '';
+    const vars = variantesMapa?.[nombre];
+    const varTxt = vars ? ' [' + Object.keys(vars).map(v=>`${v}:${vars[v]}`).join(' · ') + ']' : '';
+    partes.push(`${icono ? html(icono) : ''}×${cant} (${html(nombre)})${varTxt}`);
+  });
+  return partes.join(' · ');
+}
+
+function renderCuentas() {
+  const cont = document.getElementById('cuentasLista');
+  const panel = document.getElementById('cuentasPanel');
+  const cuentas = cargarCuentas();
+  const entries = Object.entries(cuentas).sort((a,b)=>a[1].creado - b[1].creado);
+  cont.innerHTML = '';
+
+  if (entries.length === 0) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  entries.forEach(([nombre, data]) => {
+    const total = calcularTotalDesdeMapa(data.productos, cargarProductos()).total;
+    const card = document.createElement('div');
+    card.className = 'cta-card';
+    const idMet = idFromName(nombre) + '-metodo';
+
+    card.innerHTML = `
+      <div class="cta-top">
+        <span>${escapeHtml(nombre)}</span>
+        <span>${total}₡</span>
+      </div>
+      <div class="cta-sub">${resumenLineaProductosCuenta(data.productos, data.variantes) || '<span class="muted">Vacía</span>'}</div>
+      <div class="cta-actions">
+        <button onclick="anadirSeleccionA('${jsEsc(nombre)}')">Añadir selección</button>
+        <select id="${idMet}">
+          <option value="efectivo">Efectivo</option>
+          <option value="sinpe">Sinpe</option>
+        </select>
+        <button onclick="cerrarCuenta('${jsEsc(nombre)}')">Cobrar y cerrar</button>
+        <button onclick="eliminarCuenta('${jsEsc(nombre)}')">Eliminar</button>
+      </div>
+    `;
+    cont.appendChild(card);
+  });
+}
+
+function anadirSeleccionA(nombre) {
+  const base = recogerSeleccionProductosBase();
+  const vars = recogerSeleccionVariantes();
+  const hayAlgo = Object.values(base).some(v => v > 0);
+  if (!hayAlgo) { alert('Añade productos para sumarlos a la cuenta'); return; }
+
+  const cuentas = cargarCuentas();
+  if (!cuentas[nombre]) cuentas[nombre] = { productos:{}, variantes:{}, creado: Date.now() };
+
+  for (let n in base) cuentas[nombre].productos[n] = (cuentas[nombre].productos[n] || 0) + base[n];
+  Object.keys(vars).forEach(p=>{
+    cuentas[nombre].variantes[p] = cuentas[nombre].variantes[p] || {};
+    Object.keys(vars[p]).forEach(vn=>{
+      cuentas[nombre].variantes[p][vn] = (cuentas[nombre].variantes[p][vn] || 0) + vars[p][vn];
+    });
+  });
+
+  guardarCuentas(cuentas);
+  renderCuentas();
+  borrar();
+}
+
+function cerrarCuenta(nombre) {
+  const cuentas = cargarCuentas();
+  const data = cuentas[nombre];
+  if (!data || !data.productos || Object.keys(data.productos).length === 0) {
+    alert('La cuenta está vacía.');
+    return;
+  }
+  const idMet = idFromName(nombre) + '-metodo';
+  const metodo = (document.getElementById(idMet)?.value) || 'efectivo';
+
+  const productosMap = data.productos;
+  const variantesMap = data.variantes || {};
+  const entregas = {};
+  Object.keys(productosMap).forEach(n => entregas[n] = true); // todo servido
+
+  const ordenes = cargarTabla();
+  ordenes.push({
+    fecha: new Date().toLocaleString(),
+    cliente: nombre,
+    cantidad: calcularTotalDesdeMapa(productosMap, cargarProductos()).total,
+    metodo,
+    productos: productosMap,
+    variantes: variantesMap,
+    entregas
+  });
+  guardarTabla(ordenes);
+
+  delete cuentas[nombre];
+  guardarCuentas(cuentas);
+
+  renderCuentas();
+  actualizarTabla();
+}
+
+function eliminarCuenta(nombre) {
+  if (!confirm(`¿Eliminar la cuenta abierta "${nombre}"?`)) return;
+  const cuentas = cargarCuentas();
+  delete cuentas[nombre];
+  guardarCuentas(cuentas);
+  renderCuentas();
+}
+
+/* Helpers */
+function idFromName(name) { return 'cta_' + name.replace(/[^a-z0-9_-]/gi, '_'); }
+function jsEsc(s){ return String(s).replace(/'/g, "\\'"); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* =================== PRECIO COMBO =================== */
+function calcularTotalDesdeMapa(mapa, PRODS=null) {
+  const PRODUCTOS = PRODS || cargarProductos();
+  let total = 0;
+  let individuales = { ...mapa };
+  const combos = [];
+  let cambios;
+  do {
+    cambios = false;
+    const posiblesBebidas = PRODUCTOS.filter(p => p.tipo === 'bebida' && (individuales[p.nombre] || 0) > 0);
+    const posiblesComidas = PRODUCTOS.filter(p => p.tipo === 'comida' && (individuales[p.nombre] || 0) > 0);
+    for (let bebida of posiblesBebidas) {
+      for (let comida of posiblesComidas) {
+        if ((individuales[bebida.nombre] || 0) > 0 &&
+            (individuales[comida.nombre] || 0) > 0 &&
+            (Number(bebida.precio) + Number(comida.precio)) > Number(PRECIO_COMBO)) {
+          combos.push([bebida.nombre, comida.nombre]);
+          individuales[bebida.nombre]--;
+          individuales[comida.nombre]--;
+          cambios = true;
+          break;
+        }
+      }
+      if (cambios) break;
+    }
+  } while (cambios);
+
+  const comboCantidades = {};
+  combos.forEach(c => {
+    const clave = c.join(' + ');
+    comboCantidades[clave] = (comboCantidades[clave] || 0) + 1;
+  });
+
+  for (let combo in comboCantidades) total += comboCantidades[combo] * PRECIO_COMBO;
+  for (let p in individuales) {
+    const cant = individuales[p] || 0;
+    if (cant > 0) {
+      const precioUnitario = PRODUCTOS.find(x => x.nombre === p)?.precio || 0;
+      total += cant * precioUnitario;
+    }
+  }
+  return { total, comboCantidades, individuales };
+}
+
+/* =================== CIERRE DE CAJA (incluye variantes en resumen CSV) =================== */
+function cerrarCaja() {
+  if (!confirm("¿Seguro que quieres cerrar la caja? Se enviará un resumen al correo y se eliminarán los datos actuales (las Cuentas abiertas no se tocan).")) return;
+
+  const ordenes = cargarTabla();
+  const fecha = new Date().toISOString().split('T')[0];
+  const subject = `Ignis Latte - Cierre de caja ${fecha}`;
+  const message = `Cierre automático generado el ${fecha}`;
+
+  let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
+  ordenes.forEach(o => {
+    resumen[o.metodo] = (resumen[o.metodo] || 0) + o.cantidad;
+    resumen.total += o.cantidad;
+    for (let p in o.productos) {
+      resumen.productos[p] = (resumen.productos[p] || 0) + o.productos[p];
+    }
+    const vars = o.variantes || {};
+    Object.keys(vars).forEach(base=>{
+      resumen.variantes[base] = resumen.variantes[base] || {};
+      Object.keys(vars[base]).forEach(vn=>{
+        resumen.variantes[base][vn] = (resumen.variantes[base][vn] || 0) + vars[base][vn];
+      });
+    });
+  });
+
+  let tablaResumenTexto = "Resumen;Valor\n";
+  tablaResumenTexto += `Total Recaudado;${resumen.total}₡\n`;
+  tablaResumenTexto += `Total Efectivo;${resumen.efectivo || 0}₡\n`;
+  tablaResumenTexto += `Total Sinpe;${resumen.sinpe || 0}₡\n`;
+  for (let p in resumen.productos) {
+    tablaResumenTexto += `Ventas de ${p};${resumen.productos[p]}\n`;
+    const vars = resumen.variantes[p];
+    if (vars && Object.keys(vars).length) {
+      tablaResumenTexto += `Variantes de ${p};${Object.keys(vars).map(v=>`${v}:${vars[v]}`).join(' | ')}\n`;
+    }
+  }
+
+  let tablaHistoricaTexto = "Fecha;Cliente;Cantidad;Método\n";
+  ordenes.forEach(o => {
+    tablaHistoricaTexto += `${o.fecha};${o.cliente || ''};${o.cantidad}₡;${o.metodo}\n`;
+  });
+
+  emailjs.send("service_kmko3hp", "template_7xn4zvs", {
+    subject, message,
+    tabla_resumen: tablaResumenTexto,
+    tabla_historica: tablaHistoricaTexto,
+    name: "Ignis Latte",
+    email: "info@ignismundi.org"
+  }).then(() => {
+    alert("Correo enviado con éxito.");
+    localStorage.removeItem(STORAGE_KEYS.ordenes);
+    actualizarTabla();
+  }, (error) => {
+    console.error(error);
+    alert("Error al enviar el correo: " + JSON.stringify(error));
+  });
+}
+
+/* =================== ARRANQUE (Pedidos por defecto) =================== */
+crearProductos();
+actualizarResumen();
+actualizarTabla();
+renderCuentas();
+</script>
+</body>
+</html>
