@@ -632,6 +632,23 @@
 
 <button type="button" id="verPendientesBtn" class="pendientes-btn">Pendientes</button>
 
+<div id="pendientesOverlay" class="pendientes-overlay" aria-hidden="true">
+  <div class="pendientes-dialog" role="dialog" aria-modal="true" aria-labelledby="pendientesTitulo">
+    <div class="pendientes-header">
+      <h2 id="pendientesTitulo" style="margin:0; font-size:20px;">Pendientes por servir</h2>
+      <button type="button" class="pendientes-close" aria-label="Cerrar ventana de pendientes">×</button>
+    </div>
+    <div class="pendientes-tabs" role="tablist">
+      <button type="button" id="pendientes-tab-cliente" class="pendientes-tab active" data-tab="cliente" role="tab" aria-selected="true" aria-controls="pendientesPorCliente">Por cliente</button>
+      <button type="button" id="pendientes-tab-producto" class="pendientes-tab" data-tab="producto" role="tab" aria-selected="false" aria-controls="pendientesPorProducto">Por producto</button>
+    </div>
+    <div class="pendientes-panes">
+      <div id="pendientesPorCliente" class="pendientes-pane" role="tabpanel" aria-labelledby="pendientes-tab-cliente"></div>
+      <div id="pendientesPorProducto" class="pendientes-pane" role="tabpanel" aria-labelledby="pendientes-tab-producto" hidden></div>
+    </div>
+  </div>
+</div>
+
 <!-- TABS -->
 <div class="tabs">
   <button id="tabAperturaBtn" class="tab-btn" onclick="mostrarTab('apertura')">Apertura</button>
@@ -1710,6 +1727,15 @@ function actualizarTabla() {
     }
   });
 
+  pendientesData = {
+    porCliente: normalizarPendientesPorCliente(pendientesCliente),
+    porProducto: normalizarPendientesPorProducto(pendientesProducto)
+  };
+  const overlay = document.getElementById('pendientesOverlay');
+  if (overlay && overlay.classList.contains('active')) {
+    actualizarPendientesUI();
+  }
+
   let resumenTbody = document.querySelector('#tablaResumen tbody');
   resumenTbody.innerHTML = '';
   resumenTbody.innerHTML += `<tr><td>Total Recaudado</td><td>${resumen.total}₡</td></tr>`;
@@ -1795,6 +1821,84 @@ function cancelarEliminarTodos() {
 function confirmarEliminarTodos() {
   eliminarTodasOrdenes();
   cancelarEliminarTodos();
+}
+
+function mergeVariantes(target, source) {
+  if (!target || !source) return;
+  Object.keys(source).forEach(nombreVar => {
+    const cantidad = Number(source[nombreVar]) || 0;
+    if (cantidad > 0) {
+      target[nombreVar] = (target[nombreVar] || 0) + cantidad;
+    }
+  });
+}
+
+function normalizarPendientesPorCliente(map) {
+  const resultado = [];
+  map.forEach((items, cliente) => {
+    const agrupados = new Map();
+    items.forEach(item => {
+      const key = item.nombre;
+      if (!agrupados.has(key)) {
+        agrupados.set(key, {
+          nombre: item.nombre,
+          icono: item.icono || '',
+          cantidad: 0,
+          variantes: {},
+          fecha: item.fecha || ''
+        });
+      }
+      const prod = agrupados.get(key);
+      prod.cantidad += Number(item.cantidad) || 0;
+      mergeVariantes(prod.variantes, item.variantes || {});
+      if (!prod.fecha && item.fecha) prod.fecha = item.fecha;
+    });
+
+    const itemsOrdenados = Array.from(agrupados.values()).map(prod => {
+      if (!prod.variantes || Object.keys(prod.variantes).length === 0) prod.variantes = null;
+      return prod;
+    }).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    const total = itemsOrdenados.reduce((sum, prod) => sum + (Number(prod.cantidad) || 0), 0);
+    resultado.push({ cliente, total, items: itemsOrdenados });
+  });
+  return resultado;
+}
+
+function normalizarPendientesPorProducto(map) {
+  const resultado = [];
+  map.forEach((data, keyNombre) => {
+    const clientesAgrupados = new Map();
+    (data.clientes || []).forEach(cli => {
+      const nombreCliente = (cli.cliente || 'Sin nombre');
+      if (!clientesAgrupados.has(nombreCliente)) {
+        clientesAgrupados.set(nombreCliente, {
+          cliente: nombreCliente,
+          cantidad: 0,
+          variantes: {},
+          fecha: cli.fecha || ''
+        });
+      }
+      const clienteInfo = clientesAgrupados.get(nombreCliente);
+      clienteInfo.cantidad += Number(cli.cantidad) || 0;
+      mergeVariantes(clienteInfo.variantes, cli.variantes || {});
+      if (!clienteInfo.fecha && cli.fecha) clienteInfo.fecha = cli.fecha;
+    });
+
+    const clientesOrdenados = Array.from(clientesAgrupados.values()).map(cli => {
+      if (!cli.variantes || Object.keys(cli.variantes).length === 0) cli.variantes = null;
+      return cli;
+    }).sort((a, b) => a.cliente.localeCompare(b.cliente));
+
+    const total = clientesOrdenados.reduce((sum, cli) => sum + (Number(cli.cantidad) || 0), 0);
+    resultado.push({
+      nombre: data.nombre || keyNombre || '',
+      icono: data.icono || '',
+      total,
+      clientes: clientesOrdenados
+    });
+  });
+  return resultado;
 }
 
 function variantesPendientesTexto(vars) {
@@ -1884,7 +1988,11 @@ function cambiarTabPendientes(tab) {
   const overlay = document.getElementById('pendientesOverlay');
   if (!overlay) return;
   const tabs = overlay.querySelectorAll('.pendientes-tab');
-  tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+  tabs.forEach(btn => {
+    const activa = btn.dataset.tab === tab;
+    btn.classList.toggle('active', activa);
+    btn.setAttribute('aria-selected', activa ? 'true' : 'false');
+  });
   const clientePane = document.getElementById('pendientesPorCliente');
   const productoPane = document.getElementById('pendientesPorProducto');
   if (clientePane) clientePane.hidden = tab !== 'cliente';
@@ -2245,6 +2353,14 @@ const overlayPendientes = document.getElementById('pendientesOverlay');
 if (overlayPendientes) {
   overlayPendientes.addEventListener('click', (event) => {
     if (event.target === overlayPendientes) cerrarPendientes();
+  });
+  const closeBtn = overlayPendientes.querySelector('.pendientes-close');
+  if (closeBtn) closeBtn.addEventListener('click', cerrarPendientes);
+  overlayPendientes.querySelectorAll('.pendientes-tab').forEach(tabBtn => {
+    tabBtn.addEventListener('click', () => {
+      const tab = tabBtn.dataset.tab || 'cliente';
+      cambiarTabPendientes(tab);
+    });
   });
 }
 
