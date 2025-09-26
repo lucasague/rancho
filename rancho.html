@@ -148,6 +148,15 @@
   .metodos-acciones .botones-acciones button {
     padding:4.2px 14px;
   }
+  .btn-cierre-caja {
+    background:#fdeaea;
+    border:2px solid #d64b4b;
+    color:#8a1e1e;
+  }
+  .btn-cierre-caja:hover {
+    background:#f8d0d0;
+    border-color:#c03a3a;
+  }
 
   @media (max-width: 1024px) {
     .pedidos-layout { flex-direction:column; }
@@ -258,7 +267,7 @@
             <button onclick="enviar()">Enviar</button>
             <button onclick="borrar()">Limpiar</button>
             <button onclick="anadirACuentaAbierta()">Añadir a cuenta abierta</button>
-            <button onclick="cerrarCaja()">Cierre de caja</button>
+            <button class="btn-cierre-caja" onclick="cerrarCaja()">Cierre de caja</button>
           </div>
         </div>
 
