@@ -71,10 +71,84 @@
   }
 
   button { padding:8px 14px; margin:6px; cursor:pointer; }
+  .eliminar-todos-btn {
+    background:#d32f2f;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:6px 12px;
+    font-weight:bold;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    transition:background 0.2s ease;
+  }
+  .eliminar-todos-btn:hover { background:#b71c1c; }
   table { margin:16px auto; width:100%; border-collapse:collapse; }
   th, td { border:1px solid #ddd; padding:8px; vertical-align: middle; text-align:left; }
   #resumenOrden { text-align:left; width:100%; }
   .indentado { padding-left:20px; color:#555; font-size:90%; text-align:left; }
+
+  .warning-overlay {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:2000;
+    padding:20px;
+  }
+  .warning-overlay.active { display:flex; }
+  .warning-dialog {
+    background:#fff8e1;
+    border:4px solid #ff6f00;
+    padding:30px 26px;
+    max-width:520px;
+    width:100%;
+    text-align:center;
+    border-radius:14px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.45);
+    animation:warning-pop 0.25s ease-out;
+  }
+  .warning-dialog h2 {
+    margin:0 0 18px 0;
+    color:#d84315;
+    font-size:30px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
+  .warning-dialog p {
+    margin:0 0 24px 0;
+    color:#5d4037;
+    font-size:18px;
+    line-height:1.5;
+  }
+  .warning-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    justify-content:center;
+  }
+  .warning-actions button {
+    border:none;
+    border-radius:8px;
+    padding:10px 20px;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:16px;
+  }
+  .warning-actions .confirm { background:#d32f2f; color:#fff; }
+  .warning-actions .confirm:hover { background:#b71c1c; }
+  .warning-actions .cancel { background:#eceff1; color:#37474f; }
+  .warning-actions .cancel:hover { background:#cfd8dc; }
+
+  @keyframes warning-pop {
+    from { transform:scale(0.8); opacity:0; }
+    to { transform:scale(1); opacity:1; }
+  }
 
   /* Método de pago */
   .pago-label input[type="radio"] { display:none; }
@@ -225,7 +299,7 @@
             <th>Importe</th>
             <th>Método</th>
             <th>Productos / Entrega</th>
-            <th>Eliminar</th>
+            <th><button type="button" class="eliminar-todos-btn" onclick="mostrarWarningEliminarTodos()">Eliminar todos</button></th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -302,6 +376,18 @@
 </section>
 
 <!-- EmailJS -->
+<div id="warningEliminarTodos" class="warning-overlay" role="alertdialog" aria-modal="true"
+     aria-labelledby="warningEliminarTitulo" aria-describedby="warningEliminarDescripcion">
+  <div class="warning-dialog">
+    <h2 id="warningEliminarTitulo">¡Advertencia!</h2>
+    <p id="warningEliminarDescripcion">Esta acción eliminará <strong>todo</strong> el historial de órdenes. No se podrá recuperar la información.</p>
+    <div class="warning-actions">
+      <button class="confirm" type="button" onclick="confirmarEliminarTodos()">Sí, eliminar todo</button>
+      <button class="cancel" type="button" onclick="cancelarEliminarTodos()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>(function(){ emailjs.init({ publicKey: "rzMljmZB066lvsYyE" }); })();</script>
 
@@ -866,6 +952,32 @@ function eliminarOrden(fecha) {
   actualizarTabla();
 }
 
+function eliminarTodasOrdenes() {
+  guardarTabla([]);
+  actualizarTabla();
+}
+
+function mostrarWarningEliminarTodos() {
+  const overlay = document.getElementById('warningEliminarTodos');
+  if (!overlay) return;
+  overlay.classList.add('active');
+  setTimeout(() => {
+    const confirmBtn = overlay.querySelector('.confirm');
+    if (confirmBtn) confirmBtn.focus();
+  }, 0);
+}
+
+function cancelarEliminarTodos() {
+  const overlay = document.getElementById('warningEliminarTodos');
+  if (!overlay) return;
+  overlay.classList.remove('active');
+}
+
+function confirmarEliminarTodos() {
+  eliminarTodasOrdenes();
+  cancelarEliminarTodos();
+}
+
 /* Enviar / recoger selección */
 function recogerSeleccionProductosBase() {
   const out = {};
@@ -1180,6 +1292,17 @@ function cerrarCaja() {
   }, (error) => {
     console.error(error);
     alert("Error al enviar el correo: " + JSON.stringify(error));
+  });
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') cancelarEliminarTodos();
+});
+
+const overlayEliminarTodos = document.getElementById('warningEliminarTodos');
+if (overlayEliminarTodos) {
+  overlayEliminarTodos.addEventListener('click', (event) => {
+    if (event.target === overlayEliminarTodos) cancelarEliminarTodos();
   });
 }
 
