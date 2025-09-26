@@ -59,7 +59,7 @@
   .producto {
     border:1px solid #999; padding:12px; position:relative; font-weight:bold; font-size:14px; border-radius:6px;
     display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; /* centrado */
-    min-height:94px;
+    min-height:80px;
     user-select:none;
   }
   .icono { display:block; font-size:30px; margin-bottom:4px; line-height:1; text-align:center; }
@@ -460,7 +460,12 @@ function configurarHandlersProducto(p) {
     return { x: e.clientX, y: e.clientY };
   }
 
+  function esDesdeRestar(evt) {
+    return evt.target instanceof Element && evt.target.closest('.restar');
+  }
+
   function startPress(e) {
+    if (esDesdeRestar(e)) return;
     e.preventDefault();
     longFired = false;
     pressPoint = getPointFromEvent(e);
@@ -471,6 +476,7 @@ function configurarHandlersProducto(p) {
     }, 450); // umbral pulsación larga
   }
   function endPress(e) {
+    if (esDesdeRestar(e)) return;
     if (pressTimer) clearTimeout(pressTimer);
     if (!longFired) incProducto(nombre, null); // clic corto
   }
