@@ -669,11 +669,9 @@ function abrirRadial(nombre, punto, anchorEl) {
         cercano = meta;
       }
     }
-    const UMBRAL = 90;
+    const UMBRAL = Math.min(OFFSET_X * 0.8, 50);
     setActivo(cercano && distanciaMin <= UMBRAL ? cercano.el : null);
   };
-
-  actualizarDesdePunto({ x:cx, y:cy });
 
   const moverHandler = (e) => {
     if (e.type === 'mousemove' && e.buttons === 0) return;
