@@ -741,7 +741,7 @@ function construirLineasPorProducto(o) {
     const icono = prod?.icono || '';
     const iconos = icono ? `${icono}×${cant}` : `${cant}x`;
     const vars = (o.variantes && o.variantes[nombre]) ? o.variantes[nombre] : null;
-    lineas.push({ nombre, cantidad: cant, iconos, variantes: vars });
+    lineas.push({ nombre, cantidad: cant, iconos, variantes: vars, tieneIcono: !!icono });
   }
   lineas.sort((a,b) => a.nombre.localeCompare(b.nombre));
   return lineas;
@@ -798,12 +798,15 @@ function actualizarTabla() {
           ? `<div class="productos-nombre indentado">${
               Object.keys(l.variantes).map(v=>`${html(v)}: ${l.variantes[v]}`).join(' · ')
             }</div>` : '';
+        const nombreProducto = l.tieneIcono
+          ? ''
+          : `<span class="productos-nombre">${html(l.nombre)}</span>`;
         productosHTML += `
           <div class="productos-linea">
             <input type="checkbox" class="pendiente-checkbox" ${checked}
               onclick="toggleEntrega('${o.fecha}','${jsEsc(l.nombre)}')">
             <span>${html(l.iconos)}</span>
-            <span class="productos-nombre">(${html(l.nombre)})</span>
+            ${nombreProducto}
             ${desglose}
           </div>
         `;
