@@ -1993,38 +1993,6 @@ function actualizarTabla() {
     }
   }
 
-  const pendientesPorCliente = Array.from(pendientesCliente.entries()).map(([cliente, items]) => {
-    const itemsOrdenados = items.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.nombre.localeCompare(b.nombre));
-    const primeraFecha = itemsOrdenados.length ? itemsOrdenados[0].fechaValor : Number.POSITIVE_INFINITY;
-    return {
-      cliente,
-      total: items.reduce((sum, item) => sum + (item.cantidad || 0), 0),
-      items: itemsOrdenados,
-      primeraFecha
-    };
-  }).sort((a, b) => (a.primeraFecha - b.primeraFecha) || a.cliente.localeCompare(b.cliente));
-
-  const pendientesPorProducto = Array.from(pendientesProducto.values()).map(entry => {
-    const clientesOrdenados = entry.clientes.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.cliente.localeCompare(b.cliente));
-    const primeraFecha = clientesOrdenados.length ? clientesOrdenados[0].fechaValor : entry.primeraFecha;
-    return {
-      nombre: entry.nombre,
-      icono: entry.icono,
-      total: entry.total,
-      variante: entry.variante,
-      clientes: clientesOrdenados,
-      primeraFecha
-    };
-  }).sort((a, b) => {
-    const fechaDiff = a.primeraFecha - b.primeraFecha;
-    if (fechaDiff !== 0) return fechaDiff;
-    const nombreDiff = a.nombre.localeCompare(b.nombre);
-    if (nombreDiff !== 0) return nombreDiff;
-    return (a.variante || '').localeCompare(b.variante || '');
-  });
-
-  pendientesData = { porCliente: pendientesPorCliente, porProducto: pendientesPorProducto };
-  actualizarPendientesUI();
 }
 
 function eliminarOrden(fecha) {
