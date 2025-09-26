@@ -729,14 +729,14 @@
 
 <!-- TABS -->
 <div class="tabs">
-  <button id="tabAperturaBtn" class="tab-btn" onclick="mostrarTab('apertura')">Apertura</button>
+  <button id="tabAperturaBtn" class="tab-btn active" onclick="mostrarTab('apertura')">Apertura</button>
   <button id="tabProductosBtn" class="tab-btn" onclick="mostrarTab('productos')">Productos</button>
-  <button id="tabPedidosBtn" class="tab-btn active" onclick="mostrarTab('pedidos')">Pedidos</button>
+  <button id="tabPedidosBtn" class="tab-btn" onclick="mostrarTab('pedidos')">Pedidos</button>
   <button id="tabCierreBtn" class="tab-btn" onclick="mostrarTab('cierre')">Cierre</button>
 </div>
 
 <!-- TAB: APERTURA -->
-<section id="tabApertura" class="tab-content" style="display:none;">
+<section id="tabApertura" class="tab-content">
   <div class="panel-tercio">
     <div class="apertura-card">
       <h2>Apertura de caja</h2>
@@ -831,8 +831,8 @@
   </div>
 </section>
 
-<!-- TAB: PEDIDOS (por defecto activa) -->
-<section id="tabPedidos" class="tab-content">
+<!-- TAB: PEDIDOS -->
+<section id="tabPedidos" class="tab-content" style="display:none;">
   <div class="pedidos-layout">
     <div class="pedidos-left">
       <table id="tabla">
@@ -1224,7 +1224,7 @@ const TAB_INFOS = [
   { name: 'cierre', contentId: 'tabCierre', buttonId: 'tabCierreBtn', onShow: () => actualizarPanelCierre() }
 ];
 function mostrarTab(nombre) {
-  const objetivo = nombre || 'pedidos';
+  const objetivo = nombre || 'apertura';
   TAB_INFOS.forEach(tab => {
     const activo = tab.name === objetivo;
     const contenido = document.getElementById(tab.contentId);
@@ -2495,11 +2495,13 @@ if (cierreInput) {
 actualizarResumenApertura();
 actualizarPanelCierre();
 
-/* =================== ARRANQUE (Pedidos por defecto) =================== */
+/* =================== ARRANQUE (Datos base) =================== */
 crearProductos();
 actualizarResumen();
 actualizarTabla();
 renderCuentas();
+
+mostrarTab('apertura');
 </script>
 </body>
 </html>
