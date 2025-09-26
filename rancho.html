@@ -89,6 +89,7 @@
   .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
 
   tr.servido { opacity:0.35; }
+  tr.cuenta-abierta { background:#fff9e6; }
 
   #cliente {
     padding:7px 10px; width:min(520px, 100%); margin:10px 0 0 0; display:block;
@@ -754,6 +755,55 @@ function actualizarResumen() {
 function cargarTabla() { return JSON.parse(localStorage.getItem(STORAGE_KEYS.ordenes) || '[]'); }
 function guardarTabla(data) { localStorage.setItem(STORAGE_KEYS.ordenes, JSON.stringify(data)); }
 
+function clonarMapaProductos(mapa) {
+  const copia = {};
+  Object.keys(mapa || {}).forEach(nombre => {
+    const cantidad = Number(mapa[nombre]) || 0;
+    if (cantidad > 0) copia[nombre] = cantidad;
+  });
+  return copia;
+}
+
+function clonarVariantesMapa(vars) {
+  const copia = {};
+  Object.keys(vars || {}).forEach(base => {
+    const variantesBase = vars[base] || {};
+    const variantesLimpias = {};
+    Object.keys(variantesBase).forEach(nombreVar => {
+      const cantidad = Number(variantesBase[nombreVar]) || 0;
+      if (cantidad > 0) variantesLimpias[nombreVar] = cantidad;
+    });
+    if (Object.keys(variantesLimpias).length) copia[base] = variantesLimpias;
+  });
+  return copia;
+}
+
+function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, metodo = 'efectivo', estado = 'pagado', cuenta = null, entregasServidas = false }) {
+  const productosCopia = clonarMapaProductos(productos);
+  const variantesCopia = clonarVariantesMapa(variantes);
+  const PRODS = cargarProductos();
+  const entregas = {};
+  Object.keys(productosCopia).forEach(nombre => {
+    entregas[nombre] = !!entregasServidas;
+  });
+
+  return {
+    fecha: new Date().toLocaleString(),
+    cliente,
+    cantidad: calcularTotalDesdeMapa(productosCopia, PRODS).total,
+    metodo,
+    productos: productosCopia,
+    variantes: variantesCopia,
+    entregas,
+    estado,
+    cuenta
+  };
+}
+
+function esCuentaAbiertaOrden(o) {
+  return (o?.estado || 'pagado') === 'cuenta_abierta';
+}
+
 function construirLineasPorProducto(o) {
   const PRODS = cargarProductos();
   const lineas = [];
@@ -792,7 +842,6 @@ function toggleEntregaMaestro(fecha) {
 }
 
 function actualizarTabla() {
-  const PRODS = cargarProductos();
   let ordenes = cargarTabla();
   let tbody = document.querySelector('#tabla tbody');
   let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
@@ -802,6 +851,10 @@ function actualizarTabla() {
     const lineas = construirLineasPorProducto(o);
     o.entregas = o.entregas || {};
     lineas.forEach(l => { if (!(l.nombre in o.entregas)) o.entregas[l.nombre] = false; });
+
+    const estadoOrden = o.estado || 'pagado';
+    const esCuentaAbierta = estadoOrden === 'cuenta_abierta';
+    const metodoMostrar = esCuentaAbierta ? 'Cuenta abierta' : o.metodo;
 
     const allServed = lineas.length > 0 && lineas.every(l => !!o.entregas[l.nombre]);
     const masterChecked = allServed ? 'checked' : '';
@@ -837,29 +890,32 @@ function actualizarTabla() {
 
     const fila = document.createElement('tr');
     if (allServed) fila.classList.add('servido');
+    if (esCuentaAbierta) fila.classList.add('cuenta-abierta');
 
     fila.innerHTML = `
       <td>${html(o.fecha)}</td>
       <td>${html(o.cliente || '')}</td>
       <td>${o.cantidad}₡</td>
-      <td>${html(o.metodo)}</td>
+      <td>${html(metodoMostrar)}</td>
       <td>${productosHTML}</td>
       <td><button onclick="eliminarOrden('${jsEsc(o.fecha)}')">❌</button></td>
     `;
     tbody.appendChild(fila);
 
-    resumen[o.metodo] = (resumen[o.metodo] || 0) + o.cantidad;
-    resumen.total += o.cantidad;
-    for (let p in o.productos) {
-      resumen.productos[p] = (resumen.productos[p] || 0) + o.productos[p];
-    }
-    const vars = o.variantes || {};
-    Object.keys(vars).forEach(base=>{
-      resumen.variantes[base] = resumen.variantes[base] || {};
-      Object.keys(vars[base]).forEach(vn=>{
-        resumen.variantes[base][vn] = (resumen.variantes[base][vn] || 0) + vars[base][vn];
+    if (!esCuentaAbierta) {
+      resumen[o.metodo] = (resumen[o.metodo] || 0) + o.cantidad;
+      resumen.total += o.cantidad;
+      for (let p in o.productos) {
+        resumen.productos[p] = (resumen.productos[p] || 0) + o.productos[p];
+      }
+      const vars = o.variantes || {};
+      Object.keys(vars).forEach(base=>{
+        resumen.variantes[base] = resumen.variantes[base] || {};
+        Object.keys(vars[base]).forEach(vn=>{
+          resumen.variantes[base][vn] = (resumen.variantes[base][vn] || 0) + vars[base][vn];
+        });
       });
-    });
+    }
   });
 
   let resumenTbody = document.querySelector('#tablaResumen tbody');
@@ -880,8 +936,39 @@ function actualizarTabla() {
 function eliminarOrden(fecha) {
   if (!confirm('¿Estás seguro de eliminar esta orden?')) return;
   let ordenes = cargarTabla();
-  ordenes = ordenes.filter(o => o.fecha !== fecha);
+  const idx = ordenes.findIndex(o => o.fecha === fecha);
+  if (idx === -1) return;
+  const [eliminada] = ordenes.splice(idx, 1);
   guardarTabla(ordenes);
+
+  if (eliminada && esCuentaAbiertaOrden(eliminada) && eliminada.cuenta) {
+    const cuentas = cargarCuentas();
+    const cuentaData = cuentas[eliminada.cuenta];
+    if (cuentaData) {
+      cuentaData.productos = cuentaData.productos || {};
+      cuentaData.variantes = cuentaData.variantes || {};
+      Object.keys(eliminada.productos || {}).forEach(nombre => {
+        cuentaData.productos[nombre] = (cuentaData.productos[nombre] || 0) - (eliminada.productos[nombre] || 0);
+        if (cuentaData.productos[nombre] <= 0) delete cuentaData.productos[nombre];
+      });
+      const varsEliminadas = eliminada.variantes || {};
+      Object.keys(varsEliminadas).forEach(base => {
+        cuentaData.variantes[base] = cuentaData.variantes[base] || {};
+        Object.keys(varsEliminadas[base]).forEach(varianteNombre => {
+          cuentaData.variantes[base][varianteNombre] = (cuentaData.variantes[base][varianteNombre] || 0) - varsEliminadas[base][varianteNombre];
+          if (cuentaData.variantes[base][varianteNombre] <= 0) delete cuentaData.variantes[base][varianteNombre];
+        });
+        if (Object.keys(cuentaData.variantes[base]).length === 0) delete cuentaData.variantes[base];
+      });
+      const productosRestantes = Object.keys(cuentaData.productos || {});
+      const variantesRestantes = Object.keys(cuentaData.variantes || {});
+      if (productosRestantes.length === 0 && variantesRestantes.length === 0) {
+        delete cuentas[eliminada.cuenta];
+      }
+      guardarCuentas(cuentas);
+      renderCuentas();
+    }
+  }
   actualizarTabla();
 }
 
@@ -900,7 +987,6 @@ function recogerSeleccionVariantes() {
   return out;
 }
 function enviar() {
-  const PRODS = cargarProductos();
   const totalNum = +document.getElementById('total').innerText.replace(/[^\d]/g, '');
   if (totalNum == 0) { alert('Añade productos'); return; }
 
@@ -910,18 +996,15 @@ function enviar() {
   const cliente = (document.getElementById('cliente').value || '').trim();
 
   let ordenes = cargarTabla();
-  const entregas = {};
-  for (let nombre in productosVendidos) entregas[nombre] = false;
-
-  ordenes.push({
-    fecha: new Date().toLocaleString(),
+  ordenes.push(crearOrdenRegistro({
     cliente,
-    cantidad: calcularTotalDesdeMapa(productosVendidos, PRODS).total,
-    metodo,
     productos: productosVendidos,
     variantes: variantesVendidas,
-    entregas
-  });
+    metodo,
+    estado: 'pagado',
+    cuenta: null,
+    entregasServidas: false
+  }));
 
   guardarTabla(ordenes);
   actualizarTabla();
@@ -968,7 +1051,19 @@ function anadirACuentaAbierta() {
   });
 
   guardarCuentas(cuentas);
+  let ordenes = cargarTabla();
+  ordenes.push(crearOrdenRegistro({
+    cliente: nombre,
+    productos: base,
+    variantes: vars,
+    metodo: 'Cuenta abierta',
+    estado: 'cuenta_abierta',
+    cuenta: nombre,
+    entregasServidas: false
+  }));
+  guardarTabla(ordenes);
   renderCuentas();
+  actualizarTabla();
   borrar();
 }
 function nombreSugerido() {
@@ -1050,6 +1145,18 @@ function anadirSeleccionA(nombre) {
 
   guardarCuentas(cuentas);
   renderCuentas();
+  let ordenes = cargarTabla();
+  ordenes.push(crearOrdenRegistro({
+    cliente: nombre,
+    productos: base,
+    variantes: vars,
+    metodo: 'Cuenta abierta',
+    estado: 'cuenta_abierta',
+    cuenta: nombre,
+    entregasServidas: false
+  }));
+  guardarTabla(ordenes);
+  actualizarTabla();
   borrar();
 }
 
@@ -1065,19 +1172,18 @@ function cerrarCuenta(nombre) {
 
   const productosMap = data.productos;
   const variantesMap = data.variantes || {};
-  const entregas = {};
-  Object.keys(productosMap).forEach(n => entregas[n] = true); // todo servido
 
-  const ordenes = cargarTabla();
-  ordenes.push({
-    fecha: new Date().toLocaleString(),
+  let ordenes = cargarTabla();
+  ordenes = ordenes.filter(o => !(esCuentaAbiertaOrden(o) && o.cuenta === nombre));
+  ordenes.push(crearOrdenRegistro({
     cliente: nombre,
-    cantidad: calcularTotalDesdeMapa(productosMap, cargarProductos()).total,
-    metodo,
     productos: productosMap,
     variantes: variantesMap,
-    entregas
-  });
+    metodo,
+    estado: 'pagado',
+    cuenta: null,
+    entregasServidas: true
+  }));
   guardarTabla(ordenes);
 
   delete cuentas[nombre];
@@ -1151,12 +1257,14 @@ function cerrarCaja() {
   if (!confirm("¿Seguro que quieres cerrar la caja? Se enviará un resumen al correo y se eliminarán los datos actuales (las Cuentas abiertas no se tocan).")) return;
 
   const ordenes = cargarTabla();
+  const pagadas = ordenes.filter(o => !esCuentaAbiertaOrden(o));
+  const pendientes = ordenes.filter(o => esCuentaAbiertaOrden(o));
   const fecha = new Date().toISOString().split('T')[0];
   const subject = `Ignis Latte - Cierre de caja ${fecha}`;
   const message = `Cierre automático generado el ${fecha}`;
 
   let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
-  ordenes.forEach(o => {
+  pagadas.forEach(o => {
     resumen[o.metodo] = (resumen[o.metodo] || 0) + o.cantidad;
     resumen.total += o.cantidad;
     for (let p in o.productos) {
@@ -1184,7 +1292,7 @@ function cerrarCaja() {
   }
 
   let tablaHistoricaTexto = "Fecha;Cliente;Cantidad;Método\n";
-  ordenes.forEach(o => {
+  pagadas.forEach(o => {
     tablaHistoricaTexto += `${o.fecha};${o.cliente || ''};${o.cantidad}₡;${o.metodo}\n`;
   });
 
@@ -1196,7 +1304,11 @@ function cerrarCaja() {
     email: "info@ignismundi.org"
   }).then(() => {
     alert("Correo enviado con éxito.");
-    localStorage.removeItem(STORAGE_KEYS.ordenes);
+    if (pendientes.length > 0) {
+      guardarTabla(pendientes);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.ordenes);
+    }
     actualizarTabla();
   }, (error) => {
     console.error(error);
