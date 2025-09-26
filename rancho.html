@@ -876,17 +876,17 @@ function actualizarResumen() {
   totalNodo.innerHTML = `<strong>Total: ${formatearColones(total)}₡</strong>`;
 
   if (total <= 0) {
-    sugerenciaCambio.innerHTML = '<strong>Cambio sugerido</strong><br><span class="muted">Añade productos para ver sugerencias.</span>';
+    sugerenciaCambio.innerHTML = '<strong>Cambio</strong><br><span class="muted">Añade productos para ver sugerencias.</span>';
   } else {
     const opciones = CAMBIOS_SUGERIDOS.filter(monto => monto >= total);
     if (!opciones.length) {
-      sugerenciaCambio.innerHTML = '<strong>Cambio sugerido</strong><br><span class="muted">Sin opciones disponibles.</span>';
+      sugerenciaCambio.innerHTML = '<strong>Cambio</strong><br><span class="muted">Sin opciones disponibles.</span>';
     } else {
       const items = opciones.map(monto => {
         const cambio = monto - total;
         return `<li>${formatearColones(monto)}₡ → ${formatearColones(cambio)}₡</li>`;
       }).join('');
-      sugerenciaCambio.innerHTML = `<strong>Cambio sugerido</strong><ul>${items}</ul>`;
+      sugerenciaCambio.innerHTML = `<strong>Cambio</strong><ul>${items}</ul>`;
     }
   }
 }
