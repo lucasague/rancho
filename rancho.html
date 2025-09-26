@@ -39,6 +39,9 @@
     display:flex;
     flex-direction:column;
     gap:12px;
+    max-height:calc(100vh - 120px);
+    overflow:auto;
+    padding-right:4px;
   }
 
   .panel-nuevo-pedido {
@@ -232,7 +235,6 @@
         <div class="grid" id="productosGrid"></div>
 
         <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
-
         <div class="metodos-acciones">
           <div id="metodoPago" class="metodo-pago">
             <label class="pago-label active"><input type="radio" name="pago" value="efectivo" checked>Efectivo</label>
@@ -250,7 +252,6 @@
         <div id="resumenOrden"><strong>Resumen de Orden:</strong></div>
         <div id="total"><strong>Total: 0₡</strong></div>
       </div>
-
       <section id="cuentasPanel">
         <div id="cuentasHeader">
           <h2 style="margin:0;font-size:16px;">Cuentas abiertas</h2>
