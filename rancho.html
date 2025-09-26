@@ -8,6 +8,146 @@
   /* Base mínimo; puedes sobreescribir desde fuera */
   body { font-family: Arial, sans-serif; }
 
+  .pendientes-btn {
+    position:fixed;
+    top:16px;
+    right:16px;
+    z-index:2200;
+    padding:10px 18px;
+    margin:0;
+    border-radius:999px;
+    background:#3949ab;
+    color:#fff;
+    border:none;
+    font-weight:bold;
+    box-shadow:0 4px 14px rgba(0,0,0,0.25);
+    cursor:pointer;
+  }
+  .pendientes-btn:hover { background:#283593; }
+
+  .pendientes-overlay {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.35);
+    display:none;
+    align-items:flex-start;
+    justify-content:flex-end;
+    padding:24px;
+    z-index:3000;
+  }
+  .pendientes-overlay.active { display:flex; }
+  .pendientes-dialog {
+    width:min(420px, 90vw);
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 12px 32px rgba(0,0,0,0.35);
+    padding:18px;
+    max-height:80vh;
+    overflow:hidden;
+  }
+  .pendientes-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .pendientes-close {
+    background:none;
+    border:none;
+    font-size:22px;
+    cursor:pointer;
+    line-height:1;
+    color:#555;
+  }
+  .pendientes-tabs {
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .pendientes-tab {
+    flex:1;
+    padding:8px 12px;
+    border:1px solid #c5cae9;
+    border-radius:8px;
+    background:#e8eaf6;
+    cursor:pointer;
+    font-weight:bold;
+  }
+  .pendientes-tab.active {
+    background:#3949ab;
+    color:#fff;
+    border-color:#3949ab;
+  }
+  .pendientes-panes {
+    overflow-y:auto;
+    max-height:calc(80vh - 110px);
+  }
+  .pendientes-pane[hidden] { display:none; }
+  .pendiente-card {
+    border:1px solid #e0e0e0;
+    border-radius:10px;
+    padding:10px 12px;
+    background:#fafafa;
+    margin-bottom:10px;
+  }
+  .pendiente-card-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .pendiente-card-header .header-left {
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .pendientes-icono {
+    font-size:24px;
+    line-height:1;
+  }
+  .pendientes-total {
+    font-size:13px;
+    color:#3949ab;
+    font-weight:bold;
+  }
+  .pendientes-list {
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .pendientes-list li {
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    font-size:13px;
+  }
+  .pendientes-list li .fila-principal {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .pendientes-variantes {
+    font-size:12px;
+    color:#555;
+    margin-left:4px;
+  }
+  .pendientes-fecha {
+    font-size:11px;
+    color:#888;
+    display:block;
+  }
+  .pendientes-vacio {
+    text-align:center;
+    color:#666;
+    padding:24px 0;
+  }
+
   /* Inputs/controles con fondo transparente */
   input, select, textarea {
     background: transparent;
@@ -332,6 +472,8 @@
 </head>
 <body>
 
+<button type="button" id="verPendientesBtn" class="pendientes-btn">Pendientes</button>
+
 <!-- TABS -->
 <div class="tabs">
   <button id="tabProductosBtn" class="tab-btn" onclick="mostrarTab('productos')">Productos</button>
@@ -397,6 +539,23 @@
     </div>
   </div>
 </section>
+
+<div id="pendientesOverlay" class="pendientes-overlay" role="dialog" aria-modal="true" aria-labelledby="pendientesTitulo" aria-hidden="true">
+  <div class="pendientes-dialog">
+    <div class="pendientes-header">
+      <h2 id="pendientesTitulo" style="margin:0; font-size:18px;">Productos pendientes</h2>
+      <button type="button" class="pendientes-close" onclick="cerrarPendientes()" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="pendientes-tabs">
+      <button type="button" class="pendientes-tab active" data-tab="cliente" onclick="cambiarTabPendientes('cliente')">Por cliente</button>
+      <button type="button" class="pendientes-tab" data-tab="producto" onclick="cambiarTabPendientes('producto')">Por producto</button>
+    </div>
+    <div class="pendientes-panes">
+      <div id="pendientesPorCliente" class="pendientes-pane"></div>
+      <div id="pendientesPorProducto" class="pendientes-pane" hidden></div>
+    </div>
+  </div>
+</div>
 
 <!-- TAB: PRODUCTOS (editor) -->
 <section id="tabProductos" class="tab-content" style="display:none;">
@@ -593,6 +752,7 @@ function formatearColones(valor) {
 /* =================== PEDIDOS: selección con variantes =================== */
 let productosNodos = [];              // nodos de la grilla
 let seleccionActual = {};             // { [producto]: { total:number, variantes: { [var]: number } } }
+let pendientesData = { porCliente: [], porProducto: [] };
 
 function crearProductos() {
   const grid = document.getElementById('productosGrid');
@@ -934,9 +1094,12 @@ function toggleEntregaMaestro(fecha) {
 
 function actualizarTabla() {
   const PRODS = cargarProductos();
+  const prodMap = new Map(PRODS.map(p => [p.nombre, p]));
   let ordenes = cargarTabla();
   let tbody = document.querySelector('#tabla tbody');
   let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
+  const pendientesCliente = new Map();
+  const pendientesProducto = new Map();
   tbody.innerHTML = '';
 
   ordenes.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).forEach(o => {
@@ -964,6 +1127,34 @@ function actualizarTabla() {
         const nombreProducto = l.tieneIcono
           ? ''
           : `<span class="productos-nombre">${html(l.nombre)}</span>`;
+        const prodInfo = prodMap.get(l.nombre);
+        if (!o.entregas[l.nombre]) {
+          const clienteNombre = (o.cliente || '').trim() || 'Sin nombre';
+          const cantidadPendiente = l.cantidad || 0;
+          const iconoProd = prodInfo?.icono || '';
+          const variantesPendientes = l.variantes ? { ...l.variantes } : null;
+
+          if (!pendientesCliente.has(clienteNombre)) pendientesCliente.set(clienteNombre, []);
+          pendientesCliente.get(clienteNombre).push({
+            nombre: l.nombre,
+            cantidad: cantidadPendiente,
+            icono: iconoProd,
+            variantes: variantesPendientes,
+            fecha: o.fecha
+          });
+
+          if (!pendientesProducto.has(l.nombre)) {
+            pendientesProducto.set(l.nombre, { nombre: l.nombre, icono: iconoProd, total: 0, clientes: [] });
+          }
+          const prodPendiente = pendientesProducto.get(l.nombre);
+          prodPendiente.total += cantidadPendiente;
+          prodPendiente.clientes.push({
+            cliente: clienteNombre,
+            cantidad: cantidadPendiente,
+            fecha: o.fecha,
+            variantes: variantesPendientes
+          });
+        }
         productosHTML += `
           <div class="productos-linea">
             <input type="checkbox" class="pendiente-checkbox" ${checked}
@@ -1016,6 +1207,20 @@ function actualizarTabla() {
       resumenTbody.innerHTML += `<tr><td class="indentado">— ${html(p)} (variantes)</td><td>${detalle}</td></tr>`;
     }
   }
+
+  const pendientesPorCliente = Array.from(pendientesCliente.entries()).map(([cliente, items]) => ({
+    cliente,
+    total: items.reduce((sum, item) => sum + (item.cantidad || 0), 0),
+    items: items.slice().sort((a, b) => a.nombre.localeCompare(b.nombre))
+  })).sort((a, b) => a.cliente.localeCompare(b.cliente));
+
+  const pendientesPorProducto = Array.from(pendientesProducto.values()).map(entry => ({
+    ...entry,
+    clientes: entry.clientes.slice().sort((a, b) => a.cliente.localeCompare(b.cliente))
+  })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  pendientesData = { porCliente: pendientesPorCliente, porProducto: pendientesPorProducto };
+  actualizarPendientesUI();
 }
 
 function eliminarOrden(fecha) {
@@ -1050,6 +1255,101 @@ function cancelarEliminarTodos() {
 function confirmarEliminarTodos() {
   eliminarTodasOrdenes();
   cancelarEliminarTodos();
+}
+
+function variantesPendientesTexto(vars) {
+  if (!vars) return '';
+  const claves = Object.keys(vars);
+  if (!claves.length) return '';
+  const cuerpo = claves.map(v => `${html(v)}: ${vars[v]}`).join(' · ');
+  return `<span class="pendientes-variantes">[${cuerpo}]</span>`;
+}
+
+function actualizarPendientesUI() {
+  const contCliente = document.getElementById('pendientesPorCliente');
+  const contProducto = document.getElementById('pendientesPorProducto');
+
+  if (contCliente) {
+    if (!pendientesData.porCliente.length) {
+      contCliente.innerHTML = '<p class="pendientes-vacio">No hay productos pendientes por servir.</p>';
+    } else {
+      contCliente.innerHTML = pendientesData.porCliente.map(entry => {
+        const lista = entry.items.map(item => {
+          const icono = item.icono ? `<span class="pendientes-icono">${html(item.icono)}</span>` : '';
+          const variantes = variantesPendientesTexto(item.variantes);
+          const fecha = item.fecha ? `<span class="pendientes-fecha">Pedido: ${html(item.fecha)}</span>` : '';
+          return `<li><div class="fila-principal">${icono}<span><strong>${item.cantidad}</strong> × ${html(item.nombre)}</span>${variantes}</div>${fecha}</li>`;
+        }).join('');
+        return `
+          <article class="pendiente-card">
+            <div class="pendiente-card-header">
+              <div class="header-left"><span><strong>${html(entry.cliente)}</strong></span></div>
+              <span class="pendientes-total">${entry.total} pendiente${entry.total === 1 ? '' : 's'}</span>
+            </div>
+            <ul class="pendientes-list">${lista}</ul>
+          </article>
+        `;
+      }).join('');
+    }
+  }
+
+  if (contProducto) {
+    if (!pendientesData.porProducto.length) {
+      contProducto.innerHTML = '<p class="pendientes-vacio">No hay productos pendientes por servir.</p>';
+    } else {
+      contProducto.innerHTML = pendientesData.porProducto.map(prod => {
+        const icono = prod.icono ? `<span class="pendientes-icono">${html(prod.icono)}</span>` : '';
+        const clientesDetalle = prod.clientes.map(cli => {
+          const variantes = variantesPendientesTexto(cli.variantes);
+          const fecha = cli.fecha ? `<span class="pendientes-fecha">Pedido: ${html(cli.fecha)}</span>` : '';
+          const clienteNombre = (cli.cliente || 'Sin nombre');
+          const unidades = cli.cantidad === 1 ? 'unidad' : 'unidades';
+          return `<li><div class="fila-principal"><span><strong>${cli.cantidad}</strong> ${unidades}</span><span>para ${html(clienteNombre)}</span>${variantes}</div>${fecha}</li>`;
+        }).join('');
+        return `
+          <article class="pendiente-card">
+            <div class="pendiente-card-header">
+              <div class="header-left">${icono}<span><strong>${html(prod.nombre)}</strong></span></div>
+              <span class="pendientes-total">${prod.total} pendiente${prod.total === 1 ? '' : 's'}</span>
+            </div>
+            <ul class="pendientes-list">${clientesDetalle}</ul>
+          </article>
+        `;
+      }).join('');
+    }
+  }
+}
+
+function abrirPendientes(tab = 'cliente') {
+  const overlay = document.getElementById('pendientesOverlay');
+  if (!overlay) return;
+  actualizarPendientesUI();
+  overlay.classList.add('active');
+  overlay.setAttribute('aria-hidden', 'false');
+  cambiarTabPendientes(tab);
+  const closeBtn = overlay.querySelector('.pendientes-close');
+  if (closeBtn) closeBtn.focus();
+}
+
+function cerrarPendientes() {
+  const overlay = document.getElementById('pendientesOverlay');
+  if (!overlay || !overlay.classList.contains('active')) return;
+  overlay.classList.remove('active');
+  overlay.setAttribute('aria-hidden', 'true');
+  const btn = document.getElementById('verPendientesBtn');
+  if (btn) btn.focus();
+}
+
+function cambiarTabPendientes(tab) {
+  const overlay = document.getElementById('pendientesOverlay');
+  if (!overlay) return;
+  const tabs = overlay.querySelectorAll('.pendientes-tab');
+  tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+  const clientePane = document.getElementById('pendientesPorCliente');
+  const productoPane = document.getElementById('pendientesPorProducto');
+  if (clientePane) clientePane.hidden = tab !== 'cliente';
+  if (productoPane) productoPane.hidden = tab !== 'producto';
+  overlay.dataset.activeTab = tab;
 }
 
 /* Enviar / recoger selección */
@@ -1371,8 +1671,23 @@ function cerrarCaja() {
   });
 }
 
+const btnPendientes = document.getElementById('verPendientesBtn');
+if (btnPendientes) {
+  btnPendientes.addEventListener('click', () => abrirPendientes('cliente'));
+}
+
+const overlayPendientes = document.getElementById('pendientesOverlay');
+if (overlayPendientes) {
+  overlayPendientes.addEventListener('click', (event) => {
+    if (event.target === overlayPendientes) cerrarPendientes();
+  });
+}
+
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') cancelarEliminarTodos();
+  if (event.key === 'Escape') {
+    cancelarEliminarTodos();
+    cerrarPendientes();
+  }
 });
 
 const overlayEliminarTodos = document.getElementById('warningEliminarTodos');
