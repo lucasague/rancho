@@ -189,6 +189,12 @@
   }
 
   /* Grid productos */
+  .productos-grid-wrapper {
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:start;
+    gap:16px;
+  }
   .grid {
     display:grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -226,6 +232,36 @@
     transition:background 0.2s ease;
   }
   .eliminar-todos-btn:hover { background:#b71c1c; }
+  .limpiar-btn {
+    width:108px;
+    height:108px;
+    border-radius:50%;
+    border:none;
+    background:#e0e0e0;
+    color:#424242;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+    margin:0;
+    padding:0;
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .limpiar-btn:hover { transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,0.2); }
+  .limpiar-btn:active { transform:translateY(0); box-shadow:0 2px 6px rgba(0,0,0,0.18); }
+  .limpiar-icono {
+    font-size:36px;
+    line-height:1;
+  }
+  .limpiar-texto {
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
   table { margin:16px auto; width:100%; border-collapse:collapse; }
   th, td { border:1px solid #ddd; padding:8px; vertical-align: middle; text-align:left; }
   .resumen-panel {
@@ -314,11 +350,6 @@
     to { transform:scale(1); opacity:1; }
   }
 
-  /* Método de pago */
-  .pago-label input[type="radio"] { display:none; }
-  .pago-label { display:inline-block; padding:10px 20px; margin:5px; cursor:pointer; border:2px solid #ccc; border-radius:6px; }
-  .pago-label.active { border-color:#007bff; background-color:#e0f0ff; font-weight:bold; }
-
   .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
 
   tr.servido { opacity:0.35; }
@@ -358,7 +389,7 @@
   .metodos-acciones {
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:18px;
   }
   .metodo-pago {
     display:flex;
@@ -366,11 +397,30 @@
     flex-wrap:wrap;
     justify-content:flex-start;
     align-items:center;
+    justify-content:center;
   }
-  .metodo-pago .pago-label {
-    flex:1 1 140px;
+  .metodo-toggle {
+    display:flex;
+    gap:6px;
+    background:#e5e5e5;
+    border-radius:999px;
+    padding:6px;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,0.08);
+    width:min(320px, 100%);
+  }
+  .metodo-toggle input[type="radio"] {
+    display:none;
+  }
+  .metodo-toggle label {
+    flex:1;
     text-align:center;
-    padding:7px 20px;
+    padding:10px 0;
+    border-radius:999px;
+    font-weight:600;
+    letter-spacing:0.4px;
+    cursor:pointer;
+    color:#555;
+    transition:background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
   .metodo-pago .cuenta-abierta-btn {
     flex:0 0 auto;
@@ -381,11 +431,22 @@
     align-items:center;
     gap:12px;
     position:relative;
+  #pagoEfectivo:checked + label {
+    background:#d9f2d9;
+    color:#1b5e20;
+    box-shadow:0 4px 12px rgba(27,94,32,0.25);
   }
-  .metodos-acciones button {
-    margin:0;
+  #pagoSinpe:checked + label {
+    background:#e0ebff;
+    color:#1b3c8a;
+    box-shadow:0 4px 12px rgba(27,60,138,0.25);
   }
-
+  .acciones-circulares {
+    display:flex;
+    justify-content:center;
+    gap:22px;
+    flex-wrap:wrap;
+  }
   .accion-redonda {
     width:60px;
     height:60px;
@@ -479,6 +540,13 @@
     .productos-editor {
       margin-left:0;
       width:100%;
+    }
+    .productos-grid-wrapper {
+      grid-template-columns:1fr;
+      justify-items:center;
+    }
+    .limpiar-btn {
+      justify-self:center;
     }
   }
 
@@ -719,14 +787,14 @@
 
 <!-- TABS -->
 <div class="tabs">
-  <button id="tabAperturaBtn" class="tab-btn" onclick="mostrarTab('apertura')">Apertura</button>
+  <button id="tabAperturaBtn" class="tab-btn active" onclick="mostrarTab('apertura')">Apertura</button>
   <button id="tabProductosBtn" class="tab-btn" onclick="mostrarTab('productos')">Productos</button>
-  <button id="tabPedidosBtn" class="tab-btn active" onclick="mostrarTab('pedidos')">Pedidos</button>
+  <button id="tabPedidosBtn" class="tab-btn" onclick="mostrarTab('pedidos')">Pedidos</button>
   <button id="tabCierreBtn" class="tab-btn" onclick="mostrarTab('cierre')">Cierre</button>
 </div>
 
 <!-- TAB: APERTURA -->
-<section id="tabApertura" class="tab-content" style="display:none;">
+<section id="tabApertura" class="tab-content">
   <div class="panel-tercio">
     <div class="apertura-card">
       <h2>Apertura de caja</h2>
@@ -821,8 +889,8 @@
   </div>
 </section>
 
-<!-- TAB: PEDIDOS (por defecto activa) -->
-<section id="tabPedidos" class="tab-content">
+<!-- TAB: PEDIDOS -->
+<section id="tabPedidos" class="tab-content" style="display:none;">
   <div class="pedidos-layout">
     <div class="pedidos-left">
       <table id="tabla">
@@ -843,7 +911,13 @@
 
     <div class="pedidos-right">
       <div class="panel-nuevo-pedido">
-        <div class="grid" id="productosGrid"></div>
+        <div class="productos-grid-wrapper">
+          <div class="grid" id="productosGrid"></div>
+          <button type="button" class="limpiar-btn" onclick="borrar()">
+            <span class="limpiar-icono" aria-hidden="true">🗑️</span>
+            <span class="limpiar-texto">Borrar</span>
+          </button>
+        </div>
 
         <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
         <div class="metodos-acciones">
@@ -856,6 +930,17 @@
           <div class="botones-acciones">
             <button class="boton-enviar accion-redonda" onclick="enviar()">Enviar</button>
             <button class="accion-redonda boton-limpiar-flotante" onclick="borrar()" aria-label="Limpiar selección">Limpiar</button>
+            <div class="metodo-toggle" role="radiogroup" aria-label="Método de pago">
+              <input type="radio" id="pagoEfectivo" name="pago" value="efectivo" checked>
+              <label for="pagoEfectivo">Efectivo</label>
+              <input type="radio" id="pagoSinpe" name="pago" value="sinpe">
+              <label for="pagoSinpe">Sinpe</label>
+            </div>
+          </div>
+
+          <div class="acciones-circulares">
+            <button type="button" class="accion-circular accion-enviar" onclick="enviar()">Enviar</button>
+            <button type="button" class="accion-circular accion-pendiente" onclick="anadirACuentaAbierta()">Pendiente</button>
           </div>
         </div>
 
@@ -1205,7 +1290,7 @@ const TAB_INFOS = [
   { name: 'cierre', contentId: 'tabCierre', buttonId: 'tabCierreBtn', onShow: () => actualizarPanelCierre() }
 ];
 function mostrarTab(nombre) {
-  const objetivo = nombre || 'pedidos';
+  const objetivo = nombre || 'apertura';
   TAB_INFOS.forEach(tab => {
     const activo = tab.name === objetivo;
     const contenido = document.getElementById(tab.contentId);
@@ -1533,15 +1618,6 @@ function abrirRadial(nombre, punto, anchorEl) {
   overlay.addEventListener('click', (e)=>{ if (e.target === overlay) cerrarOverlay(); });
 }
 
-/* Pago UI */
-document.addEventListener('click', (ev) => {
-  const lbl = ev.target.closest('#metodoPago .pago-label');
-  if (!lbl) return;
-  document.querySelectorAll('#metodoPago .pago-label').forEach(l => l.classList.remove('active'));
-  lbl.classList.add('active');
-  const inp = lbl.querySelector('input'); if (inp) inp.checked = true;
-});
-
 /* Resumen de pedido (incluye variantes) */
 function actualizarResumen() {
   const PRODS = cargarProductos();
@@ -1731,6 +1807,7 @@ function actualizarTabla() {
           const cantidadPendiente = l.cantidad || 0;
           const iconoProd = prodInfo?.icono || '';
           const variantesPendientes = l.variantes ? { ...l.variantes } : null;
+          const fechaValor = new Date(o.fecha).getTime() || Number.POSITIVE_INFINITY;
 
           if (!pendientesCliente.has(clienteNombre)) pendientesCliente.set(clienteNombre, []);
           pendientesCliente.get(clienteNombre).push({
@@ -1738,19 +1815,22 @@ function actualizarTabla() {
             cantidad: cantidadPendiente,
             icono: iconoProd,
             variantes: variantesPendientes,
-            fecha: o.fecha
+            fecha: o.fecha,
+            fechaValor
           });
 
           if (!pendientesProducto.has(l.nombre)) {
-            pendientesProducto.set(l.nombre, { nombre: l.nombre, icono: iconoProd, total: 0, clientes: [] });
+            pendientesProducto.set(l.nombre, { nombre: l.nombre, icono: iconoProd, total: 0, clientes: [], primeraFecha: Number.POSITIVE_INFINITY });
           }
           const prodPendiente = pendientesProducto.get(l.nombre);
           prodPendiente.total += cantidadPendiente;
+          prodPendiente.primeraFecha = Math.min(prodPendiente.primeraFecha || Number.POSITIVE_INFINITY, fechaValor);
           prodPendiente.clientes.push({
             cliente: clienteNombre,
             cantidad: cantidadPendiente,
             fecha: o.fecha,
-            variantes: variantesPendientes
+            variantes: variantesPendientes,
+            fechaValor
           });
         }
         productosHTML += `
@@ -1795,14 +1875,38 @@ function actualizarTabla() {
     }
   });
 
-  pendientesData = {
-    porCliente: normalizarPendientesPorCliente(pendientesCliente),
-    porProducto: normalizarPendientesPorProducto(pendientesProducto)
-  };
-  const overlay = document.getElementById('pendientesOverlay');
-  if (overlay && overlay.classList.contains('active')) {
-    actualizarPendientesUI();
-  }
+  const pendientesPorCliente = Array.from(pendientesCliente.entries()).map(([cliente, items]) => {
+    const itemsOrdenados = items.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.nombre.localeCompare(b.nombre));
+    const primeraFecha = itemsOrdenados.length ? itemsOrdenados[0].fechaValor : Number.POSITIVE_INFINITY;
+    return {
+      cliente,
+      total: items.reduce((sum, item) => sum + (item.cantidad || 0), 0),
+      items: itemsOrdenados,
+      primeraFecha
+    };
+  }).sort((a, b) => (a.primeraFecha - b.primeraFecha) || a.cliente.localeCompare(b.cliente));
+
+  const pendientesPorProducto = Array.from(pendientesProducto.values()).map(entry => {
+    const clientesOrdenados = entry.clientes.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.cliente.localeCompare(b.cliente));
+    const primeraFecha = clientesOrdenados.length ? clientesOrdenados[0].fechaValor : entry.primeraFecha;
+    return {
+      nombre: entry.nombre,
+      icono: entry.icono,
+      total: entry.total,
+      variante: entry.variante,
+      clientes: clientesOrdenados,
+      primeraFecha
+    };
+  }).sort((a, b) => {
+    const fechaDiff = a.primeraFecha - b.primeraFecha;
+    if (fechaDiff !== 0) return fechaDiff;
+    const nombreDiff = a.nombre.localeCompare(b.nombre);
+    if (nombreDiff !== 0) return nombreDiff;
+    return (a.variante || '').localeCompare(b.variante || '');
+  });
+
+  pendientesData = { porCliente: pendientesPorCliente, porProducto: pendientesPorProducto };
+  actualizarPendientesUI();
 
   let resumenTbody = document.querySelector('#tablaResumen tbody');
   resumenTbody.innerHTML = '';
@@ -2485,11 +2589,13 @@ if (cierreInput) {
 actualizarResumenApertura();
 actualizarPanelCierre();
 
-/* =================== ARRANQUE (Pedidos por defecto) =================== */
+/* =================== ARRANQUE (Datos base) =================== */
 crearProductos();
 actualizarResumen();
 actualizarTabla();
 renderCuentas();
+
+mostrarTab('apertura');
 </script>
 </body>
 </html>
