@@ -156,6 +156,221 @@
     transition:background 0.2s ease;
   }
   .pendiente-completar:hover { background:#1b5e20; }
+
+  .sinpe-overlay {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:10000;
+  }
+  .sinpe-overlay.active {
+    display:flex;
+  }
+  .sinpe-dialog {
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.25);
+    width:min(960px, 100%);
+    max-height:90vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .sinpe-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 20px;
+    border-bottom:1px solid #e0e0e0;
+    background:#0d47a1;
+    color:#fff;
+  }
+  .sinpe-header h2 {
+    margin:0;
+    font-size:20px;
+  }
+  .sinpe-close {
+    background:transparent;
+    border:none;
+    font-size:26px;
+    color:#fff;
+    cursor:pointer;
+  }
+  .sinpe-body {
+    padding:20px;
+    overflow:auto;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+  .sinpe-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+    gap:20px;
+  }
+  .sinpe-column {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .sinpe-column textarea {
+    min-height:160px;
+    resize:vertical;
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #b0bec5;
+    font-family:inherit;
+  }
+  .sinpe-column button {
+    align-self:flex-start;
+    padding:8px 16px;
+    border:none;
+    border-radius:20px;
+    background:#0d47a1;
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .sinpe-column button:hover {
+    background:#1565c0;
+  }
+  .sinpe-ayuda {
+    font-size:13px;
+    color:#455a64;
+  }
+  .sinpe-lista {
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .sinpe-ordenes {
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .sinpe-ordenes li {
+    font-size:13px;
+    color:#37474f;
+    padding:4px 0;
+    border-bottom:1px dashed #c5cae9;
+  }
+  .sinpe-ordenes li:last-child {
+    border-bottom:none;
+  }
+  .sinpe-card {
+    border:1px solid #cfd8dc;
+    border-radius:10px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    background:#fafbff;
+  }
+  .sinpe-card header {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .sinpe-card h3 {
+    margin:0;
+    font-size:18px;
+  }
+  .sinpe-detalle {
+    font-size:13px;
+    color:#455a64;
+  }
+  .sinpe-mensaje {
+    font-size:14px;
+    background:#fff;
+    border-radius:8px;
+    border:1px solid #eceff1;
+    padding:10px;
+    white-space:pre-wrap;
+  }
+  .sinpe-card-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+  }
+  .sinpe-card-actions select {
+    min-width:200px;
+    padding:6px 10px;
+    border-radius:6px;
+    border:1px solid #b0bec5;
+  }
+  .sinpe-card-actions button {
+    padding:6px 12px;
+    border-radius:16px;
+    border:1px solid #b0bec5;
+    background:#eceff1;
+    cursor:pointer;
+  }
+  .sinpe-card-actions button.confirmar {
+    background:#2e7d32;
+    border-color:#2e7d32;
+    color:#fff;
+  }
+  .sinpe-card-actions button.peligro {
+    background:#c62828;
+    border-color:#c62828;
+    color:#fff;
+  }
+  .sinpe-card-actions button:hover {
+    filter:brightness(1.05);
+  }
+  .sinpe-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+    text-transform:uppercase;
+  }
+  .sinpe-badge--pendiente {
+    background:#fff3cd;
+    color:#795548;
+  }
+  .sinpe-badge--confirmado {
+    background:#c8e6c9;
+    color:#1b5e20;
+  }
+  .sinpe-card footer {
+    font-size:12px;
+    color:#607d8b;
+  }
+  .sinpe-coincidencias {
+    font-size:13px;
+    color:#2e7d32;
+  }
+  .sinpe-orden-pendiente {
+    color:#d84315;
+  }
+  @media (max-width: 600px) {
+    .sinpe-card-actions select {
+      min-width:unset;
+      flex:1 1 100%;
+    }
+    .sinpe-card-actions {
+      flex-direction:column;
+      align-items:stretch;
+    }
+    .sinpe-card-actions button {
+      width:100%;
+      justify-content:center;
+    }
+  }
   .pendientes-variantes {
     font-size:12px;
     color:#555;
@@ -518,6 +733,32 @@
     gap:14px;
     flex-wrap:wrap;
   }
+  .sinpe-sync {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding:10px 12px;
+    border:1px dashed #0d47a1;
+    border-radius:8px;
+    background:#eef4ff;
+  }
+  .sinpe-sync button {
+    align-self:flex-start;
+    padding:6px 12px;
+    border-radius:16px;
+    border:1px solid #0d47a1;
+    background:#0d47a1;
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .sinpe-sync button:hover {
+    background:#1565c0;
+    border-color:#1565c0;
+  }
+  .sinpe-sync .muted {
+    font-size:13px;
+  }
   #pagoEfectivo:checked + label {
     background:#d9f2d9;
     color:#1b5e20;
@@ -861,6 +1102,32 @@
   </div>
 </div>
 
+<div id="sinpeOverlay" class="sinpe-overlay" aria-hidden="true">
+  <div class="sinpe-dialog" role="dialog" aria-modal="true" aria-labelledby="sinpeTitulo">
+    <div class="sinpe-header">
+      <h2 id="sinpeTitulo" style="margin:0;">Conciliación de pagos Sinpe</h2>
+      <button type="button" class="sinpe-close" aria-label="Cerrar conciliador de Sinpe" onclick="cerrarSinpeOverlay()">×</button>
+    </div>
+    <div class="sinpe-body">
+      <div class="sinpe-grid">
+        <div class="sinpe-column">
+          <label for="sinpeMensajes" class="sinpe-ayuda"><strong>Pega aquí los SMS recibidos</strong> (uno por línea o separados por un espacio en blanco).</label>
+          <textarea id="sinpeMensajes" placeholder="SINPE MÓVIL: Has recibido 5 000,00 CRC de..."></textarea>
+          <button type="button" onclick="procesarMensajesSinpe()">Guardar SMS</button>
+          <p class="sinpe-ayuda">Los mensajes se guardan localmente. Se extraen montos, referencias y remitentes cuando es posible.</p>
+        </div>
+        <div class="sinpe-column">
+          <div class="sinpe-ayuda"><strong>Órdenes con método Sinpe pendientes:</strong></div>
+          <ul id="sinpeOrdenesPendientes" class="sinpe-ordenes"></ul>
+          <p class="sinpe-ayuda">Si se detecta una coincidencia única por monto, el sistema la vincula automáticamente.</p>
+        </div>
+      </div>
+      <div class="sinpe-ayuda"><strong>Pagos registrados</strong></div>
+      <div id="sinpePagosLista" class="sinpe-lista"></div>
+    </div>
+  </div>
+</div>
+
 <!-- TABS -->
 <div class="tabs">
   <button id="tabAperturaBtn" class="tab-btn active" onclick="mostrarTab('apertura')">Apertura</button>
@@ -1008,6 +1275,10 @@
             <button class="accion-redonda boton-enviar" onclick="enviar()">Enviar</button>
             <button class="accion-redonda boton-pendiente" onclick="anadirACuentaAbierta()">Pendiente</button>
           </div>
+          <div class="sinpe-sync">
+            <button type="button" onclick="abrirSinpeOverlay()">Conciliar pagos Sinpe</button>
+            <span class="muted">Pega los SMS recibidos para asociarlos con las órdenes Sinpe y marcar los pagos como confirmados.</span>
+          </div>
         </div>
 
         <div class="resumen-panel">
@@ -1128,7 +1399,8 @@ const STORAGE_KEYS = {
   productos: 'ignis_productos_v2', // v2 por variantes
   ordenes: 'ordenes_v2',
   cuentas: 'cuentas_abiertas_v2',
-  apertura: 'config_apertura_caja_v1'
+  apertura: 'config_apertura_caja_v1',
+  sinpe: 'sinpe_pagos_v1'
 };
 
 const PRECIO_COMBO = 999999; // tu valor actual
@@ -1184,6 +1456,83 @@ function guardarConfigApertura() {
     responsable: configApertura.responsable,
     fondo: configApertura.fondo
   }));
+}
+
+function cargarPagosSinpe() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEYS.sinpe) || '[]');
+    if (!Array.isArray(raw)) return [];
+    return raw.map(pago => ({
+      id: pago.id || generarIdSinpe(),
+      monto: Number.parseInt(pago.monto, 10) || 0,
+      referencia: pago.referencia ? String(pago.referencia).toUpperCase() : null,
+      remitente: pago.remitente ? String(pago.remitente) : null,
+      mensaje: pago.mensaje ? String(pago.mensaje) : '',
+      creadoEn: Number.isFinite(pago.creadoEn) ? Number(pago.creadoEn) : Date.now(),
+      ordenFecha: pago.ordenFecha ? String(pago.ordenFecha) : null
+    })).filter(p => p.monto > 0 && p.mensaje);
+  } catch {
+    return [];
+  }
+}
+
+function guardarPagosSinpe(pagos) {
+  if (!Array.isArray(pagos)) return;
+  localStorage.setItem(STORAGE_KEYS.sinpe, JSON.stringify(pagos));
+}
+
+function generarIdSinpe() {
+  return `sinpe_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizarMensajeSinpe(texto) {
+  return String(texto || '').replace(/\s+/g, ' ').trim();
+}
+
+function extraerDatosSinpeDesdeMensaje(texto) {
+  const limpio = normalizarMensajeSinpe(texto);
+  if (!limpio) return null;
+
+  const montos = [];
+  const montoRegex = /(?:₡|¢|CRC|COL|colones?)?\s*([\d.]{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\d{3,})/gi;
+  let match;
+  while ((match = montoRegex.exec(limpio)) !== null) {
+    const valor = parseColones(match[1]);
+    if (valor > 0) montos.push(valor);
+  }
+  const monto = montos.length ? Math.max(...montos) : 0;
+  if (!monto) return null;
+
+  const referenciaMatch = limpio.match(/ref(?:erencia)?[:\s-]*([A-Za-z0-9]+)/i);
+  const referencia = referenciaMatch ? referenciaMatch[1].toUpperCase() : null;
+
+  const remitenteMatch = limpio.match(/de\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]{3,40})/i);
+  let remitente = remitenteMatch ? remitenteMatch[1].trim() : null;
+  if (remitente) {
+    remitente = remitente.replace(/(colones?|crc|₡|ref.*)$/i, '').trim();
+    if (!remitente) remitente = null;
+  }
+
+  return {
+    monto,
+    referencia,
+    remitente,
+    mensaje: limpio
+  };
+}
+
+function dividirMensajesSinpe(raw) {
+  if (!raw) return [];
+  const texto = String(raw).trim();
+  if (!texto) return [];
+  let bloques = texto.split(/(?:\r?\n){2,}/).map(b => b.trim()).filter(Boolean);
+  if (bloques.length <= 1) {
+    bloques = texto.split(/\r?\n/).map(b => b.trim()).filter(Boolean);
+  }
+  if (bloques.length <= 1) {
+    bloques = texto.split(/\s{3,}/).map(b => b.trim()).filter(Boolean);
+  }
+  return bloques;
 }
 function parseColones(valor) {
   if (valor === null || valor === undefined) return 0;
@@ -1732,7 +2081,7 @@ function clonarVariantesMapa(vars) {
   return copia;
 }
 
-function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, metodo = 'efectivo', estado = 'pagado', cuenta = null, entregasServidas = false }) {
+function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, metodo = 'efectivo', estado = 'pagado', cuenta = null, entregasServidas = false, sinpeId = null }) {
   const productosCopia = clonarMapaProductos(productos);
   const variantesCopia = clonarVariantesMapa(variantes);
   const PRODS = cargarProductos();
@@ -1750,7 +2099,8 @@ function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, meto
     variantes: variantesCopia,
     entregas,
     estado,
-    cuenta
+    cuenta,
+    sinpeId: sinpeId || null
   };
 }
 
@@ -1811,6 +2161,8 @@ function marcarPendienteComoServido(fecha, nombreProducto) {
 function actualizarTabla() {
   const PRODS = cargarProductos();
   const prodMap = new Map(PRODS.map(p => [p.nombre, p]));
+  const pagosSinpe = cargarPagosSinpe();
+  const pagosSinpeMap = new Map(pagosSinpe.map(p => [p.id, p]));
   let ordenes = cargarTabla();
   let tbody = document.querySelector('#tabla tbody');
   let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
@@ -1855,6 +2207,15 @@ function actualizarTabla() {
     const estadoOrden = o.estado || 'pagado';
     const esCuentaAbierta = estadoOrden === 'cuenta_abierta';
     const metodoMostrar = esCuentaAbierta ? 'Cuenta abierta' : o.metodo;
+    let metodoHtml = html(metodoMostrar);
+    if (!esCuentaAbierta && o.metodo === 'sinpe') {
+      const pagoRelacionado = o.sinpeId ? pagosSinpeMap.get(o.sinpeId) : null;
+      const confirmado = pagoRelacionado && pagoRelacionado.ordenFecha === o.fecha;
+      const badge = confirmado
+        ? '<span class="sinpe-badge sinpe-badge--confirmado">Confirmado</span>'
+        : '<span class="sinpe-badge sinpe-badge--pendiente">Sin validar</span>';
+      metodoHtml = `Sinpe ${badge}`;
+    }
 
     const allServed = lineas.length > 0 && lineas.every(l => !!o.entregas[l.nombre]);
     const masterChecked = allServed ? 'checked' : '';
@@ -1933,7 +2294,7 @@ function actualizarTabla() {
       <td class="col-fecha">${html(o.fecha)}</td>
       <td>${html(o.cliente || '')}</td>
       <td>${o.cantidad}₡</td>
-      <td>${html(metodoMostrar)}</td>
+      <td>${metodoHtml}</td>
       <td>${productosHTML}</td>
       <td><button onclick="eliminarOrden('${jsEsc(o.fecha)}')">❌</button></td>
     `;
@@ -2002,6 +2363,7 @@ function actualizarTabla() {
     }
   }
 
+  renderPanelSinpe();
 }
 
 function eliminarOrden(fecha) {
@@ -2011,6 +2373,16 @@ function eliminarOrden(fecha) {
   if (idx === -1) return;
   const [eliminada] = ordenes.splice(idx, 1);
   guardarTabla(ordenes);
+
+  if (eliminada && eliminada.sinpeId) {
+    const pagos = cargarPagosSinpe();
+    const pago = pagos.find(p => p.id === eliminada.sinpeId);
+    if (pago) {
+      pago.ordenFecha = null;
+      guardarPagosSinpe(pagos);
+      renderPanelSinpe();
+    }
+  }
 
   if (eliminada && esCuentaAbiertaOrden(eliminada) && eliminada.cuenta) {
     const cuentas = cargarCuentas();
@@ -2044,6 +2416,18 @@ function eliminarOrden(fecha) {
 }
 
 function eliminarTodasOrdenes() {
+  const pagos = cargarPagosSinpe();
+  let cambio = false;
+  pagos.forEach(p => {
+    if (p.ordenFecha) {
+      p.ordenFecha = null;
+      cambio = true;
+    }
+  });
+  if (cambio) {
+    guardarPagosSinpe(pagos);
+    renderPanelSinpe();
+  }
   guardarTabla([]);
   actualizarTabla();
 }
@@ -2256,6 +2640,258 @@ document.addEventListener('click', event => {
   marcarPendienteComoServido(fecha, producto);
 });
 
+/* =================== SINPE (pagos desde SMS) =================== */
+function intentarConciliarPagosSinpe() {
+  let pagos = cargarPagosSinpe();
+  let ordenes = cargarTabla();
+  let huboCambios = false;
+
+  const pagosPorId = new Map(pagos.map(p => [p.id, p]));
+  ordenes.forEach(o => {
+    if (esCuentaAbiertaOrden(o) || o.metodo !== 'sinpe') return;
+    if (o.sinpeId && pagosPorId.has(o.sinpeId)) return;
+    o.sinpeId = null;
+  });
+
+  pagos.forEach(pago => {
+    if (pago.ordenFecha) {
+      const ordenAsociada = ordenes.find(o => o.fecha === pago.ordenFecha);
+      if (!ordenAsociada || ordenAsociada.metodo !== 'sinpe') {
+        pago.ordenFecha = null;
+        huboCambios = true;
+      } else if (ordenAsociada.sinpeId !== pago.id) {
+        ordenAsociada.sinpeId = pago.id;
+        huboCambios = true;
+      }
+      return;
+    }
+
+    const candidatos = ordenes.filter(o => !esCuentaAbiertaOrden(o) && o.metodo === 'sinpe' && !o.sinpeId && o.cantidad === pago.monto);
+    if (candidatos.length === 1) {
+      const orden = candidatos[0];
+      orden.sinpeId = pago.id;
+      pago.ordenFecha = orden.fecha;
+      huboCambios = true;
+    }
+  });
+
+  if (huboCambios) {
+    guardarPagosSinpe(pagos);
+    guardarTabla(ordenes);
+    actualizarTabla();
+  }
+}
+
+function procesarMensajesSinpe() {
+  const textarea = document.getElementById('sinpeMensajes');
+  if (!textarea) return;
+  const bloques = dividirMensajesSinpe(textarea.value || '');
+  if (!bloques.length) {
+    alert('No se detectaron mensajes válidos.');
+    return;
+  }
+
+  let pagos = cargarPagosSinpe();
+  let nuevos = 0;
+  let omitidos = 0;
+
+  bloques.forEach(texto => {
+    const datos = extraerDatosSinpeDesdeMensaje(texto);
+    if (!datos) {
+      omitidos++;
+      return;
+    }
+    const duplicado = pagos.some(p => p.mensaje === datos.mensaje || (datos.referencia && p.referencia && datos.referencia === p.referencia));
+    if (duplicado) {
+      omitidos++;
+      return;
+    }
+    pagos.push({
+      id: generarIdSinpe(),
+      monto: datos.monto,
+      referencia: datos.referencia,
+      remitente: datos.remitente,
+      mensaje: datos.mensaje,
+      creadoEn: Date.now(),
+      ordenFecha: null
+    });
+    nuevos++;
+  });
+
+  if (!nuevos) {
+    alert('Los SMS ya estaban registrados o no contienen montos válidos.');
+    return;
+  }
+
+  guardarPagosSinpe(pagos);
+  textarea.value = '';
+  intentarConciliarPagosSinpe();
+  renderPanelSinpe();
+
+  const mensaje = [`Se guardaron ${nuevos} pago${nuevos === 1 ? '' : 's'} Sinpe.`];
+  if (omitidos) mensaje.push(`${omitidos} mensaje${omitidos === 1 ? '' : 's'} se omitieron por duplicados o formato desconocido.`);
+  alert(mensaje.join(' '));
+}
+
+function actualizarVinculoPagoSinpe(idPago, fechaOrden) {
+  let pagos = cargarPagosSinpe();
+  let ordenes = cargarTabla();
+  const pago = pagos.find(p => p.id === idPago);
+  if (!pago) return;
+
+  if (pago.ordenFecha) {
+    const ordenPrev = ordenes.find(o => o.fecha === pago.ordenFecha);
+    if (ordenPrev) ordenPrev.sinpeId = null;
+    pago.ordenFecha = null;
+  }
+
+  if (fechaOrden) {
+    const orden = ordenes.find(o => o.fecha === fechaOrden);
+    if (!orden || orden.metodo !== 'sinpe') {
+      guardarPagosSinpe(pagos);
+      guardarTabla(ordenes);
+      renderPanelSinpe();
+      actualizarTabla();
+      return;
+    }
+    if (orden.sinpeId && orden.sinpeId !== idPago) {
+      const pagoAnterior = pagos.find(p => p.id === orden.sinpeId);
+      if (pagoAnterior) pagoAnterior.ordenFecha = null;
+    }
+    orden.sinpeId = idPago;
+    pago.ordenFecha = fechaOrden;
+  }
+
+  guardarPagosSinpe(pagos);
+  guardarTabla(ordenes);
+  renderPanelSinpe();
+  actualizarTabla();
+}
+
+function eliminarPagoSinpe(idPago) {
+  if (!confirm('¿Eliminar este comprobante Sinpe?')) return;
+  let pagos = cargarPagosSinpe();
+  let ordenes = cargarTabla();
+  const idx = pagos.findIndex(p => p.id === idPago);
+  if (idx === -1) return;
+  const pago = pagos[idx];
+  pagos.splice(idx, 1);
+  if (pago && pago.ordenFecha) {
+    const orden = ordenes.find(o => o.fecha === pago.ordenFecha);
+    if (orden) orden.sinpeId = null;
+  }
+  guardarPagosSinpe(pagos);
+  guardarTabla(ordenes);
+  renderPanelSinpe();
+  actualizarTabla();
+}
+
+function renderPanelSinpe() {
+  const lista = document.getElementById('sinpePagosLista');
+  const overlay = document.getElementById('sinpeOverlay');
+  if (!lista || !overlay || !overlay.classList.contains('active')) return;
+
+  const pagos = cargarPagosSinpe().sort((a, b) => (b.creadoEn - a.creadoEn));
+  const ordenes = cargarTabla();
+  const sinpeOrdenes = ordenes.filter(o => !esCuentaAbiertaOrden(o) && o.metodo === 'sinpe');
+  const ordenesMapa = new Map(sinpeOrdenes.map(o => [o.fecha, o]));
+
+  const pendientesUl = document.getElementById('sinpeOrdenesPendientes');
+  if (pendientesUl) {
+    const pendientes = sinpeOrdenes.filter(o => !o.sinpeId);
+    if (!pendientes.length) {
+      pendientesUl.innerHTML = '<li>No hay órdenes pendientes por conciliar.</li>';
+    } else {
+      pendientesUl.innerHTML = pendientes.map(o => {
+        const cliente = o.cliente ? ` · ${html(o.cliente)}` : '';
+        return `<li>${html(o.fecha)} · <strong>${formatearColones(o.cantidad)}₡</strong>${cliente}</li>`;
+      }).join('');
+    }
+  }
+
+  if (!pagos.length) {
+    lista.innerHTML = '<p class="sinpe-ayuda">Aún no hay pagos registrados.</p>';
+    return;
+  }
+
+  lista.innerHTML = pagos.map(pago => {
+    const ordenActual = pago.ordenFecha ? ordenesMapa.get(pago.ordenFecha) : null;
+    const estadoConfirmado = !!(ordenActual && ordenActual.sinpeId === pago.id);
+    const badge = estadoConfirmado
+      ? '<span class="sinpe-badge sinpe-badge--confirmado">Confirmado</span>'
+      : '<span class="sinpe-badge sinpe-badge--pendiente">Sin vincular</span>';
+
+    const coincidencias = sinpeOrdenes.filter(o => o.cantidad === pago.monto);
+    let coincidenciasTexto = '';
+    if (coincidencias.length === 1) {
+      const c = coincidencias[0];
+      const cliente = c.cliente ? ` · ${html(c.cliente)}` : '';
+      coincidenciasTexto = `<div class="sinpe-coincidencias">Coincidencia por monto: ${html(c.fecha)}${cliente}</div>`;
+    } else if (coincidencias.length > 1) {
+      const detalle = coincidencias.map(c => `${html(c.fecha)} (${formatearColones(c.cantidad)}₡${c.cliente ? ' · ' + html(c.cliente) : ''})`).join('<br>');
+      coincidenciasTexto = `<div class="sinpe-coincidencias sinpe-orden-pendiente">${detalle}</div>`;
+    }
+
+    const selectId = `sinpeSelect_${pago.id}`;
+    const opciones = ['<option value="">-- Selecciona una orden --</option>']
+      .concat(sinpeOrdenes.map(o => {
+        const ocupado = o.sinpeId && o.sinpeId !== pago.id;
+        const selected = o.sinpeId === pago.id;
+        const cliente = o.cliente ? ` · ${o.cliente}` : '';
+        const texto = `${o.fecha} · ${formatearColones(o.cantidad)}₡${cliente}${ocupado ? ' (ocupada)' : ''}`;
+        return `<option value="${html(o.fecha)}"${selected ? ' selected' : ''}${ocupado && !selected ? ' disabled' : ''}>${html(texto)}</option>`;
+      }));
+
+    const referencia = pago.referencia ? `<span>Ref: ${html(pago.referencia)}</span>` : '';
+    const remitente = pago.remitente ? `<span>De: ${html(pago.remitente)}</span>` : '';
+    const fecha = new Date(pago.creadoEn || Date.now()).toLocaleString();
+
+    const ordenTexto = ordenActual
+      ? `<div>Vinculado con: <strong>${html(ordenActual.fecha)}</strong>${ordenActual.cliente ? ` · ${html(ordenActual.cliente)}` : ''}</div>`
+      : '';
+
+    return `
+      <article class="sinpe-card">
+        <header>
+          <h3>₡${formatearColones(pago.monto)}</h3>
+          ${badge}
+        </header>
+        <div class="sinpe-detalle">${[referencia, remitente].filter(Boolean).join(' · ') || 'Sin detalles adicionales'}</div>
+        <div class="sinpe-mensaje">${html(pago.mensaje)}</div>
+        ${coincidenciasTexto}
+        <div class="sinpe-card-actions">
+          <select id="${selectId}" onchange="actualizarVinculoPagoSinpe('${pago.id}', this.value)">
+            ${opciones.join('')}
+          </select>
+          <button type="button" class="confirmar" onclick="actualizarVinculoPagoSinpe('${pago.id}', document.getElementById('${selectId}').value)">Guardar vínculo</button>
+          <button type="button" class="peligro" onclick="eliminarPagoSinpe('${pago.id}')">Eliminar</button>
+        </div>
+        ${ordenTexto}
+        <footer>Registrado: ${html(fecha)}</footer>
+      </article>
+    `;
+  }).join('');
+}
+
+function abrirSinpeOverlay() {
+  const overlay = document.getElementById('sinpeOverlay');
+  if (!overlay) return;
+  overlay.classList.add('active');
+  overlay.setAttribute('aria-hidden', 'false');
+  renderPanelSinpe();
+  setTimeout(() => {
+    const textarea = document.getElementById('sinpeMensajes');
+    if (textarea) textarea.focus();
+  }, 0);
+}
+
+function cerrarSinpeOverlay() {
+  const overlay = document.getElementById('sinpeOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('active');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
 /* Enviar / recoger selección */
 function recogerSeleccionProductosBase() {
   const out = {};
@@ -2291,6 +2927,7 @@ function enviar() {
   }));
 
   guardarTabla(ordenes);
+  intentarConciliarPagosSinpe();
   actualizarTabla();
   borrar();
 }
@@ -2470,6 +3107,7 @@ function cerrarCuenta(nombre) {
     entregasServidas: true
   }));
   guardarTabla(ordenes);
+  intentarConciliarPagosSinpe();
 
   delete cuentas[nombre];
   guardarCuentas(cuentas);
@@ -2621,10 +3259,18 @@ if (overlayPendientes) {
   });
 }
 
+const overlaySinpe = document.getElementById('sinpeOverlay');
+if (overlaySinpe) {
+  overlaySinpe.addEventListener('click', (event) => {
+    if (event.target === overlaySinpe) cerrarSinpeOverlay();
+  });
+}
+
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     cancelarEliminarTodos();
     cerrarPendientes();
+    cerrarSinpeOverlay();
     ocultarPanelVariantes();
   }
 });
@@ -2679,6 +3325,7 @@ actualizarPanelCierre();
 crearProductos();
 actualizarResumen();
 actualizarTabla();
+intentarConciliarPagosSinpe();
 renderCuentas();
 
 mostrarTab('apertura');
