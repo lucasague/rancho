@@ -183,6 +183,9 @@
 
   /* Tabs */
   .tabs {
+    position:fixed;
+    top:16px;
+    left:16px;
     display:flex;
     gap:8px;
     align-items:center;
@@ -190,8 +193,6 @@
     margin:10px 0 10px var(--main-offset);
     width:var(--main-width);
   }
-  .tab-btn { padding:8px 14px; border:1px solid #ccc; background:#f9f9f9; cursor:pointer; border-radius:6px; }
-  .tab-btn.active { font-weight:bold; background:#eee; }
   .tab-content { width:100%; margin:10px 0; }
 
   /* Distribución especial para pedidos en tablet horizontal */
@@ -227,71 +228,52 @@
 
   /* Grid productos */
   .productos-grid-wrapper {
+    position:relative;
     display:flex;
     flex-wrap:wrap;
     gap:16px;
     align-items:flex-start;
   }
-  .variantes-panel {
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    min-width:220px;
-    max-width:260px;
-    background:#ffffff;
-    border:1px solid #d0d0d0;
-    border-radius:12px;
-    padding:14px 16px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+  .variantes-overlay {
+    position:absolute;
+    left:0;
+    top:0;
+    width:0;
+    height:0;
+    pointer-events:none;
+    z-index:2050;
+    opacity:0;
+    transition:opacity 0.18s ease;
   }
-  .variantes-panel[hidden] { display:none; }
-  .variantes-header {
+  .variantes-overlay.visible {
+    opacity:1;
+  }
+  .variante-bubble {
+    position:absolute;
+    min-width:44px;
+    height:44px;
+    padding:8px 10px;
+    border-radius:50%;
+    border:2px solid #3949ab;
+    background:linear-gradient(135deg, #e8eaf6, #c5cae9);
+    color:#1a237e;
+    font-weight:600;
+    font-size:12px;
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap:12px;
-  }
-  .variantes-titulo { font-weight:700; font-size:15px; color:#2e3135; }
-  .variantes-cerrar {
-    border:none;
-    background:transparent;
-    font-size:20px;
-    line-height:1;
+    justify-content:center;
+    text-align:center;
+    box-shadow:0 10px 24px rgba(57,73,171,0.28);
     cursor:pointer;
-    color:#666;
-    padding:4px;
+    pointer-events:auto;
+    transform:translate(-50%, -50%);
+    transition:transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    white-space:nowrap;
   }
-  .variantes-indicacion {
-    margin:0;
-    font-size:12px;
-    color:#666;
-  }
-  .variantes-lista {
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .variante-btn {
-    padding:10px 12px;
-    margin:0;
-    border-radius:10px;
-    border:2px solid #2e7d32;
-    background:#f1f8e9;
-    font-weight:600;
-    font-size:13px;
-    cursor:pointer;
-    transition:transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-    text-align:left;
-  }
-  .variante-btn:hover {
-    transform:translateX(2px);
-    box-shadow:0 4px 12px rgba(46,125,50,0.25);
-    background:#e8f5e9;
-  }
-  .variante-btn:active {
-    transform:translateX(0);
-    box-shadow:none;
-    background:#c8e6c9;
+  .variante-bubble:hover {
+    transform:translate(-50%, -50%) scale(1.05);
+    box-shadow:0 14px 28px rgba(57,73,171,0.35);
+    background:linear-gradient(135deg, #dfe3ff, #b3bcf5);
   }
   .grid {
     display:grid;
@@ -309,6 +291,7 @@
   .producto.activo {
     box-shadow:0 0 0 3px rgba(46,125,50,0.45);
     transform:translateY(-2px);
+    z-index:50;
   }
   .icono { display:block; font-size:30px; margin-bottom:4px; line-height:1; text-align:center; }
   .contador {
@@ -990,15 +973,8 @@
     <div class="pedidos-right">
       <div class="panel-nuevo-pedido">
         <div class="productos-grid-wrapper">
-          <div id="variantesPanel" class="variantes-panel" hidden>
-            <div class="variantes-header">
-              <span class="variantes-titulo" id="variantesTitulo">Variantes</span>
-              <button type="button" class="variantes-cerrar" aria-label="Cerrar variantes">×</button>
-            </div>
-            <p class="variantes-indicacion">Toca una variante para añadirla.</p>
-            <div id="variantesLista" class="variantes-lista"></div>
-          </div>
           <div class="grid" id="productosGrid"></div>
+          <div id="variantesOverlay" class="variantes-overlay" hidden></div>
           <button type="button" class="limpiar-btn" onclick="borrar()">
             <span class="limpiar-icono" aria-hidden="true">🗑️</span>
             <span class="limpiar-texto">Borrar</span>
@@ -1088,7 +1064,7 @@
 <section id="tabProductos" class="tab-content" style="display:none;">
   <div class="productos-editor">
     <h2 style="margin:0 0 10px 0; text-align:center;">Editor de productos</h2>
-    <p class="help" style="text-align:center;">Puedes añadir <strong>variantes</strong> separadas por comas (p. ej. “Queso, Frijol, Mixta”). Pulsación larga en el producto abre el menú radial.</p>
+    <p class="help" style="text-align:center;">Puedes añadir <strong>variantes</strong> separadas por comas (p. ej. “Queso, Frijol, Mixta”). Toca un producto con variantes para ver el menú flotante alrededor de él.</p>
 
     <div class="editor-actions">
       <button onclick="agregarFilaProducto()">Añadir fila</button>
@@ -1484,7 +1460,7 @@ function crearProductos() {
   productosNodos = Array.from(document.querySelectorAll('.producto'));
   productosNodos.forEach(p => configurarHandlersProducto(p));
 
-  if (panelVariantes && !panelVariantes.hidden && productoVariantesActivo) {
+  if (overlayVariantes && !overlayVariantes.hidden && productoVariantesActivo) {
     const prodActual = PRODS.find(prod => prod.nombre === productoVariantesActivo);
     if (prodActual && Array.isArray(prodActual.variantes) && prodActual.variantes.length) {
       mostrarPanelVariantes(productoVariantesActivo, prodActual.variantes);
@@ -1516,6 +1492,10 @@ function configurarHandlersProducto(p) {
     if (e.target instanceof Element && e.target.closest('.restar')) return;
     const variantes = obtenerVariantes();
     if (variantes.length) {
+      if (productoVariantesActivo === nombre && overlayVariantes && !overlayVariantes.hidden) {
+        ocultarPanelVariantes();
+        return;
+      }
       mostrarPanelVariantes(nombre, variantes);
     } else {
       ocultarPanelVariantes();
@@ -1577,10 +1557,9 @@ function renderContador(nombre, contador, restar) {
   restar.style.display = total ? 'inline-block' : 'none';
 }
 
-/* Panel lateral para variantes */
-const panelVariantes = document.getElementById('variantesPanel');
-const variantesLista = document.getElementById('variantesLista');
-const variantesTitulo = document.getElementById('variantesTitulo');
+/* Menú flotante de variantes */
+const overlayVariantes = document.getElementById('variantesOverlay');
+const gridWrapper = document.querySelector('.productos-grid-wrapper');
 let productoVariantesActivo = null;
 
 function marcarProductoActivo(nombre) {
@@ -1591,15 +1570,16 @@ function marcarProductoActivo(nombre) {
 }
 
 function ocultarPanelVariantes() {
-  if (!panelVariantes) return;
-  panelVariantes.hidden = true;
-  if (variantesLista) variantesLista.innerHTML = '';
+  if (!overlayVariantes) return;
+  overlayVariantes.classList.remove('visible');
+  overlayVariantes.innerHTML = '';
+  overlayVariantes.hidden = true;
   productoVariantesActivo = null;
   marcarProductoActivo(null);
 }
 
 function mostrarPanelVariantes(nombre, variantes) {
-  if (!panelVariantes || !variantesLista) {
+  if (!overlayVariantes || !gridWrapper) {
     incProducto(nombre, null);
     return;
   }
@@ -1612,30 +1592,48 @@ function mostrarPanelVariantes(nombre, variantes) {
     return;
   }
 
-  productoVariantesActivo = nombre;
-  panelVariantes.hidden = false;
-  if (variantesTitulo) variantesTitulo.textContent = `Variantes de ${nombre}`;
-  variantesLista.innerHTML = '';
+  const nodoProducto = productosNodos.find(nodo => nodo.dataset.nombre === nombre);
+  if (!nodoProducto) {
+    incProducto(nombre, null);
+    return;
+  }
 
-  lista.forEach(variante => {
+  const wrapperRect = gridWrapper.getBoundingClientRect();
+  const rect = nodoProducto.getBoundingClientRect();
+  const centroX = rect.left - wrapperRect.left + rect.width / 2;
+  const centroY = rect.top - wrapperRect.top + rect.height / 2;
+
+  productoVariantesActivo = nombre;
+  overlayVariantes.classList.remove('visible');
+  overlayVariantes.innerHTML = '';
+  overlayVariantes.style.left = `${centroX}px`;
+  overlayVariantes.style.top = `${centroY}px`;
+  overlayVariantes.hidden = false;
+
+  const radioBase = Math.max(rect.width, rect.height) * 0.7 + 48;
+  const inicioDeg = 120;
+  const finDeg = 240;
+  const paso = lista.length > 1 ? (finDeg - inicioDeg) / (lista.length - 1) : 0;
+
+  lista.forEach((variante, index) => {
+    const anguloDeg = lista.length === 1 ? 180 : inicioDeg + paso * index;
+    const anguloRad = anguloDeg * Math.PI / 180;
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'variante-btn';
+    btn.className = 'variante-bubble';
     btn.textContent = variante;
-    btn.addEventListener('click', () => {
+    btn.style.left = `${Math.cos(anguloRad) * radioBase}px`;
+    btn.style.top = `${Math.sin(anguloRad) * radioBase}px`;
+    btn.addEventListener('click', (event) => {
+      event.stopPropagation();
       incProducto(nombre, variante);
     });
-    variantesLista.appendChild(btn);
+    overlayVariantes.appendChild(btn);
   });
 
-  marcarProductoActivo(nombre);
-}
+  requestAnimationFrame(() => overlayVariantes.classList.add('visible'));
 
-if (panelVariantes) {
-  const cerrarBtnVariantes = panelVariantes.querySelector('.variantes-cerrar');
-  if (cerrarBtnVariantes) {
-    cerrarBtnVariantes.addEventListener('click', () => ocultarPanelVariantes());
-  }
+  marcarProductoActivo(nombre);
 }
 
 /* Resumen de pedido (incluye variantes) */
