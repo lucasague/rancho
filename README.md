@@ -2,6 +2,14 @@
 
 Este repositorio contiene la herramienta interna **Ignis Latte**, un punto de venta ligero empaquetado en un único archivo: [`rancho.html`](./rancho.html). Al abrirlo en el navegador se cargan varios paneles que ayudan a llevar el control de productos, pedidos, cuentas abiertas y movimientos de caja directamente desde el navegador.
 
+## Instrucción inicial sugerida para tareas en paralelo
+
+Cuando abras una tarea nueva en Codex, incluye este resumen para que el agente entienda el contexto sin volver a inspeccionar todo el archivo:
+
+```
+Estás editando rancho.html, un punto de venta autónomo (Ignis Latte) empaquetado en un único HTML con pestañas de Apertura, Pedidos, Cierre y Productos. Los datos se guardan en localStorage y se recalculan combos, pendientes y cuentas abiertas automáticamente. Mantén la documentación en español y actualiza el README si cambias el flujo de uso.
+```
+
 ## Descripción general de la página
 
 La interfaz está dividida en pestañas que se ajustan según el flujo de trabajo diario:
