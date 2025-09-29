@@ -168,7 +168,11 @@
   .pendientes-fecha {
     font-size:11px;
     color:#888;
-    display:block;
+    display:none;
+  }
+
+  #tabla .col-fecha {
+    display:none;
   }
   .pendientes-vacio {
     text-align:center;
@@ -957,7 +961,7 @@
       <table id="tabla">
         <thead>
           <tr>
-            <th>Fecha</th>
+            <th class="col-fecha">Fecha</th>
             <th>Cliente</th>
             <th>Importe</th>
             <th>Método</th>
@@ -1915,7 +1919,7 @@ function actualizarTabla() {
     if (esCuentaAbierta) fila.classList.add('cuenta-abierta');
 
     fila.innerHTML = `
-      <td>${html(o.fecha)}</td>
+      <td class="col-fecha">${html(o.fecha)}</td>
       <td>${html(o.cliente || '')}</td>
       <td>${o.cantidad}₡</td>
       <td>${html(metodoMostrar)}</td>
