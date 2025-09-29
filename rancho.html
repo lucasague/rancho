@@ -8,7 +8,12 @@
   /* Base mínimo; puedes sobreescribir desde fuera */
   body {
     font-family: Arial, sans-serif;
-    padding-top:96px;
+    --main-offset: 20%;
+    --main-width: 80%;
+  }
+  body[data-active-tab="pedidos"] {
+    --main-offset: 12.5%;
+    --main-width: 87.5%;
   }
 
   .pendientes-btn {
@@ -185,31 +190,8 @@
     gap:8px;
     align-items:center;
     justify-content:flex-start;
-    flex-wrap:wrap;
-    padding:6px 10px;
-    border-radius:999px;
-    background:rgba(255,255,255,0.92);
-    box-shadow:0 8px 24px rgba(0,0,0,0.18);
-    backdrop-filter:blur(8px);
-    z-index:2150;
-  }
-  .tab-btn {
-    padding:8px 16px;
-    border:1px solid #c5cae9;
-    background:#f3f4ff;
-    cursor:pointer;
-    border-radius:999px;
-    font-weight:600;
-    color:#1a237e;
-    transition:background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-  }
-  .tab-btn:hover { background:#e8eaf6; }
-  .tab-btn.active {
-    background:#3949ab;
-    color:#fff;
-    border-color:#3949ab;
-    box-shadow:0 6px 18px rgba(57,73,171,0.35);
-    transform:translateY(-1px);
+    margin:10px 0 10px var(--main-offset);
+    width:var(--main-width);
   }
   .tab-content { width:100%; margin:10px 0; }
 
@@ -218,6 +200,8 @@
     display:flex;
     gap:20px;
     align-items:flex-start;
+    margin-left:var(--main-offset);
+    width:var(--main-width);
   }
   .pedidos-left,
   .pedidos-right {
@@ -619,6 +603,10 @@
       margin-left:0;
       width:100%;
     }
+    .pedidos-layout {
+      margin-left:0;
+      width:100%;
+    }
     .tab-content {
       width:95%;
       margin:10px auto;
@@ -667,8 +655,8 @@
     position:relative;
   }
   .productos-editor {
-    margin-left:34%;
-    width:66%;
+    margin-left:var(--main-offset);
+    width:var(--main-width);
   }
   .editor-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; margin:8px 0; }
   .small { font-size:12px; color:#555; }
@@ -681,8 +669,8 @@
 
   /* Paneles con tercio en blanco */
   .panel-tercio {
-    margin-left:34%;
-    width:66%;
+    margin-left:var(--main-offset);
+    width:var(--main-width);
     display:flex;
     flex-direction:column;
     gap:20px;
@@ -1354,6 +1342,7 @@ const TAB_INFOS = [
 ];
 function mostrarTab(nombre) {
   const objetivo = nombre || 'apertura';
+  document.body.dataset.activeTab = objetivo;
   TAB_INFOS.forEach(tab => {
     const activo = tab.name === objetivo;
     const contenido = document.getElementById(tab.contentId);
