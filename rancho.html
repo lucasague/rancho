@@ -669,7 +669,12 @@
   .tipo-select { width:130px; }
   .icono-input { width:100px; }
   .nombre-input { width:100%; }
-  .variantes-input { width:100%; }
+  .variantes-input {
+    width:100%;
+  }
+  .variantes-input::placeholder {
+    color:rgba(57,73,171,0.35);
+  }
   .help { font-size:12px; color:#666; margin-top:-4px; }
 
   /* Paneles con tercio en blanco */
@@ -1069,7 +1074,7 @@
 <section id="tabProductos" class="tab-content" style="display:none;">
   <div class="productos-editor">
     <h2 style="margin:0 0 10px 0; text-align:center;">Editor de productos</h2>
-    <p class="help" style="text-align:center;">Puedes añadir <strong>variantes</strong> separadas por comas (p. ej. “Queso, Frijol, Mixta”). Toca un producto con variantes para ver el menú flotante alrededor de él.</p>
+    <p class="help" style="text-align:center;">Puedes añadir <strong>variantes</strong> separadas por comas (p. ej. “Variante A, Variante B, Variante C”). Toca un producto con variantes para ver el menú flotante alrededor de él.</p>
 
     <div class="editor-actions">
       <button onclick="agregarFilaProducto()">Añadir fila</button>
@@ -1376,7 +1381,7 @@ function renderEditorProductos() {
         </select>
       </td>
       <td><input class="icono-input" type="text" value="${html(p.icono)}" placeholder="☕"></td>
-      <td><input class="variantes-input" type="text" value="${html(p.variantes.join(', '))}" placeholder="Queso, Frijol, Mixta"></td>
+      <td><input class="variantes-input" type="text" value="${html(p.variantes.join(', '))}" placeholder="Variante A, Variante B, Variante C"></td>
       <td style="text-align:center;"><button onclick="borrarFilaProducto(this)">🗑️</button></td>
     `;
     tbody.appendChild(tr);
@@ -1396,7 +1401,7 @@ function agregarFilaProducto() {
       </select>
     </td>
     <td><input class="icono-input" type="text" value="" placeholder="🍪"></td>
-    <td><input class="variantes-input" type="text" value="" placeholder="Queso, Frijol"></td>
+    <td><input class="variantes-input" type="text" value="" placeholder="Variante A, Variante B"></td>
     <td style="text-align:center;"><button onclick="borrarFilaProducto(this)">🗑️</button></td>
   `;
   tbody.appendChild(tr);
