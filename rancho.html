@@ -816,6 +816,24 @@
     margin-top:16px;
     font-size:15px;
   }
+  .cierre-datos-conteo {
+    gap:10px;
+  }
+  .cierre-conteo-tabla {
+    width:100%;
+    border-collapse:collapse;
+  }
+  .cierre-conteo-tabla th {
+    text-align:left;
+    font-weight:600;
+  }
+  .cierre-conteo-tabla td {
+    text-align:right;
+  }
+  .cierre-conteo-tabla th,
+  .cierre-conteo-tabla td {
+    padding:4px 0;
+  }
   .diferencia {
     font-weight:bold;
   }
@@ -1039,8 +1057,6 @@
         </table>
         <div class="cierre-datos">
           <span>Responsable: <strong id="cierreResponsable">Glorilucas</strong></span>
-          <span>Fondo inicial: <strong id="cierreFondoInicial">10 000₡</strong></span>
-          <span>Efectivo esperado en caja: <strong id="cierreEsperado">10 000₡</strong></span>
         </div>
       </div>
       <div class="cierre-right cierre-card">
@@ -1063,9 +1079,27 @@
           </table>
           <div class="cash-total">Total contado: <span data-breakdown-total="cierre">0₡</span></div>
         </div>
-        <div class="cierre-datos">
-          <span>Efectivo contado: <strong id="cierreEfectivoContado">0₡</strong></span>
-          <span>Diferencia con fondo inicial: <strong id="cierreNeto">0₡</strong></span>
+        <div class="cierre-datos cierre-datos-conteo">
+          <table class="cierre-conteo-tabla">
+            <tbody>
+              <tr>
+                <th>Fondo de caja</th>
+                <td><strong id="cierreFondoInicial">10 000₡</strong></td>
+              </tr>
+              <tr>
+                <th>Efectivo recaudado</th>
+                <td><strong id="cierreEfectivoContado">0₡</strong></td>
+              </tr>
+              <tr>
+                <th>Efectivo esperado</th>
+                <td><strong id="cierreEsperado">10 000₡</strong></td>
+              </tr>
+              <tr>
+                <th>Diferencia</th>
+                <td><strong id="cierreDiferenciaValor">0₡</strong></td>
+              </tr>
+            </tbody>
+          </table>
           <span>Ventas en efectivo registradas: <strong id="cierreVentasEfectivo">0₡</strong></span>
           <span class="diferencia diferencia-neutro" id="cierreDiferencia">Cuadra (0₡)</span>
         </div>
@@ -1284,7 +1318,6 @@ function actualizarPanelCierre() {
   const ventasEfectivo = Number(ultimoResumen.efectivo || 0);
   const cierreInput = document.getElementById('cierreEfectivoInput');
   const contado = cierreInput ? parseColones(cierreInput.value) : 0;
-  const neto = contado - fondo;
   const esperado = fondo + ventasEfectivo;
   const diferencia = contado - esperado;
 
@@ -1296,10 +1329,10 @@ function actualizarPanelCierre() {
   if (esperadoSpan) esperadoSpan.textContent = `${formatearColones(esperado)}₡`;
   const contadoSpan = document.getElementById('cierreEfectivoContado');
   if (contadoSpan) contadoSpan.textContent = `${formatearColones(contado)}₡`;
-  const netoSpan = document.getElementById('cierreNeto');
-  if (netoSpan) netoSpan.textContent = `${formatearColones(neto)}₡`;
   const ventasSpan = document.getElementById('cierreVentasEfectivo');
   if (ventasSpan) ventasSpan.textContent = `${formatearColones(ventasEfectivo)}₡`;
+  const diferenciaValorSpan = document.getElementById('cierreDiferenciaValor');
+  if (diferenciaValorSpan) diferenciaValorSpan.textContent = `${formatearColones(diferencia)}₡`;
 
   const diffSpan = document.getElementById('cierreDiferencia');
   if (diffSpan) {
@@ -2002,6 +2035,12 @@ function actualizarTabla() {
     }
   }
 
+  ultimoResumen = {
+    efectivo: resumen.efectivo || 0,
+    sinpe: resumen.sinpe || 0,
+    total: resumen.total || 0
+  };
+  actualizarPanelCierre();
 }
 
 function eliminarOrden(fecha) {
@@ -2564,10 +2603,20 @@ function cerrarCaja() {
     });
   });
 
+  const cierreInput = document.getElementById('cierreEfectivoInput');
+  const efectivoContado = cierreInput ? parseColones(cierreInput.value) : 0;
+  const fondo = obtenerFondoInicial();
+  const efectivoEsperado = fondo + (resumen.efectivo || 0);
+  const diferenciaConteo = efectivoContado - efectivoEsperado;
+
   let tablaResumenTexto = "Resumen;Valor\n";
   tablaResumenTexto += `Total Recaudado;${resumen.total}₡\n`;
   tablaResumenTexto += `Total Efectivo;${resumen.efectivo || 0}₡\n`;
   tablaResumenTexto += `Total Sinpe;${resumen.sinpe || 0}₡\n`;
+  tablaResumenTexto += `Fondo de caja;${fondo}₡\n`;
+  tablaResumenTexto += `Efectivo real contado;${efectivoContado}₡\n`;
+  tablaResumenTexto += `Efectivo esperado;${efectivoEsperado}₡\n`;
+  tablaResumenTexto += `Diferencia conteo;${diferenciaConteo}₡\n`;
   for (let p in resumen.productos) {
     tablaResumenTexto += `Ventas de ${p};${resumen.productos[p]}\n`;
     const vars = resumen.variantes[p];

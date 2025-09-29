@@ -16,7 +16,7 @@ La interfaz está dividida en pestañas que se ajustan según el flujo de trabaj
 
 - **Apertura**: permite registrar a la persona responsable del turno y configurar el fondo inicial en caja. También ofrece un desglose opcional por denominaciones para documentar con cuánto efectivo se empieza el día.
 - **Pedidos**: muestra la grilla de productos vendibles, el resumen del pedido actual, sugerencias de cambio y el historial de órdenes registradas. Desde aquí se crean cuentas abiertas, se marca el estado de entrega de cada producto y se abre un panel flotante con los pendientes por cliente o por producto.
-- **Cierre**: calcula la diferencia entre el efectivo esperado y el efectivo contado, reutilizando el desglose por denominaciones. Desde esta pestaña se envía un correo de cierre (vía EmailJS) con el resumen del día y se limpian las órdenes pagadas del almacenamiento local.
+- **Cierre**: calcula la diferencia entre el efectivo esperado y el efectivo contado, reutilizando el desglose por denominaciones. La tabla de conteo muestra el fondo de caja, el efectivo realmente recaudado, el esperado y la diferencia. Desde esta pestaña se envía un correo de cierre (vía EmailJS) con el resumen del día —incluyendo el efectivo real— y se limpian las órdenes pagadas del almacenamiento local.
 - **Productos**: expone un editor para mantener el catálogo. Cada fila permite cambiar nombre, precio, tipo (bebida/comida), icono y variantes. Los cambios se guardan en `localStorage` y se reflejan inmediatamente en la pestaña de pedidos.
 
 ## Lógica destacada en `rancho.html`
@@ -25,7 +25,7 @@ La interfaz está dividida en pestañas que se ajustan según el flujo de trabaj
 - **Cálculo inteligente de totales**: antes de mostrar el importe se evalúa si conviene armar combos bebida+comida utilizando el valor configurado en `PRECIO_COMBO`. El resumen resultante indica las líneas cobradas como combo y las unidades restantes a precio individual.
 - **Gestión de pendientes**: el historial guarda por orden la cantidad, método de pago y variantes pedidas. Con esa información se construyen vistas agrupadas por cliente y por producto. Cada línea puede marcarse como servida directamente desde el panel de pendientes o desde la tabla principal.
 - **Cuentas abiertas**: los pedidos pendientes se agrupan por nombre de cliente. Cuando se cierra una cuenta, el sistema consolida los productos acumulados, solicita el método de pago y transforma el registro en una orden pagada que se incluye en los resúmenes.
-- **Apertura y cierre de caja**: la configuración de apertura persiste en `localStorage`, permitiendo recordar el fondo y el responsable elegido. Durante el cierre se calcula automáticamente la diferencia contra lo esperado y se prepara el correo de reporte con dos archivos CSV incrustados (resumen general e historial de ventas).
+- **Apertura y cierre de caja**: la configuración de apertura persiste en `localStorage`, permitiendo recordar el fondo y el responsable elegido. Durante el cierre se calcula automáticamente la diferencia contra lo esperado usando las ventas en efectivo registradas, se detalla el conteo real de caja y se prepara el correo de reporte con dos archivos CSV incrustados (resumen general e historial de ventas).
 - **Persistencia local**: productos, órdenes, cuentas abiertas y configuración de apertura se almacenan en `localStorage`. Esto permite trabajar sin conexión y conservar el estado entre recargas mientras se usa el mismo navegador.
 
 ## Flujo de uso recomendado
