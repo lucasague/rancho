@@ -450,7 +450,7 @@
   .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
 
   tr.servido { opacity:0.35; }
-  tr.cuenta-abierta { background:#fff9e6; }
+  tr.orden-casa { background:#fff9e6; }
 
   #cliente {
     padding:7px 10px; width:min(520px, 100%); margin:10px 0 0 0; display:block;
@@ -483,50 +483,12 @@
   .master-checkbox { width:20px; height:20px; cursor:pointer; transform:scale(1.2); transform-origin:left center; }
   .master-label { font-weight:bold; font-size:14px; color:#333; }
 
-  .metodos-acciones {
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-  }
-  .metodo-toggle {
-    display:flex;
-    gap:6px;
-    background:#e5e5e5;
-    border-radius:999px;
-    padding:6px;
-    box-shadow:inset 0 1px 3px rgba(0,0,0,0.08);
-    flex:1 1 220px;
-    max-width:320px;
-  }
-  .metodo-toggle input[type="radio"] {
-    display:none;
-  }
-  .metodo-toggle label {
-    flex:1;
-    text-align:center;
-    padding:10px 0;
-    border-radius:999px;
-    font-weight:600;
-    letter-spacing:0.4px;
-    cursor:pointer;
-    color:#555;
-    transition:background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-  }
-  .botones-acciones {
+  .acciones-pedido {
     display:flex;
     align-items:center;
     gap:14px;
     flex-wrap:wrap;
-  }
-  #pagoEfectivo:checked + label {
-    background:#d9f2d9;
-    color:#1b5e20;
-    box-shadow:0 4px 12px rgba(27,94,32,0.25);
-  }
-  #pagoSinpe:checked + label {
-    background:#e0ebff;
-    color:#1b3c8a;
-    box-shadow:0 4px 12px rgba(27,60,138,0.25);
+    margin-top:16px;
   }
   .accion-redonda {
     width:60px;
@@ -559,11 +521,51 @@
     background-color:#2e7d32;
     color:#fff;
   }
-  .boton-pendiente {
-    border:3px solid #fbc02d;
-    background:#fbc02d;
-    color:#4e342e;
-    font-weight:700;
+
+  .pago-acciones {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    align-items:center;
+  }
+  .pago-btn {
+    border:none;
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+    font-weight:600;
+    transition:filter 0.2s ease;
+  }
+  .pago-btn:hover { filter:brightness(0.95); }
+  .pago-btn.efectivo { background:#d9f2d9; color:#1b5e20; }
+  .pago-btn.sinpe { background:#e0ebff; color:#1b3c8a; }
+  .pago-btn.casa { background:#fff4d5; color:#8a5a00; }
+  .pago-btn.simple { background:#eceff1; color:#37474f; }
+  .pago-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border-radius:999px;
+    padding:4px 10px;
+    font-weight:600;
+    font-size:12px;
+  }
+  .pago-badge.pago-efectivo { background:#2e7d32; color:#fff; }
+  .pago-badge.pago-sinpe { background:#1b3c8a; color:#fff; }
+  .pago-badge.pago-pendiente { background:#eceff1; color:#455a64; }
+  .pago-badge.pago-casa { background:#fff4d5; color:#8a5a00; }
+  .pago-badge button {
+    border:none;
+    border-radius:999px;
+    padding:2px 8px;
+    font-size:11px;
+    cursor:pointer;
+    color:inherit;
+    background:rgba(255,255,255,0.2);
+  }
+  .pago-badge button:hover {
+    background:rgba(0,0,0,0.15);
   }
 
   @media (max-width: 1024px) {
@@ -572,16 +574,22 @@
       height:54px;
       font-size:10px;
     }
-    .botones-acciones { justify-content:flex-start; }
+    .acciones-pedido { justify-content:flex-start; }
     .variantes-panel {
       min-width:100%;
       max-width:none;
       order:-1;
     }
+    .casas-grid {
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
   }
   @media (max-width: 640px) {
     .grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .casas-grid {
+      grid-template-columns:1fr;
     }
   }
   @media (max-width: 420px) {
@@ -602,6 +610,87 @@
   .btn-cierre-caja:hover {
     background:#f8d0d0;
     border-color:#c03a3a;
+  }
+
+  .cierre-pendientes {
+    margin-top:24px;
+  }
+  #tablaPendientesPago {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:12px;
+  }
+  #tablaPendientesPago th,
+  #tablaPendientesPago td {
+    padding:8px;
+    border-bottom:1px solid #e0e0e0;
+    text-align:left;
+    font-size:13px;
+  }
+  #tablaPendientesPago tbody tr:last-child td { border-bottom:none; }
+
+  .casas-wrapper {
+    margin-left:var(--main-offset);
+    width:var(--main-width);
+    padding:24px 0 40px 0;
+  }
+  .casas-wrapper h2 {
+    margin-top:0;
+  }
+  .casas-grid {
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:18px;
+    margin-top:18px;
+  }
+  .casa-card {
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 8px 22px rgba(0,0,0,0.12);
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .casa-card h3 {
+    margin:0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:18px;
+  }
+  .casa-pedidos-list {
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .casa-pedido {
+    border:1px solid #e0e0e0;
+    border-radius:10px;
+    background:#fafafa;
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .casa-pedido-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:600;
+  }
+  .casa-pedido-acciones {
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .casa-vacia {
+    color:#90a4ae;
+    font-style:italic;
   }
 
   @media (max-width: 1024px) {
@@ -649,15 +738,6 @@
   }
 
   /* Cuentas abiertas */
-  #cuentasPanel { display:none; width:100%; margin:16px 0 8px 0; text-align:left; }
-  #cuentasHeader { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
-  #cuentasLista { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:8px; }
-  .cta-card { border:1px solid #ddd; border-radius:8px; padding:8px 10px; background:#fafafa; line-height:1.2; }
-  .cta-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; font-size:14px; font-weight:bold; }
-  .cta-sub { font-size:12px; color:#555; margin-bottom:6px; }
-  .cta-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-  .cta-actions button { padding:6px 10px; margin:0; font-size:12px; }
-  .cta-actions select { padding:4px 6px; font-size:12px; }
   .muted { color:#666; font-size:12px; }
 
   /* Editor de productos */
@@ -882,9 +962,10 @@
 <!-- TABS -->
 <div class="tabs">
   <button id="tabAperturaBtn" class="tab-btn active" onclick="mostrarTab('apertura')">Apertura</button>
-  <button id="tabProductosBtn" class="tab-btn" onclick="mostrarTab('productos')">Productos</button>
   <button id="tabPedidosBtn" class="tab-btn" onclick="mostrarTab('pedidos')">Pedidos</button>
   <button id="tabCierreBtn" class="tab-btn" onclick="mostrarTab('cierre')">Cierre</button>
+  <button id="tabProductosBtn" class="tab-btn" onclick="mostrarTab('productos')">Productos</button>
+  <button id="tabCasasBtn" class="tab-btn" onclick="mostrarTab('casas')">Casas</button>
 </div>
 
 <!-- TAB: APERTURA -->
@@ -993,7 +1074,7 @@
             <th class="col-fecha">Fecha</th>
             <th>Cliente</th>
             <th>Importe</th>
-            <th>Método</th>
+            <th>Pago</th>
             <th>Productos</th>
             <th><button type="button" class="eliminar-todos-btn" onclick="mostrarWarningEliminarTodos()">Eliminar</button></th>
           </tr>
@@ -1015,17 +1096,8 @@
         </div>
 
         <input id="cliente" type="text" placeholder="Nombre del cliente (opcional)">
-        <div class="metodos-acciones">
-          <div class="botones-acciones">
-            <div class="metodo-toggle" role="radiogroup" aria-label="Método de pago">
-              <input type="radio" id="pagoEfectivo" name="pago" value="efectivo" checked>
-              <label for="pagoEfectivo">Efectivo</label>
-              <input type="radio" id="pagoSinpe" name="pago" value="sinpe">
-              <label for="pagoSinpe">Sinpe</label>
-            </div>
-            <button class="accion-redonda boton-enviar" onclick="enviar()">Enviar</button>
-            <button class="accion-redonda boton-pendiente" onclick="anadirACuentaAbierta()">Pendiente</button>
-          </div>
+        <div class="acciones-pedido">
+          <button class="accion-redonda boton-enviar" onclick="enviar()">Registrar</button>
         </div>
 
         <div class="resumen-panel">
@@ -1034,13 +1106,6 @@
           <div id="sugerenciaCambio"><strong>Cambio</strong><br><span class="muted">Añade productos para ver sugerencias.</span></div>
         </div>
       </div>
-      <section id="cuentasPanel">
-        <div id="cuentasHeader">
-          <h2 style="margin:0;font-size:16px;">Cuentas abiertas</h2>
-          <span class="muted">Crea cuentas con “Añadir a cuenta abierta” usando el nombre del campo Cliente.</span>
-        </div>
-        <div id="cuentasLista"></div>
-      </section>
     </div>
   </div>
 </section>
@@ -1106,6 +1171,22 @@
         <button class="btn-cierre-caja" onclick="cerrarCaja()">Cierre de caja</button>
       </div>
     </div>
+    <div class="cierre-card cierre-pendientes">
+      <h2>Pedidos sin pagar</h2>
+      <p class="help" style="margin:0 0 12px 0;">Marca el pago recibido o envía la orden a una casa.</p>
+      <table id="tablaPendientesPago">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Total</th>
+            <th>Productos</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 </section>
 
@@ -1140,6 +1221,15 @@
   </div>
 </section>
 
+<!-- TAB: CASAS -->
+<section id="tabCasas" class="tab-content" style="display:none;">
+  <div class="casas-wrapper">
+    <h2>Casas abiertas</h2>
+    <p class="help">Envía pedidos pendientes a cada casa o regístralos como pagados directamente desde esta vista.</p>
+    <div class="casas-grid" id="casasGrid"></div>
+  </div>
+</section>
+
 <!-- EmailJS -->
 <div id="warningEliminarTodos" class="warning-overlay" role="alertdialog" aria-modal="true"
      aria-labelledby="warningEliminarTitulo" aria-describedby="warningEliminarDescripcion">
@@ -1161,7 +1251,6 @@
 const STORAGE_KEYS = {
   productos: 'ignis_productos_v2', // v2 por variantes
   ordenes: 'ordenes_v2',
-  cuentas: 'cuentas_abiertas_v2',
   apertura: 'config_apertura_caja_v1'
 };
 
@@ -1374,7 +1463,6 @@ function guardarProductos(arr) {
 /* =================== TABS =================== */
 const TAB_INFOS = [
   { name: 'apertura', contentId: 'tabApertura', buttonId: 'tabAperturaBtn', onShow: () => actualizarResumenApertura() },
-  { name: 'productos', contentId: 'tabProductos', buttonId: 'tabProductosBtn', onShow: () => renderEditorProductos() },
   {
     name: 'pedidos',
     contentId: 'tabPedidos',
@@ -1383,10 +1471,19 @@ const TAB_INFOS = [
       crearProductos();
       actualizarResumen();
       actualizarTabla();
-      renderCuentas();
     }
   },
-  { name: 'cierre', contentId: 'tabCierre', buttonId: 'tabCierreBtn', onShow: () => actualizarPanelCierre() }
+  {
+    name: 'cierre',
+    contentId: 'tabCierre',
+    buttonId: 'tabCierreBtn',
+    onShow: () => {
+      actualizarPanelCierre();
+      renderPendientesPago();
+    }
+  },
+  { name: 'productos', contentId: 'tabProductos', buttonId: 'tabProductosBtn', onShow: () => renderEditorProductos() },
+  { name: 'casas', contentId: 'tabCasas', buttonId: 'tabCasasBtn', onShow: () => renderCasas() }
 ];
 function mostrarTab(nombre) {
   const objetivo = nombre || 'apertura';
@@ -1475,6 +1572,15 @@ function restablecerProductos() {
 }
 function setEstadoGuardado(txt) { document.getElementById('estadoGuardado').textContent = txt || ''; }
 function html(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function jsEsc(s){
+  return String(s).replace(/[\\'"\n\r]/g, c => ({
+    '\\': '\\\\',
+    "'": "\\'",
+    '"': '\\"',
+    '\n': '\\n',
+    '\r': '\\r'
+  }[c] || c));
+}
 function fechaTextoToMs(texto) {
   const ms = new Date(texto).getTime();
   return Number.isFinite(ms) ? ms : Date.now();
@@ -1739,7 +1845,15 @@ function actualizarResumen() {
 }
 
 /* Tabla de historial y resumen global (acumula variantes) */
-function cargarTabla() { return JSON.parse(localStorage.getItem(STORAGE_KEYS.ordenes) || '[]'); }
+function cargarTabla() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEYS.ordenes) || '[]');
+    if (!Array.isArray(raw)) return [];
+    return raw.map(normalizarOrden).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
 function guardarTabla(data) { localStorage.setItem(STORAGE_KEYS.ordenes, JSON.stringify(data)); }
 
 function clonarMapaProductos(mapa) {
@@ -1765,7 +1879,30 @@ function clonarVariantesMapa(vars) {
   return copia;
 }
 
-function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, metodo = 'efectivo', estado = 'pagado', cuenta = null, entregasServidas = false }) {
+function normalizarNumeroCasa(valor) {
+  const num = Number.parseInt(valor, 10);
+  return Number.isInteger(num) && num >= 1 && num <= 6 ? num : null;
+}
+
+function esOrdenPagada(orden) {
+  return orden?.estado === ESTADOS_ORDEN.PAGADO;
+}
+
+function esOrdenEnCasa(orden) {
+  return orden?.estado === ESTADOS_ORDEN.CASA;
+}
+
+function esOrdenPendientePago(orden) {
+  return orden?.estado === ESTADOS_ORDEN.PENDIENTE;
+}
+
+const ESTADOS_ORDEN = {
+  PENDIENTE: 'pendiente_pago',
+  PAGADO: 'pagado',
+  CASA: 'casa'
+};
+
+function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, metodo = null, estado = ESTADOS_ORDEN.PENDIENTE, casa = null, entregasServidas = false }) {
   const productosCopia = clonarMapaProductos(productos);
   const variantesCopia = clonarVariantesMapa(variantes);
   const PRODS = cargarProductos();
@@ -1774,21 +1911,72 @@ function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, meto
     entregas[nombre] = !!entregasServidas;
   });
 
+  const estadoNormalizado = Object.values(ESTADOS_ORDEN).includes(estado) ? estado : ESTADOS_ORDEN.PENDIENTE;
+  const metodoNormalizado = estadoNormalizado === ESTADOS_ORDEN.PAGADO && (metodo === 'sinpe' || metodo === 'efectivo')
+    ? metodo
+    : null;
+  const casaNormalizada = estadoNormalizado === ESTADOS_ORDEN.CASA
+    ? normalizarNumeroCasa(casa)
+    : null;
+
   return {
     fecha: new Date().toLocaleString(),
     cliente,
     cantidad: calcularTotalDesdeMapa(productosCopia, PRODS).total,
-    metodo,
+    metodo: metodoNormalizado,
     productos: productosCopia,
     variantes: variantesCopia,
     entregas,
-    estado,
-    cuenta
+    estado: estadoNormalizado,
+    casa: casaNormalizada,
+    pagoFecha: estadoNormalizado === ESTADOS_ORDEN.PAGADO ? new Date().toISOString() : null
   };
 }
 
-function esCuentaAbiertaOrden(o) {
-  return (o?.estado || 'pagado') === 'cuenta_abierta';
+function normalizarOrden(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const copia = {
+    fecha: raw.fecha || new Date().toLocaleString(),
+    cliente: raw.cliente || '',
+    cantidad: Number(raw.cantidad) || 0,
+    productos: raw.productos && typeof raw.productos === 'object' ? { ...raw.productos } : {},
+    variantes: raw.variantes && typeof raw.variantes === 'object' ? JSON.parse(JSON.stringify(raw.variantes)) : {},
+    entregas: raw.entregas && typeof raw.entregas === 'object' ? { ...raw.entregas } : {}
+  };
+
+  let estado = raw.estado;
+  if (estado === 'cuenta_abierta') estado = ESTADOS_ORDEN.CASA;
+  if (!estado) {
+    if (raw.metodo === 'Cuenta abierta') estado = ESTADOS_ORDEN.CASA;
+    else if (raw.metodo === 'sinpe' || raw.metodo === 'efectivo') estado = ESTADOS_ORDEN.PAGADO;
+    else estado = ESTADOS_ORDEN.PENDIENTE;
+  }
+  if (!Object.values(ESTADOS_ORDEN).includes(estado)) estado = ESTADOS_ORDEN.PENDIENTE;
+
+  let metodo = null;
+  if (estado === ESTADOS_ORDEN.PAGADO) {
+    metodo = raw.metodo === 'sinpe' ? 'sinpe' : 'efectivo';
+  }
+
+  const casa = estado === ESTADOS_ORDEN.CASA
+    ? (normalizarNumeroCasa(raw.casa) || normalizarNumeroCasa(raw.cuenta) || normalizarNumeroCasa(detectarCasaDesdeNombre(raw.cliente)))
+    : null;
+
+  let pagoFecha = null;
+  if (estado === ESTADOS_ORDEN.PAGADO) {
+    pagoFecha = raw.pagoFecha && !Number.isNaN(Date.parse(raw.pagoFecha))
+      ? raw.pagoFecha
+      : new Date().toISOString();
+  }
+
+  return {
+    ...copia,
+    metodo,
+    estado,
+    casa,
+    pagoFecha
+  };
 }
 
 function construirLineasPorProducto(o) {
@@ -1885,9 +2073,8 @@ function actualizarTabla() {
     o.entregas = o.entregas || {};
     lineas.forEach(l => { if (!(l.nombre in o.entregas)) o.entregas[l.nombre] = false; });
 
-    const estadoOrden = o.estado || 'pagado';
-    const esCuentaAbierta = estadoOrden === 'cuenta_abierta';
-    const metodoMostrar = esCuentaAbierta ? 'Cuenta abierta' : o.metodo;
+    const esPagada = esOrdenPagada(o);
+    const enCasa = esOrdenEnCasa(o);
 
     const allServed = lineas.length > 0 && lineas.every(l => !!o.entregas[l.nombre]);
     const masterChecked = allServed ? 'checked' : '';
@@ -1960,19 +2147,43 @@ function actualizarTabla() {
 
     const fila = document.createElement('tr');
     if (allServed) fila.classList.add('servido');
-    if (esCuentaAbierta) fila.classList.add('cuenta-abierta');
+    if (enCasa) fila.classList.add('orden-casa');
+
+    let pagoHTML = '';
+    if (esPagada) {
+      const clasePago = o.metodo === 'sinpe' ? 'pago-sinpe' : 'pago-efectivo';
+      const textoPago = o.metodo === 'sinpe' ? 'Sinpe' : 'Efectivo';
+      pagoHTML = `<span class="pago-badge ${clasePago}">${html(textoPago)}<button type="button" onclick="desmarcarPago('${jsEsc(o.fecha)}')">Deshacer</button></span>`;
+    } else if (enCasa) {
+      const casaTexto = o.casa ? `Casa ${o.casa}` : 'Casa';
+      pagoHTML = `
+        <div class="pago-acciones">
+          <span class="pago-badge pago-casa">${html(casaTexto)}</span>
+          <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
+          <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
+          <button type="button" class="pago-btn simple" onclick="liberarCasa('${jsEsc(o.fecha)}')">Liberar</button>
+        </div>
+      `;
+    } else {
+      pagoHTML = `
+        <div class="pago-acciones">
+          <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
+          <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
+        </div>
+      `;
+    }
 
     fila.innerHTML = `
       <td class="col-fecha">${html(o.fecha)}</td>
       <td>${html(o.cliente || '')}</td>
       <td>${o.cantidad}₡</td>
-      <td>${html(metodoMostrar)}</td>
+      <td>${pagoHTML}</td>
       <td>${productosHTML}</td>
       <td><button onclick="eliminarOrden('${jsEsc(o.fecha)}')">❌</button></td>
     `;
     tbody.appendChild(fila);
 
-    if (!esCuentaAbierta) {
+    if (esPagada) {
       resumen[o.metodo] = (resumen[o.metodo] || 0) + o.cantidad;
       resumen.total += o.cantidad;
       for (let p in o.productos) {
@@ -2040,7 +2251,167 @@ function actualizarTabla() {
     sinpe: resumen.sinpe || 0,
     total: resumen.total || 0
   };
+  renderPendientesPago();
+  renderCasas();
   actualizarPanelCierre();
+}
+
+/* =================== PAGOS Y CASAS =================== */
+function registrarPago(fecha, metodo) {
+  if (!fecha || (metodo !== 'efectivo' && metodo !== 'sinpe')) return;
+  let ordenes = cargarTabla();
+  const idx = ordenes.findIndex(o => o.fecha === fecha);
+  if (idx === -1) return;
+  const orden = ordenes[idx];
+  orden.estado = ESTADOS_ORDEN.PAGADO;
+  orden.metodo = metodo;
+  orden.casa = null;
+  orden.pagoFecha = new Date().toISOString();
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+
+function desmarcarPago(fecha) {
+  if (!fecha) return;
+  let ordenes = cargarTabla();
+  const idx = ordenes.findIndex(o => o.fecha === fecha);
+  if (idx === -1) return;
+  const orden = ordenes[idx];
+  orden.estado = ESTADOS_ORDEN.PENDIENTE;
+  orden.metodo = null;
+  orden.pagoFecha = null;
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+
+function enviarOrdenACasa(fecha, casaNumero) {
+  const casa = normalizarNumeroCasa(casaNumero);
+  if (!fecha || !casa) return;
+  let ordenes = cargarTabla();
+  const idx = ordenes.findIndex(o => o.fecha === fecha);
+  if (idx === -1) return;
+  const orden = ordenes[idx];
+  orden.estado = ESTADOS_ORDEN.CASA;
+  orden.casa = casa;
+  orden.metodo = null;
+  orden.pagoFecha = null;
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+
+function liberarCasa(fecha) {
+  if (!fecha) return;
+  let ordenes = cargarTabla();
+  const idx = ordenes.findIndex(o => o.fecha === fecha);
+  if (idx === -1) return;
+  const orden = ordenes[idx];
+  orden.estado = ESTADOS_ORDEN.PENDIENTE;
+  orden.casa = null;
+  orden.metodo = null;
+  orden.pagoFecha = null;
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+
+function resumenProductosCorto(o) {
+  return construirLineasPorProducto(o).map(l => {
+    const variantes = l.variantes && Object.keys(l.variantes).length
+      ? ` <span class="productos-nombre">(${Object.keys(l.variantes).map(v => `${html(v)}: ${l.variantes[v]}`).join(' · ')})</span>`
+      : '';
+    return `${html(l.iconos)} ${html(l.nombre)}${variantes}`;
+  }).join('<br>');
+}
+
+function renderPendientesPago() {
+  const tbody = document.querySelector('#tablaPendientesPago tbody');
+  if (!tbody) return;
+  const ordenes = cargarTabla();
+  const pendientes = ordenes.filter(esOrdenPendientePago);
+  tbody.innerHTML = '';
+  if (pendientes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">No hay pedidos pendientes de pago.</td></tr>';
+    return;
+  }
+  pendientes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha)).forEach(o => {
+    const productos = resumenProductosCorto(o) || '<span class="muted">Sin detalle</span>';
+    const casaBtns = Array.from({ length: 6 }, (_, i) => i + 1).map(num =>
+      `<button type="button" class="pago-btn casa" onclick="enviarOrdenACasa('${jsEsc(o.fecha)}', ${num})">Casa ${num}</button>`
+    ).join('');
+    const acciones = `
+      <div class="pago-acciones">
+        <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
+        <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
+      </div>
+      <div class="pago-acciones">
+        ${casaBtns}
+      </div>
+    `;
+    const fila = document.createElement('tr');
+    fila.innerHTML = `
+      <td>${html(o.fecha)}</td>
+      <td>${html(o.cliente || 'Sin nombre')}</td>
+      <td>${o.cantidad}₡</td>
+      <td>${productos}</td>
+      <td>${acciones}</td>
+    `;
+    tbody.appendChild(fila);
+  });
+}
+
+function renderCasas() {
+  const grid = document.getElementById('casasGrid');
+  if (!grid) return;
+  const ordenes = cargarTabla();
+  const casas = new Map(Array.from({ length: 6 }, (_, i) => [i + 1, []]));
+  ordenes.forEach(o => {
+    if (!esOrdenEnCasa(o)) return;
+    const casa = normalizarNumeroCasa(o.casa) || normalizarNumeroCasa(detectarCasaDesdeNombre(o.cliente));
+    if (!casa) return;
+    casas.get(casa).push(o);
+  });
+
+  grid.innerHTML = '';
+  casas.forEach((lista, numero) => {
+    const card = document.createElement('article');
+    card.className = 'casa-card';
+    card.innerHTML = `<h3>Casa ${numero}<span>${lista.length} pedido${lista.length === 1 ? '' : 's'}</span></h3>`;
+    if (!lista.length) {
+      card.innerHTML += '<div class="casa-vacia">Sin pedidos asignados.</div>';
+    } else {
+      const ul = document.createElement('ul');
+      ul.className = 'casa-pedidos-list';
+      lista.sort((a, b) => new Date(a.fecha) - new Date(b.fecha)).forEach(o => {
+        const li = document.createElement('li');
+        li.className = 'casa-pedido';
+        const productos = resumenProductosCorto(o) || '<span class="muted">Sin detalle</span>';
+        li.innerHTML = `
+          <div class="casa-pedido-header">
+            <span>${html(o.cliente || 'Sin nombre')}</span>
+            <span>${formatearColones(o.cantidad)}₡</span>
+          </div>
+          <div class="productos-nombre">${productos}</div>
+          <div class="casa-pedido-acciones">
+            <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
+            <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
+            <button type="button" class="pago-btn simple" onclick="liberarCasa('${jsEsc(o.fecha)}')">Retirar</button>
+          </div>
+        `;
+        ul.appendChild(li);
+      });
+      card.appendChild(ul);
+    }
+    grid.appendChild(card);
+  });
+}
+
+function detectarCasaDesdeNombre(nombre) {
+  if (!nombre) return null;
+  const texto = String(nombre).trim().toLowerCase();
+  const matchCasa = texto.match(/casa\s*([1-6])/);
+  if (matchCasa) return Number(matchCasa[1]);
+  const matchNumero = texto.match(/\b([1-6])\b/);
+  if (matchNumero) return Number(matchNumero[1]);
+  return null;
 }
 
 function eliminarOrden(fecha) {
@@ -2048,37 +2419,8 @@ function eliminarOrden(fecha) {
   let ordenes = cargarTabla();
   const idx = ordenes.findIndex(o => o.fecha === fecha);
   if (idx === -1) return;
-  const [eliminada] = ordenes.splice(idx, 1);
+  ordenes.splice(idx, 1);
   guardarTabla(ordenes);
-
-  if (eliminada && esCuentaAbiertaOrden(eliminada) && eliminada.cuenta) {
-    const cuentas = cargarCuentas();
-    const cuentaData = cuentas[eliminada.cuenta];
-    if (cuentaData) {
-      cuentaData.productos = cuentaData.productos || {};
-      cuentaData.variantes = cuentaData.variantes || {};
-      Object.keys(eliminada.productos || {}).forEach(nombre => {
-        cuentaData.productos[nombre] = (cuentaData.productos[nombre] || 0) - (eliminada.productos[nombre] || 0);
-        if (cuentaData.productos[nombre] <= 0) delete cuentaData.productos[nombre];
-      });
-      const varsEliminadas = eliminada.variantes || {};
-      Object.keys(varsEliminadas).forEach(base => {
-        cuentaData.variantes[base] = cuentaData.variantes[base] || {};
-        Object.keys(varsEliminadas[base]).forEach(varianteNombre => {
-          cuentaData.variantes[base][varianteNombre] = (cuentaData.variantes[base][varianteNombre] || 0) - varsEliminadas[base][varianteNombre];
-          if (cuentaData.variantes[base][varianteNombre] <= 0) delete cuentaData.variantes[base][varianteNombre];
-        });
-        if (Object.keys(cuentaData.variantes[base]).length === 0) delete cuentaData.variantes[base];
-      });
-      const productosRestantes = Object.keys(cuentaData.productos || {});
-      const variantesRestantes = Object.keys(cuentaData.variantes || {});
-      if (productosRestantes.length === 0 && variantesRestantes.length === 0) {
-        delete cuentas[eliminada.cuenta];
-      }
-      guardarCuentas(cuentas);
-      renderCuentas();
-    }
-  }
   actualizarTabla();
 }
 
@@ -2313,21 +2655,30 @@ function enviar() {
   const totalNum = +document.getElementById('total').innerText.replace(/[^\d]/g, '');
   if (totalNum == 0) { alert('Añade productos'); return; }
 
-  const metodo = document.querySelector('input[name="pago"]:checked').value;
   const productosVendidos = recogerSeleccionProductosBase();
   const variantesVendidas = recogerSeleccionVariantes();
   const cliente = (document.getElementById('cliente').value || '').trim();
 
-  let ordenes = cargarTabla();
-  ordenes.push(crearOrdenRegistro({
+  const nuevaOrden = crearOrdenRegistro({
     cliente,
     productos: productosVendidos,
     variantes: variantesVendidas,
-    metodo,
-    estado: 'pagado',
-    cuenta: null,
+    estado: ESTADOS_ORDEN.PENDIENTE,
+    casa: null,
     entregasServidas: false
-  }));
+  });
+
+  const casaAuto = detectarCasaDesdeNombre(cliente);
+  if (casaAuto) {
+    nuevaOrden.estado = ESTADOS_ORDEN.CASA;
+    nuevaOrden.casa = casaAuto;
+    nuevaOrden.metodo = null;
+    nuevaOrden.pagoFecha = null;
+    alert(`Pedido asignado automáticamente a la Casa ${casaAuto}.`);
+  }
+
+  let ordenes = cargarTabla();
+  ordenes.push(nuevaOrden);
 
   guardarTabla(ordenes);
   actualizarTabla();
@@ -2346,190 +2697,6 @@ function borrar() {
   const clienteInput = document.getElementById('cliente');
   if (clienteInput) clienteInput.value = '';
   actualizarResumen();
-}
-
-/* =================== CUENTAS ABIERTAS (con variantes) =================== */
-function cargarCuentas() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEYS.cuentas) || '{}'); // { nombre: {productos:{}, variantes:{}, creado:ts} }
-}
-function guardarCuentas(obj) { localStorage.setItem(STORAGE_KEYS.cuentas, JSON.stringify(obj)); }
-
-function anadirACuentaAbierta() {
-  const base = recogerSeleccionProductosBase();
-  const vars = recogerSeleccionVariantes();
-  const hayAlgo = Object.values(base).some(v => v > 0);
-  if (!hayAlgo) { alert('Añade productos para pasar a la cuenta abierta'); return; }
-
-  let nombre = (document.getElementById('cliente').value || '').trim();
-  if (!nombre) nombre = nombreSugerido();
-
-  const cuentas = cargarCuentas();
-  if (!cuentas[nombre]) cuentas[nombre] = { productos:{}, variantes:{}, creado: Date.now() };
-
-  for (let n in base) cuentas[nombre].productos[n] = (cuentas[nombre].productos[n] || 0) + base[n];
-  Object.keys(vars).forEach(p=>{
-    cuentas[nombre].variantes[p] = cuentas[nombre].variantes[p] || {};
-    Object.keys(vars[p]).forEach(vn=>{
-      cuentas[nombre].variantes[p][vn] = (cuentas[nombre].variantes[p][vn] || 0) + vars[p][vn];
-    });
-  });
-
-  guardarCuentas(cuentas);
-  let ordenes = cargarTabla();
-  ordenes.push(crearOrdenRegistro({
-    cliente: nombre,
-    productos: base,
-    variantes: vars,
-    metodo: 'Cuenta abierta',
-    estado: 'cuenta_abierta',
-    cuenta: nombre,
-    entregasServidas: false
-  }));
-  guardarTabla(ordenes);
-  renderCuentas();
-  actualizarTabla();
-  borrar();
-}
-function nombreSugerido() {
-  const base = 'Misionero';
-  const cuentas = cargarCuentas();
-  if (!cuentas[base]) return base;
-  let i = 2;
-  while (cuentas[`${base} ${i}`]) i++;
-  return `${base} ${i}`;
-}
-
-function resumenLineaProductosCuenta(productosMapa, variantesMapa) {
-  const PRODS = cargarProductos();
-  const partes = [];
-  const nombres = Object.keys(productosMapa).sort((a,b)=>a.localeCompare(b));
-  nombres.forEach(nombre => {
-    const prod = PRODS.find(p => p.nombre === nombre);
-    const cant = productosMapa[nombre];
-    const icono = prod?.icono || '';
-    const vars = variantesMapa?.[nombre];
-    const varTxt = vars ? ' [' + Object.keys(vars).map(v=>`${v}:${vars[v]}`).join(' · ') + ']' : '';
-    partes.push(`${icono ? html(icono) : ''}×${cant} (${html(nombre)})${varTxt}`);
-  });
-  return partes.join(' · ');
-}
-
-function renderCuentas() {
-  const cont = document.getElementById('cuentasLista');
-  const panel = document.getElementById('cuentasPanel');
-  const cuentas = cargarCuentas();
-  const entries = Object.entries(cuentas).sort((a,b)=>a[1].creado - b[1].creado);
-  cont.innerHTML = '';
-
-  if (entries.length === 0) { panel.style.display = 'none'; return; }
-  panel.style.display = 'block';
-
-  entries.forEach(([nombre, data]) => {
-    const total = calcularTotalDesdeMapa(data.productos, cargarProductos()).total;
-    const card = document.createElement('div');
-    card.className = 'cta-card';
-    const idMet = idFromName(nombre) + '-metodo';
-
-    card.innerHTML = `
-      <div class="cta-top">
-        <span>${escapeHtml(nombre)}</span>
-        <span>${total}₡</span>
-      </div>
-      <div class="cta-sub">${resumenLineaProductosCuenta(data.productos, data.variantes) || '<span class="muted">Vacía</span>'}</div>
-      <div class="cta-actions">
-        <button onclick="anadirSeleccionA('${jsEsc(nombre)}')">Añadir selección</button>
-        <select id="${idMet}">
-          <option value="efectivo">Efectivo</option>
-          <option value="sinpe">Sinpe</option>
-        </select>
-        <button onclick="cerrarCuenta('${jsEsc(nombre)}')">Cobrar y cerrar</button>
-        <button onclick="eliminarCuenta('${jsEsc(nombre)}')">Eliminar</button>
-      </div>
-    `;
-    cont.appendChild(card);
-  });
-}
-
-function anadirSeleccionA(nombre) {
-  const base = recogerSeleccionProductosBase();
-  const vars = recogerSeleccionVariantes();
-  const hayAlgo = Object.values(base).some(v => v > 0);
-  if (!hayAlgo) { alert('Añade productos para sumarlos a la cuenta'); return; }
-
-  const cuentas = cargarCuentas();
-  if (!cuentas[nombre]) cuentas[nombre] = { productos:{}, variantes:{}, creado: Date.now() };
-
-  for (let n in base) cuentas[nombre].productos[n] = (cuentas[nombre].productos[n] || 0) + base[n];
-  Object.keys(vars).forEach(p=>{
-    cuentas[nombre].variantes[p] = cuentas[nombre].variantes[p] || {};
-    Object.keys(vars[p]).forEach(vn=>{
-      cuentas[nombre].variantes[p][vn] = (cuentas[nombre].variantes[p][vn] || 0) + vars[p][vn];
-    });
-  });
-
-  guardarCuentas(cuentas);
-  renderCuentas();
-  let ordenes = cargarTabla();
-  ordenes.push(crearOrdenRegistro({
-    cliente: nombre,
-    productos: base,
-    variantes: vars,
-    metodo: 'Cuenta abierta',
-    estado: 'cuenta_abierta',
-    cuenta: nombre,
-    entregasServidas: false
-  }));
-  guardarTabla(ordenes);
-  actualizarTabla();
-  borrar();
-}
-
-function cerrarCuenta(nombre) {
-  const cuentas = cargarCuentas();
-  const data = cuentas[nombre];
-  if (!data || !data.productos || Object.keys(data.productos).length === 0) {
-    alert('La cuenta está vacía.');
-    return;
-  }
-  const idMet = idFromName(nombre) + '-metodo';
-  const metodo = (document.getElementById(idMet)?.value) || 'efectivo';
-
-  const productosMap = data.productos;
-  const variantesMap = data.variantes || {};
-
-  let ordenes = cargarTabla();
-  ordenes = ordenes.filter(o => !(esCuentaAbiertaOrden(o) && o.cuenta === nombre));
-  ordenes.push(crearOrdenRegistro({
-    cliente: nombre,
-    productos: productosMap,
-    variantes: variantesMap,
-    metodo,
-    estado: 'pagado',
-    cuenta: null,
-    entregasServidas: true
-  }));
-  guardarTabla(ordenes);
-
-  delete cuentas[nombre];
-  guardarCuentas(cuentas);
-
-  renderCuentas();
-  actualizarTabla();
-}
-
-function eliminarCuenta(nombre) {
-  if (!confirm(`¿Eliminar la cuenta abierta "${nombre}"?`)) return;
-  const cuentas = cargarCuentas();
-  delete cuentas[nombre];
-  guardarCuentas(cuentas);
-  renderCuentas();
-}
-
-/* Helpers */
-function idFromName(name) { return 'cta_' + name.replace(/[^a-z0-9_-]/gi, '_'); }
-function jsEsc(s){ return String(s).replace(/'/g, "\\'"); }
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 /* =================== PRECIO COMBO =================== */
@@ -2578,11 +2745,11 @@ function calcularTotalDesdeMapa(mapa, PRODS=null) {
 
 /* =================== CIERRE DE CAJA (incluye variantes en resumen CSV) =================== */
 function cerrarCaja() {
-  if (!confirm("¿Seguro que quieres cerrar la caja? Se enviará un resumen al correo y se eliminarán los datos actuales (las Cuentas abiertas no se tocan).")) return;
+  if (!confirm("¿Seguro que quieres cerrar la caja? Se enviará un resumen al correo y se conservarán los pedidos sin pagar o asignados a casas.")) return;
 
   const ordenes = cargarTabla();
-  const pagadas = ordenes.filter(o => !esCuentaAbiertaOrden(o));
-  const pendientes = ordenes.filter(o => esCuentaAbiertaOrden(o));
+  const pagadas = ordenes.filter(esOrdenPagada);
+  const pendientes = ordenes.filter(o => !esOrdenPagada(o));
   const fecha = new Date().toISOString().split('T')[0];
   const subject = `Ignis Latte - Cierre de caja ${fecha}`;
   const message = `Cierre automático generado el ${fecha}`;
@@ -2728,7 +2895,6 @@ actualizarPanelCierre();
 crearProductos();
 actualizarResumen();
 actualizarTabla();
-renderCuentas();
 
 mostrarTab('apertura');
 </script>
