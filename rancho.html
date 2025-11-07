@@ -257,8 +257,19 @@
   .variantes-overlay.visible {
     opacity:1;
   }
-  .variante-bubble {
+  .variantes-lista {
     position:absolute;
+    left:0;
+    top:0;
+    transform:translate(-50%, -50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    pointer-events:none;
+  }
+  .variante-bubble {
+    position:relative;
     min-width:64px;
     max-width:140px;
     padding:6px 12px;
@@ -275,12 +286,11 @@
     box-shadow:0 6px 18px rgba(57,73,171,0.22);
     cursor:pointer;
     pointer-events:auto;
-    transform:translate(-50%, -50%);
     transition:transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
     white-space:nowrap;
   }
   .variante-bubble:hover {
-    transform:translate(-50%, -50%) scale(1.04);
+    transform:scale(1.04);
     box-shadow:0 10px 22px rgba(57,73,171,0.28);
     background-color:#eef0ff;
     border-color:#7986cb;
@@ -1658,26 +1668,22 @@ function mostrarPanelVariantes(nombre, variantes) {
   overlayVariantes.style.top = `${centroY}px`;
   overlayVariantes.hidden = false;
 
-  const radioBase = Math.max(rect.width, rect.height) * 0.35 + 28;
-  const inicioDeg = 150;
-  const finDeg = 210;
-  const paso = lista.length > 1 ? (finDeg - inicioDeg) / (lista.length - 1) : 0;
+  const contenedorVariantes = document.createElement('div');
+  contenedorVariantes.className = 'variantes-lista';
 
-  lista.forEach((variante, index) => {
-    const anguloDeg = lista.length === 1 ? 180 : inicioDeg + paso * index;
-    const anguloRad = anguloDeg * Math.PI / 180;
+  lista.forEach((variante) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'variante-bubble';
     btn.textContent = variante;
-    btn.style.left = `${Math.cos(anguloRad) * radioBase}px`;
-    btn.style.top = `${Math.sin(anguloRad) * radioBase}px`;
     btn.addEventListener('click', (event) => {
       event.stopPropagation();
       incProducto(nombre, variante);
     });
-    overlayVariantes.appendChild(btn);
+    contenedorVariantes.appendChild(btn);
   });
+
+  overlayVariantes.appendChild(contenedorVariantes);
 
   requestAnimationFrame(() => overlayVariantes.classList.add('visible'));
 
