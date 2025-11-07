@@ -505,45 +505,6 @@
 
   .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
 
-  .entrega-linea-toggle {
-    border:1px solid #c5cae9;
-    background:#e8eaf6;
-    color:#1a237e;
-    border-radius:20px;
-    padding:4px 12px;
-    font-size:11px;
-    font-weight:700;
-    cursor:pointer;
-    text-transform:uppercase;
-    letter-spacing:0.6px;
-    transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  }
-  .entrega-linea-toggle.icon-only {
-    width:28px;
-    height:28px;
-    border-radius:50%;
-    padding:0;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    font-size:0;
-    line-height:1;
-  }
-  .entrega-linea-toggle.icon-only span[aria-hidden="true"] {
-    font-size:16px;
-    line-height:1;
-  }
-  .entrega-linea-toggle:hover { background:#dfe3ff; }
-  .entrega-linea-toggle.servida {
-    background:#2e7d32;
-    border-color:#2e7d32;
-    color:#fff;
-  }
-  .entrega-linea-toggle:focus-visible {
-    outline:2px solid #1a237e;
-    outline-offset:2px;
-  }
-
   tr.servido { opacity:0.35; }
   tr.orden-casa { background:#fff9e6; }
 
@@ -558,14 +519,14 @@
     align-items:center;
     justify-content:flex-end;
     gap:8px;
-    margin-bottom:6px;
+    margin-bottom:3px;
     text-align:right;
   }
   .productos-linea:last-child { margin-bottom:0; }
   .entrega-unidades {
     display:flex;
-    flex-wrap:wrap;
-    gap:4px;
+    flex-wrap:nowrap;
+    gap:2px;
     justify-content:flex-end;
   }
   .entrega-unidad {
@@ -2290,7 +2251,7 @@ function toggleEntregaMaestro(fecha) {
   actualizarTabla();
 }
 
-function marcarPendienteComoServido(fecha, nombreProducto) {
+function marcarPendienteComoServido(fecha, nombreProducto, indiceUnidad = null) {
   if (!fecha || !nombreProducto) return;
   let ordenes = cargarTabla();
   const idx = ordenes.findIndex(o => o.fecha === fecha);
@@ -2298,9 +2259,17 @@ function marcarPendienteComoServido(fecha, nombreProducto) {
   const orden = ordenes[idx];
   const cantidad = orden?.productos?.[nombreProducto] || 0;
   const entregasLinea = normalizarEntregasLinea(orden, nombreProducto, cantidad);
-  const siguiente = entregasLinea.findIndex(v => !v);
-  if (siguiente === -1) return;
-  entregasLinea[siguiente] = true;
+  if (!Array.isArray(entregasLinea) || !entregasLinea.length) return;
+
+  let objetivo = null;
+  if (Number.isInteger(indiceUnidad) && indiceUnidad >= 0 && indiceUnidad < entregasLinea.length) {
+    objetivo = indiceUnidad;
+  } else {
+    objetivo = entregasLinea.findIndex(v => !v);
+  }
+
+  if (objetivo === -1 || objetivo === null) return;
+  entregasLinea[objetivo] = true;
   orden.entregas[nombreProducto] = entregasLinea;
   guardarTabla(ordenes);
   actualizarTabla();
@@ -2314,8 +2283,7 @@ function actualizarTabla() {
   let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
   const pendientesCliente = new Map();
   const pendientesProducto = new Map();
-  const registrarPendienteProducto = (productoNombre, varianteNombre, cantidad, icono, clienteNombre, fechaTexto, fechaValor) => {
-    if (!cantidad) return;
+  const registrarPendienteProducto = (productoNombre, varianteNombre, indiceUnidad, icono, clienteNombre, fechaTexto, fechaValor) => {
     const clave = `${productoNombre}__${varianteNombre || ''}`;
     const valorFecha = Number.isFinite(fechaValor) ? fechaValor : fechaTextoToMs(fechaTexto);
     if (!pendientesProducto.has(clave)) {
@@ -2323,23 +2291,22 @@ function actualizarTabla() {
         nombre: productoNombre,
         icono,
         total: 0,
-        clientes: [],
+        unidades: [],
         variante: varianteNombre || null,
         primeraFecha: valorFecha
       });
     }
     const prodPendiente = pendientesProducto.get(clave);
-    prodPendiente.total += cantidad;
+    prodPendiente.total += 1;
     prodPendiente.primeraFecha = Math.min(prodPendiente.primeraFecha, valorFecha);
-    const variantesDetalle = varianteNombre ? { [varianteNombre]: cantidad } : null;
-    prodPendiente.clientes.push({
+    prodPendiente.unidades.push({
       cliente: clienteNombre,
-      cantidad,
       fecha: fechaTexto,
       fechaValor: valorFecha,
-      variantes: variantesDetalle,
       pedidoFecha: fechaTexto,
-      producto: productoNombre
+      producto: productoNombre,
+      variante: varianteNombre || null,
+      indice: indiceUnidad
     });
   };
 
@@ -2392,7 +2359,6 @@ function actualizarTabla() {
           return `<button type="button" class="${clases.join(' ')}" title="${titulo}" onclick="toggleEntregaUnidad('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}',${idx})">${contenido}${varianteTexto}</button>`;
         }).join('');
         const lineaLabel = lineaServida ? 'Todo servido' : `Servidas ${unidadesServidas}/${l.cantidad}`;
-        const toggleTitle = lineaServida ? 'Desmarcar la fila completa' : 'Marcar toda la fila como servida';
         const variantesTooltip = l.variantes && Object.keys(l.variantes).length
           ? Object.keys(l.variantes).map(v => `${v}: ${l.variantes[v]}`).join(' · ')
           : '';
@@ -2400,13 +2366,6 @@ function actualizarTabla() {
         const lineaTooltip = `${lineaDescripcion} · ${lineaLabel}`;
         productosHTML += `
           <div class="productos-linea" title="${html(lineaTooltip)}">
-            <button type="button" class="entrega-linea-toggle icon-only ${lineaServida ? 'servida' : ''}"
-                    title="${html(toggleTitle)}"
-                    aria-label="${html(`${toggleTitle} (${l.nombre})`)}"
-                    onclick="toggleEntregaLineaCompleta('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}')">
-              <span class="sr-only">${html(lineaLabel)}</span>
-              <span aria-hidden="true">${lineaServida ? '✔' : '○'}</span>
-            </button>
             <div class="entrega-unidades">${unidadesMarkup}</div>
           </div>
         `;
@@ -2417,46 +2376,24 @@ function actualizarTabla() {
         }
         if (pendientesIndices.length > 0) {
           const clienteNombre = (o.cliente || '').trim() || 'Sin nombre';
-          const cantidadPendiente = pendientesIndices.length;
           const fechaTexto = o.fecha;
           const fechaValor = fechaTextoToMs(fechaTexto);
 
           if (!pendientesCliente.has(clienteNombre)) pendientesCliente.set(clienteNombre, []);
-          const variantesPendientes = {};
-          let sinVariantePend = 0;
           pendientesIndices.forEach(idxUnidad => {
             const unidadInfo = l.unidades[idxUnidad] || {};
             const varNombre = unidadInfo?.variante || null;
-            if (varNombre) {
-              variantesPendientes[varNombre] = (variantesPendientes[varNombre] || 0) + 1;
-            } else {
-              sinVariantePend += 1;
-            }
-          });
-          const variantesCliente = Object.keys(variantesPendientes).length ? { ...variantesPendientes } : null;
-          if (variantesCliente && sinVariantePend > 0) {
-            variantesCliente['Sin variante'] = sinVariantePend;
-          }
-          pendientesCliente.get(clienteNombre).push({
-            nombre: l.nombre,
-            cantidad: cantidadPendiente,
-            icono: iconoProd,
-            variantes: variantesCliente,
-            fecha: fechaTexto,
-            fechaValor,
-            pedidoFecha: o.fecha
-          });
-
-          if (Object.keys(variantesPendientes).length) {
-            Object.entries(variantesPendientes).forEach(([varNombre, cantVar]) => {
-              registrarPendienteProducto(l.nombre, varNombre, cantVar, iconoProd, clienteNombre, fechaTexto, fechaValor);
+            pendientesCliente.get(clienteNombre).push({
+              nombre: l.nombre,
+              icono: iconoProd,
+              variante: varNombre,
+              fecha: fechaTexto,
+              fechaValor,
+              pedidoFecha: o.fecha,
+              indice: idxUnidad
             });
-            if (sinVariantePend > 0) {
-              registrarPendienteProducto(l.nombre, null, sinVariantePend, iconoProd, clienteNombre, fechaTexto, fechaValor);
-            }
-          } else {
-            registrarPendienteProducto(l.nombre, null, cantidadPendiente, iconoProd, clienteNombre, fechaTexto, fechaValor);
-          }
+            registrarPendienteProducto(l.nombre, varNombre, idxUnidad, iconoProd, clienteNombre, fechaTexto, fechaValor);
+          });
         }
       });
     }
@@ -2517,25 +2454,41 @@ function actualizarTabla() {
   });
 
   const pendientesPorCliente = Array.from(pendientesCliente.entries()).map(([cliente, items]) => {
-    const itemsOrdenados = items.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.nombre.localeCompare(b.nombre));
+    const itemsOrdenados = items.slice().sort((a, b) => {
+      const fechaDiff = (a.fechaValor - b.fechaValor);
+      if (fechaDiff !== 0) return fechaDiff;
+      const nombreDiff = a.nombre.localeCompare(b.nombre);
+      if (nombreDiff !== 0) return nombreDiff;
+      const varianteA = a.variante || '';
+      const varianteB = b.variante || '';
+      const varianteDiff = varianteA.localeCompare(varianteB);
+      if (varianteDiff !== 0) return varianteDiff;
+      return (a.indice - b.indice);
+    });
     const primeraFecha = itemsOrdenados.length ? itemsOrdenados[0].fechaValor : Number.POSITIVE_INFINITY;
     return {
       cliente,
-      total: items.reduce((sum, item) => sum + (item.cantidad || 0), 0),
+      total: itemsOrdenados.length,
       items: itemsOrdenados,
       primeraFecha
     };
   }).sort((a, b) => (a.primeraFecha - b.primeraFecha) || a.cliente.localeCompare(b.cliente));
 
   const pendientesPorProducto = Array.from(pendientesProducto.values()).map(entry => {
-    const clientesOrdenados = entry.clientes.slice().sort((a, b) => (a.fechaValor - b.fechaValor) || a.cliente.localeCompare(b.cliente));
-    const primeraFecha = clientesOrdenados.length ? clientesOrdenados[0].fechaValor : entry.primeraFecha;
+    const unidadesOrdenadas = entry.unidades.slice().sort((a, b) => {
+      const fechaDiff = (a.fechaValor - b.fechaValor);
+      if (fechaDiff !== 0) return fechaDiff;
+      const clienteDiff = (a.cliente || '').localeCompare(b.cliente || '');
+      if (clienteDiff !== 0) return clienteDiff;
+      return (a.indice - b.indice);
+    });
+    const primeraFecha = unidadesOrdenadas.length ? unidadesOrdenadas[0].fechaValor : entry.primeraFecha;
     return {
       nombre: entry.nombre,
       icono: entry.icono,
       total: entry.total,
       variante: entry.variante,
-      clientes: clientesOrdenados,
+      unidades: unidadesOrdenadas,
       primeraFecha
     };
   }).sort((a, b) => {
@@ -2828,50 +2781,6 @@ function normalizarPendientesPorCliente(map) {
   return resultado;
 }
 
-function normalizarPendientesPorProducto(map) {
-  const resultado = [];
-  map.forEach((data, keyNombre) => {
-    const clientesAgrupados = new Map();
-    (data.clientes || []).forEach(cli => {
-      const nombreCliente = (cli.cliente || 'Sin nombre');
-      if (!clientesAgrupados.has(nombreCliente)) {
-        clientesAgrupados.set(nombreCliente, {
-          cliente: nombreCliente,
-          cantidad: 0,
-          variantes: {},
-          fecha: cli.fecha || ''
-        });
-      }
-      const clienteInfo = clientesAgrupados.get(nombreCliente);
-      clienteInfo.cantidad += Number(cli.cantidad) || 0;
-      mergeVariantes(clienteInfo.variantes, cli.variantes || {});
-      if (!clienteInfo.fecha && cli.fecha) clienteInfo.fecha = cli.fecha;
-    });
-
-    const clientesOrdenados = Array.from(clientesAgrupados.values()).map(cli => {
-      if (!cli.variantes || Object.keys(cli.variantes).length === 0) cli.variantes = null;
-      return cli;
-    }).sort((a, b) => a.cliente.localeCompare(b.cliente));
-
-    const total = clientesOrdenados.reduce((sum, cli) => sum + (Number(cli.cantidad) || 0), 0);
-    resultado.push({
-      nombre: data.nombre || keyNombre || '',
-      icono: data.icono || '',
-      total,
-      clientes: clientesOrdenados
-    });
-  });
-  return resultado;
-}
-
-function variantesPendientesTexto(vars) {
-  if (!vars) return '';
-  const claves = Object.keys(vars);
-  if (!claves.length) return '';
-  const cuerpo = claves.map(v => `${html(v)}: ${vars[v]}`).join(' · ');
-  return `<span class="pendientes-variantes">[${cuerpo}]</span>`;
-}
-
 function actualizarPendientesUI() {
   const contCliente = document.getElementById('pendientesPorCliente');
   const contProducto = document.getElementById('pendientesPorProducto');
@@ -2883,10 +2792,12 @@ function actualizarPendientesUI() {
       contCliente.innerHTML = pendientesData.porCliente.map(entry => {
         const lista = entry.items.map(item => {
           const icono = item.icono ? `<span class="pendientes-icono">${html(item.icono)}</span>` : '';
-          const variantes = variantesPendientesTexto(item.variantes);
+          const variante = item.variante ? `<span class="pendientes-variante">${html(item.variante)}</span>` : '';
+          const unidadBadge = Number.isInteger(item.indice) ? `<span class="pendientes-variante">Unidad ${item.indice + 1}</span>` : '';
           const fecha = item.fecha ? `<span class="pendientes-fecha">Pedido: ${html(item.fecha)}</span>` : '';
-          const completar = `<button type="button" class="pendiente-completar" data-fecha="${html(item.pedidoFecha)}" data-producto="${html(item.nombre)}" title="Marcar como completado">Completar</button>`;
-          return `<li><div class="fila-principal">${icono}<span><strong>${item.cantidad}</strong> × ${html(item.nombre)}</span>${variantes}${completar}</div>${fecha}</li>`;
+          const indiceAttr = Number.isInteger(item.indice) ? ` data-indice="${item.indice}"` : '';
+          const completar = `<button type="button" class="pendiente-completar" data-fecha="${html(item.pedidoFecha)}" data-producto="${html(item.nombre)}"${indiceAttr} title="Marcar como completado">Completar</button>`;
+          return `<li><div class="fila-principal">${icono}<span>${html(item.nombre)}</span>${variante}${unidadBadge}${completar}</div>${fecha}</li>`;
         }).join('');
         return `
           <article class="pendiente-card">
@@ -2908,13 +2819,14 @@ function actualizarPendientesUI() {
       contProducto.innerHTML = pendientesData.porProducto.map(prod => {
         const icono = prod.icono ? `<span class="pendientes-icono">${html(prod.icono)}</span>` : '';
         const variante = prod.variante ? `<span class="pendientes-variante">${html(prod.variante)}</span>` : '';
-        const clientesDetalle = prod.clientes.map(cli => {
-          const variantes = variantesPendientesTexto(cli.variantes);
-          const fecha = cli.fecha ? `<span class="pendientes-fecha">Pedido: ${html(cli.fecha)}</span>` : '';
-          const clienteNombre = (cli.cliente || 'Sin nombre');
-          const unidades = cli.cantidad === 1 ? 'unidad' : 'unidades';
-          const completar = `<button type="button" class="pendiente-completar" data-fecha="${html(cli.pedidoFecha)}" data-producto="${html(cli.producto)}" title="Marcar como completado">Completar</button>`;
-          return `<li><div class="fila-principal"><span><strong>${cli.cantidad}</strong> ${unidades}</span><span>para ${html(clienteNombre)}</span>${variantes}${completar}</div>${fecha}</li>`;
+        const clientesDetalle = prod.unidades.map(unidad => {
+          const clienteNombre = (unidad.cliente || 'Sin nombre');
+          const fecha = unidad.fecha ? `<span class="pendientes-fecha">Pedido: ${html(unidad.fecha)}</span>` : '';
+          const unidadBadge = Number.isInteger(unidad.indice) ? `<span class="pendientes-variante">Unidad ${unidad.indice + 1}</span>` : '';
+          const varianteDetalle = unidad.variante && !prod.variante ? `<span class="pendientes-variante">${html(unidad.variante)}</span>` : '';
+          const indiceAttr = Number.isInteger(unidad.indice) ? ` data-indice="${unidad.indice}"` : '';
+          const completar = `<button type="button" class="pendiente-completar" data-fecha="${html(unidad.pedidoFecha)}" data-producto="${html(prod.nombre)}"${indiceAttr} title="Marcar como completado">Completar</button>`;
+          return `<li><div class="fila-principal"><span>para ${html(clienteNombre)}</span>${varianteDetalle}${unidadBadge}${completar}</div>${fecha}</li>`;
         }).join('');
         return `
           <article class="pendiente-card">
@@ -2969,8 +2881,13 @@ function cambiarTabPendientes(tab) {
 document.addEventListener('click', event => {
   const btn = event.target.closest('.pendiente-completar');
   if (!btn) return;
-  const { fecha, producto } = btn.dataset;
-  marcarPendienteComoServido(fecha, producto);
+  const { fecha, producto, indice } = btn.dataset;
+  const indiceNumero = indice === undefined ? null : Number.parseInt(indice, 10);
+  if (Number.isInteger(indiceNumero)) {
+    marcarPendienteComoServido(fecha, producto, indiceNumero);
+  } else {
+    marcarPendienteComoServido(fecha, producto);
+  }
 });
 
 /* Enviar / recoger selección */
@@ -3150,6 +3067,16 @@ function cerrarCaja() {
   }, (error) => {
     console.error(error);
     alert("Error al enviar el correo: " + JSON.stringify(error));
+  });
+}
+
+const clienteInputPedidos = document.getElementById('cliente');
+if (clienteInputPedidos) {
+  clienteInputPedidos.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      enviar();
+    }
   });
 }
 
