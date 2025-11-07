@@ -33,7 +33,7 @@ La interfaz está dividida en pestañas que se ajustan según el flujo de trabaj
 ## Flujo de uso recomendado
 
 1. **Configura la apertura**: selecciona a la persona responsable y actualiza el fondo de caja si cambió desde el último turno.
-2. **Registra pedidos** desde la pestaña principal. Cada orden se almacena sin pago; marca los productos entregados y registra el cobro cuando corresponda.
+2. **Registra pedidos** desde la pestaña principal. Cada orden se almacena sin pago; marca los productos entregados y registra el cobro cuando corresponda. Tras escribir el nombre del cliente puedes pulsar Enter para registrar el pedido sin tocar el ratón.
 3. **Clasifica los pedidos por casa** desde la pestaña de cierre (botones “Casa n”) o directamente en la pestaña final de casas para seguir el saldo de cada una.
 4. **Mantén el catálogo al día** en la pestaña de productos cuando haya cambios de precios, iconografía o variantes.
 5. **Realiza el cierre de caja** al finalizar la jornada: cuenta el efectivo, revisa las órdenes sin pagar desde la tabla dedicada, marca los cobros que falten o envíalos a una casa y, finalmente, envía el correo automático. Las órdenes pagadas se depuran mientras que los pendientes o asignados a casas se conservan para el siguiente turno.

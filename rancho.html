@@ -3098,6 +3098,16 @@ function cerrarCaja() {
   });
 }
 
+const clienteInputPedidos = document.getElementById('cliente');
+if (clienteInputPedidos) {
+  clienteInputPedidos.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      enviar();
+    }
+  });
+}
+
 const btnPendientes = document.getElementById('verPendientesBtn');
 if (btnPendientes) {
   btnPendientes.addEventListener('click', () => abrirPendientes('cliente'));
