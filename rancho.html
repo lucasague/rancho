@@ -1885,6 +1885,7 @@ function mostrarPanelVariantes(nombre, variantes) {
     btn.addEventListener('click', (event) => {
       event.stopPropagation();
       incProducto(nombre, variante);
+      ocultarPanelVariantes();
     });
     contenedorVariantes.appendChild(btn);
   });
@@ -1895,6 +1896,15 @@ function mostrarPanelVariantes(nombre, variantes) {
 
   marcarProductoActivo(nombre);
 }
+
+document.addEventListener('click', (event) => {
+  if (!overlayVariantes || overlayVariantes.hidden) return;
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  if (target.closest('.variantes-lista')) return;
+  if (target.closest('.producto')) return;
+  ocultarPanelVariantes();
+});
 
 /* Resumen de pedido (incluye variantes) */
 function actualizarResumen() {
