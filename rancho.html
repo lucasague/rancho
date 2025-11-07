@@ -601,6 +601,15 @@
     font-size:20px;
     line-height:1;
   }
+  .entrega-unidad .unidad-variante {
+    font-size:10px;
+    line-height:1.1;
+    color:#37474f;
+    text-align:center;
+    font-weight:500;
+    max-width:60px;
+    word-break:break-word;
+  }
   .entrega-unidad.sin-icono .unidad-icono {
     font-size:13px;
     background:#3949ab;
@@ -2336,10 +2345,13 @@ function actualizarTabla() {
           const contenido = iconoProd
             ? `<span class="unidad-icono">${html(iconoProd)}</span>`
             : `<span class="unidad-icono">${idx + 1}</span>`;
+          const varianteTexto = unidad?.variante
+            ? `<span class="unidad-variante">${html(unidad.variante)}</span>`
+            : '';
           const tituloPartes = [l.nombre, `Unidad ${idx + 1}`];
           if (unidad?.variante) tituloPartes.push(unidad.variante);
           const titulo = html(tituloPartes.join(' · '));
-          return `<button type="button" class="${clases.join(' ')}" title="${titulo}" onclick="toggleEntregaUnidad('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}',${idx})">${contenido}</button>`;
+          return `<button type="button" class="${clases.join(' ')}" title="${titulo}" onclick="toggleEntregaUnidad('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}',${idx})">${contenido}${varianteTexto}</button>`;
         }).join('');
         const lineaLabel = lineaServida ? 'Todo servido' : `Servidas ${unidadesServidas}/${l.cantidad}`;
         const toggleTitle = lineaServida ? 'Desmarcar la fila completa' : 'Marcar toda la fila como servida';
