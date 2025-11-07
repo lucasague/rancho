@@ -22,7 +22,7 @@ La interfaz está dividida en pestañas que se ajustan según el flujo de trabaj
 
 ## Lógica destacada en `rancho.html`
 
-- **Selección de productos con variantes**: cada tile de la grilla se genera dinámicamente a partir de los datos guardados. Los productos con variantes despliegan un menú circular para elegir opciones específicas (por ejemplo, sabor de empanada). El contador integrado permite sumar y restar unidades rápidamente.
+- **Selección de productos con variantes**: cada tile de la grilla se genera dinámicamente a partir de los datos guardados. Los productos con variantes despliegan un menú circular para elegir opciones específicas (por ejemplo, sabor de empanada). El menú flotante se cierra automáticamente al elegir una variante o al hacer clic fuera del producto, y el contador integrado permite sumar y restar unidades rápidamente.
 - **Cálculo inteligente de totales**: antes de mostrar el importe se evalúa si conviene armar combos bebida+comida utilizando el valor configurado en `PRECIO_COMBO`. El resumen resultante indica las líneas cobradas como combo y las unidades restantes a precio individual.
 - **Gestión de pendientes**: el historial guarda por orden la cantidad y variantes pedidas. Con esa información se construyen vistas agrupadas por cliente y por producto. Cada línea puede marcarse como servida directamente desde el panel de pendientes o desde la tabla principal.
 - **Registro de pagos**: cada pedido nace como “pendiente”. Desde la tabla principal, la pestaña de cierre o la pestaña de casas se puede registrar el cobro por efectivo o Sinpe. Las ventas pagadas se suman automáticamente al resumen diario y al correo de cierre.
