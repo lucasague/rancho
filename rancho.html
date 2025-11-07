@@ -1274,6 +1274,22 @@
 <!-- TAB: CIERRE -->
 <section id="tabCierre" class="tab-content" style="display:none;">
   <div class="panel-tercio">
+    <div class="cierre-card cierre-pendientes">
+      <h2>Pedidos sin pagar</h2>
+      <p class="help" style="margin:0 0 12px 0;">Marca el pago recibido o envía la orden a una casa.</p>
+      <table id="tablaPendientesPago">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Total</th>
+            <th>Productos</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
     <div class="cierre-layout">
       <div class="cierre-left cierre-card">
         <h2>Resumen del día</h2>
@@ -1331,22 +1347,6 @@
         </div>
         <button class="btn-cierre-caja" onclick="cerrarCaja()">Cierre de caja</button>
       </div>
-    </div>
-    <div class="cierre-card cierre-pendientes">
-      <h2>Pedidos sin pagar</h2>
-      <p class="help" style="margin:0 0 12px 0;">Marca el pago recibido o envía la orden a una casa.</p>
-      <table id="tablaPendientesPago">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Total</th>
-            <th>Productos</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
     </div>
   </div>
 </section>
