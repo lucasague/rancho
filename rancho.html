@@ -449,6 +449,30 @@
 
   .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
 
+  .entrega-linea-toggle {
+    border:1px solid #c5cae9;
+    background:#e8eaf6;
+    color:#1a237e;
+    border-radius:20px;
+    padding:4px 12px;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .entrega-linea-toggle:hover { background:#dfe3ff; }
+  .entrega-linea-toggle.servida {
+    background:#2e7d32;
+    border-color:#2e7d32;
+    color:#fff;
+  }
+  .entrega-linea-toggle:focus-visible {
+    outline:2px solid #1a237e;
+    outline-offset:2px;
+  }
+
   tr.servido { opacity:0.35; }
   tr.orden-casa { background:#fff9e6; }
 
@@ -459,19 +483,84 @@
 
   .productos-linea {
     display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:8px;
+    margin-bottom:10px;
+    text-align:right;
+  }
+  .productos-linea-header {
+    display:flex;
     justify-content:flex-end;
     align-items:center;
     gap:8px;
-    margin-bottom:6px;
     flex-wrap:wrap;
-    text-align:right;
   }
-  .productos-nombre { font-size:12px; color:#666; margin-left:6px; }
+  .productos-iconos {
+    font-weight:700;
+    color:#3949ab;
+  }
+  .productos-nombre { font-size:13px; color:#424242; }
   .productos-linea .productos-nombre.indentado {
     width:100%;
-    margin-left:0;
-    text-align:right;
+    font-size:12px;
+    color:#555;
   }
+  .entrega-unidades {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    justify-content:flex-end;
+  }
+  .entrega-unidad {
+    border:1px solid #c5cae9;
+    background:#eef0ff;
+    color:#1a237e;
+    border-radius:10px;
+    min-width:44px;
+    min-height:44px;
+    padding:6px 8px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    cursor:pointer;
+    font-weight:600;
+    transition:transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+  .entrega-unidad:hover {
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(57,73,171,0.2);
+  }
+  .entrega-unidad.servida {
+    opacity:0.35;
+    background:#f5f5f5;
+    border-color:#b0bec5;
+    box-shadow:none;
+  }
+  .entrega-unidad:focus-visible {
+    outline:3px solid #3949ab;
+    outline-offset:2px;
+  }
+  .entrega-unidad .unidad-icono {
+    font-size:22px;
+    line-height:1;
+  }
+  .entrega-unidad.sin-icono .unidad-icono {
+    font-size:13px;
+    background:#3949ab;
+    color:#fff;
+    border-radius:999px;
+    padding:4px 8px;
+    min-width:28px;
+  }
+  .entrega-unidad .unidad-variante {
+    font-size:11px;
+    color:#303f9f;
+    line-height:1.1;
+  }
+
   .productos-maestro {
     display:flex;
     justify-content:flex-end;
@@ -1908,7 +1997,8 @@ function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, meto
   const PRODS = cargarProductos();
   const entregas = {};
   Object.keys(productosCopia).forEach(nombre => {
-    entregas[nombre] = !!entregasServidas;
+    const cantidad = Number(productosCopia[nombre]) || 0;
+    entregas[nombre] = Array.from({ length: cantidad }, () => !!entregasServidas);
   });
 
   const estadoNormalizado = Object.values(ESTADOS_ORDEN).includes(estado) ? estado : ESTADOS_ORDEN.PENDIENTE;
@@ -1984,21 +2074,74 @@ function construirLineasPorProducto(o) {
   const lineas = [];
   for (let nombre in o.productos) {
     const prod = PRODS.find(p => p.nombre === nombre);
-    const cant = o.productos[nombre];
+    const cant = Number(o.productos[nombre]) || 0;
     const icono = prod?.icono || '';
     const iconos = icono ? `${icono}×${cant}` : `${cant}x`;
     const vars = (o.variantes && o.variantes[nombre]) ? o.variantes[nombre] : null;
-    lineas.push({ nombre, cantidad: cant, iconos, variantes: vars, tieneIcono: !!icono });
+    const unidades = [];
+    if (vars && typeof vars === 'object') {
+      Object.keys(vars).forEach(varNombre => {
+        const cantVar = Number(vars[varNombre]) || 0;
+        for (let i = 0; i < cantVar; i++) unidades.push({ variante: varNombre });
+      });
+    }
+    if (unidades.length < cant) {
+      const restantes = cant - unidades.length;
+      for (let i = 0; i < restantes; i++) unidades.push({ variante: null });
+    } else if (unidades.length > cant) {
+      unidades.length = cant;
+    }
+    lineas.push({ nombre, cantidad: cant, iconos, variantes: vars, tieneIcono: !!icono, unidades });
   }
   lineas.sort((a,b) => a.nombre.localeCompare(b.nombre));
   return lineas;
 }
-function toggleEntrega(fecha, nombreProducto) {
+
+function normalizarEntregasLinea(orden, nombreProducto, cantidad) {
+  if (!orden.entregas) orden.entregas = {};
+  const cantidadFinal = Math.max(0, Number(cantidad) || 0);
+  const existente = orden.entregas[nombreProducto];
+  let arreglo;
+  if (Array.isArray(existente)) {
+    arreglo = existente.slice(0, cantidadFinal);
+    if (arreglo.length < cantidadFinal) {
+      arreglo = arreglo.concat(Array.from({ length: cantidadFinal - arreglo.length }, () => false));
+    }
+  } else if (typeof existente === 'boolean') {
+    arreglo = Array.from({ length: cantidadFinal }, () => existente);
+  } else {
+    arreglo = Array.from({ length: cantidadFinal }, () => false);
+  }
+  orden.entregas[nombreProducto] = arreglo;
+  return arreglo;
+}
+function toggleEntregaUnidad(fecha, nombreProducto, indice) {
   let ordenes = cargarTabla();
   const i = ordenes.findIndex(x => x.fecha === fecha);
   if (i === -1) return;
-  if (!ordenes[i].entregas) ordenes[i].entregas = {};
-  ordenes[i].entregas[nombreProducto] = !ordenes[i].entregas[nombreProducto];
+  const orden = ordenes[i];
+  const cantidad = orden?.productos?.[nombreProducto] || 0;
+  const entregasLinea = normalizarEntregasLinea(orden, nombreProducto, cantidad);
+  const idxUnidad = Number(indice);
+  if (!Number.isInteger(idxUnidad) || idxUnidad < 0 || idxUnidad >= entregasLinea.length) return;
+  entregasLinea[idxUnidad] = !entregasLinea[idxUnidad];
+  orden.entregas[nombreProducto] = entregasLinea;
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+function toggleEntregaLineaCompleta(fecha, nombreProducto) {
+  let ordenes = cargarTabla();
+  const i = ordenes.findIndex(x => x.fecha === fecha);
+  if (i === -1) return;
+  const orden = ordenes[i];
+  const cantidad = orden?.productos?.[nombreProducto] || 0;
+  const entregasLinea = normalizarEntregasLinea(orden, nombreProducto, cantidad);
+  const todoServido = entregasLinea.length > 0 && entregasLinea.every(Boolean);
+  const target = !todoServido;
+  for (let idx = 0; idx < entregasLinea.length; idx++) {
+    entregasLinea[idx] = target;
+  }
+  orden.entregas[nombreProducto] = entregasLinea;
   guardarTabla(ordenes);
   actualizarTabla();
 }
@@ -2009,9 +2152,18 @@ function toggleEntregaMaestro(fecha) {
   const o = ordenes[i];
   const lineas = construirLineasPorProducto(o);
   if (!o.entregas) o.entregas = {};
-  const allServed = lineas.length > 0 && lineas.every(l => !!o.entregas[l.nombre]);
+  const allServed = lineas.length > 0 && lineas.every(l => {
+    const entregasLinea = normalizarEntregasLinea(o, l.nombre, l.cantidad);
+    return entregasLinea.length > 0 && entregasLinea.every(Boolean);
+  });
   const target = !allServed;
-  lineas.forEach(l => { o.entregas[l.nombre] = target; });
+  lineas.forEach(l => {
+    const entregasLinea = normalizarEntregasLinea(o, l.nombre, l.cantidad);
+    for (let idx = 0; idx < entregasLinea.length; idx++) {
+      entregasLinea[idx] = target;
+    }
+    o.entregas[l.nombre] = entregasLinea;
+  });
   guardarTabla(ordenes);
   actualizarTabla();
 }
@@ -2022,9 +2174,12 @@ function marcarPendienteComoServido(fecha, nombreProducto) {
   const idx = ordenes.findIndex(o => o.fecha === fecha);
   if (idx === -1) return;
   const orden = ordenes[idx];
-  if (!orden.entregas) orden.entregas = {};
-  if (orden.entregas[nombreProducto]) return;
-  orden.entregas[nombreProducto] = true;
+  const cantidad = orden?.productos?.[nombreProducto] || 0;
+  const entregasLinea = normalizarEntregasLinea(orden, nombreProducto, cantidad);
+  const siguiente = entregasLinea.findIndex(v => !v);
+  if (siguiente === -1) return;
+  entregasLinea[siguiente] = true;
+  orden.entregas[nombreProducto] = entregasLinea;
   guardarTabla(ordenes);
   actualizarTabla();
 }
@@ -2071,77 +2226,115 @@ function actualizarTabla() {
   ordenes.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).forEach(o => {
     const lineas = construirLineasPorProducto(o);
     o.entregas = o.entregas || {};
-    lineas.forEach(l => { if (!(l.nombre in o.entregas)) o.entregas[l.nombre] = false; });
+    const entregasPorLinea = new Map();
+    lineas.forEach(l => {
+      entregasPorLinea.set(l.nombre, normalizarEntregasLinea(o, l.nombre, l.cantidad));
+    });
 
     const esPagada = esOrdenPagada(o);
     const enCasa = esOrdenEnCasa(o);
 
-    const allServed = lineas.length > 0 && lineas.every(l => !!o.entregas[l.nombre]);
+    const allServed = lineas.length > 0 && lineas.every(l => {
+      const entregasLinea = entregasPorLinea.get(l.nombre) || [];
+      return entregasLinea.length > 0 && entregasLinea.every(Boolean);
+    });
     const masterChecked = allServed ? 'checked' : '';
     let productosHTML = `
       <div class="productos-maestro">
         <input type="checkbox" class="master-checkbox" ${masterChecked}
               title="Marcar todo el pedido"
-              onclick="toggleEntregaMaestro('${o.fecha}')">
+              onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
         <span class="master-label">Pedido completo</span>
       </div>
     `;
     if (lineas.length >= 1) {
       lineas.forEach(l => {
-        const checked = o.entregas[l.nombre] ? 'checked' : '';
-        const desglose = l.variantes
+        const entregasLinea = entregasPorLinea.get(l.nombre) || [];
+        const unidadesServidas = entregasLinea.filter(Boolean).length;
+        const lineaServida = entregasLinea.length > 0 && unidadesServidas === entregasLinea.length;
+        const variantesTexto = l.variantes && Object.keys(l.variantes).length
           ? `<div class="productos-nombre indentado">${
-              Object.keys(l.variantes).map(v=>`${html(v)}: ${l.variantes[v]}`).join(' · ')
+              Object.keys(l.variantes).map(v => `${html(v)}: ${l.variantes[v]}`).join(' · ')
             }</div>`
           : '';
-        const nombreProducto = l.tieneIcono
-          ? ''
-          : `<span class="productos-nombre">${html(l.nombre)}</span>`;
         const prodInfo = prodMap.get(l.nombre);
-        if (!o.entregas[l.nombre]) {
+        const iconoProd = prodInfo?.icono || '';
+        const unidadesMarkup = l.unidades.map((unidad, idx) => {
+          const servida = !!entregasLinea[idx];
+          const clases = ['entrega-unidad', iconoProd ? 'con-icono' : 'sin-icono'];
+          if (servida) clases.push('servida');
+          const contenido = iconoProd
+            ? `<span class="unidad-icono">${html(iconoProd)}</span>`
+            : `<span class="unidad-icono">${idx + 1}</span>`;
+          const varianteTexto = unidad?.variante
+            ? `<span class="unidad-variante">${html(unidad.variante)}</span>`
+            : '';
+          const tituloPartes = [l.nombre, `Unidad ${idx + 1}`];
+          if (unidad?.variante) tituloPartes.push(unidad.variante);
+          const titulo = html(tituloPartes.join(' · '));
+          return `<button type="button" class="${clases.join(' ')}" title="${titulo}" onclick="toggleEntregaUnidad('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}',${idx})">${contenido}${varianteTexto}</button>`;
+        }).join('');
+        const lineaLabel = lineaServida ? 'Todo servido' : `Servidas ${unidadesServidas}/${l.cantidad}`;
+        const toggleTitle = lineaServida ? 'Desmarcar la fila completa' : 'Marcar toda la fila como servida';
+        productosHTML += `
+          <div class="productos-linea">
+            <div class="productos-linea-header">
+              <button type="button" class="entrega-linea-toggle ${lineaServida ? 'servida' : ''}" title="${html(toggleTitle)}" onclick="toggleEntregaLineaCompleta('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}')">${html(lineaLabel)}</button>
+              <span class="productos-iconos">${html(l.iconos)}</span>
+              <span class="productos-nombre">${html(l.nombre)}</span>
+            </div>
+            ${variantesTexto}
+            <div class="entrega-unidades">${unidadesMarkup}</div>
+          </div>
+        `;
+
+        const pendientesIndices = [];
+        for (let idx = 0; idx < entregasLinea.length; idx++) {
+          if (!entregasLinea[idx]) pendientesIndices.push(idx);
+        }
+        if (pendientesIndices.length > 0) {
           const clienteNombre = (o.cliente || '').trim() || 'Sin nombre';
-          const cantidadPendiente = l.cantidad || 0;
-          const iconoProd = prodInfo?.icono || '';
-          const variantesPendientes = l.variantes ? { ...l.variantes } : null;
+          const cantidadPendiente = pendientesIndices.length;
           const fechaTexto = o.fecha;
           const fechaValor = fechaTextoToMs(fechaTexto);
 
           if (!pendientesCliente.has(clienteNombre)) pendientesCliente.set(clienteNombre, []);
+          const variantesPendientes = {};
+          let sinVariantePend = 0;
+          pendientesIndices.forEach(idxUnidad => {
+            const unidadInfo = l.unidades[idxUnidad] || {};
+            const varNombre = unidadInfo?.variante || null;
+            if (varNombre) {
+              variantesPendientes[varNombre] = (variantesPendientes[varNombre] || 0) + 1;
+            } else {
+              sinVariantePend += 1;
+            }
+          });
+          const variantesCliente = Object.keys(variantesPendientes).length ? { ...variantesPendientes } : null;
+          if (variantesCliente && sinVariantePend > 0) {
+            variantesCliente['Sin variante'] = sinVariantePend;
+          }
           pendientesCliente.get(clienteNombre).push({
             nombre: l.nombre,
             cantidad: cantidadPendiente,
             icono: iconoProd,
-            variantes: variantesPendientes,
+            variantes: variantesCliente,
             fecha: fechaTexto,
             fechaValor,
             pedidoFecha: o.fecha
           });
 
-          if (variantesPendientes && Object.keys(variantesPendientes).length) {
-            let acumulado = 0;
+          if (Object.keys(variantesPendientes).length) {
             Object.entries(variantesPendientes).forEach(([varNombre, cantVar]) => {
-              const cantNum = Number(cantVar) || 0;
-              if (!cantNum) return;
-              acumulado += cantNum;
-              registrarPendienteProducto(l.nombre, varNombre, cantNum, iconoProd, clienteNombre, fechaTexto, fechaValor);
+              registrarPendienteProducto(l.nombre, varNombre, cantVar, iconoProd, clienteNombre, fechaTexto, fechaValor);
             });
-            const restante = cantidadPendiente - acumulado;
-            if (restante > 0) {
-              registrarPendienteProducto(l.nombre, null, restante, iconoProd, clienteNombre, fechaTexto, fechaValor);
+            if (sinVariantePend > 0) {
+              registrarPendienteProducto(l.nombre, null, sinVariantePend, iconoProd, clienteNombre, fechaTexto, fechaValor);
             }
           } else {
             registrarPendienteProducto(l.nombre, null, cantidadPendiente, iconoProd, clienteNombre, fechaTexto, fechaValor);
           }
         }
-        productosHTML += `
-          <div class="productos-linea">
-            <input type="checkbox" class="pendiente-checkbox" ${checked}
-              onclick="toggleEntrega('${o.fecha}','${jsEsc(l.nombre)}')">
-            <span>${html(l.iconos)}</span>
-            ${nombreProducto}
-            ${desglose}
-          </div>
-        `;
       });
     }
 
