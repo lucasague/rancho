@@ -178,7 +178,9 @@
   #tabla .col-fecha {
     display:none;
   }
-  #tabla th:nth-child(4),
+  #tabla th:nth-child(4) {
+    text-align:center;
+  }
   #tabla td:nth-child(4) {
     text-align:right;
   }
@@ -679,9 +681,10 @@
 
   .pago-acciones {
     display:flex;
-    flex-wrap:wrap;
-    gap:6px;
-    align-items:center;
+    flex-direction:column;
+    gap:4px;
+    align-items:flex-end;
+    margin-left:auto;
   }
   .pago-btn {
     border:none;
