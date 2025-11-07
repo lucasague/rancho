@@ -480,6 +480,21 @@
     letter-spacing:0.6px;
     transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
+  .entrega-linea-toggle.icon-only {
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0;
+    line-height:1;
+  }
+  .entrega-linea-toggle.icon-only span[aria-hidden="true"] {
+    font-size:16px;
+    line-height:1;
+  }
   .entrega-linea-toggle:hover { background:#dfe3ff; }
   .entrega-linea-toggle.servida {
     background:#2e7d32;
@@ -501,33 +516,18 @@
 
   .productos-linea {
     display:flex;
-    flex-direction:column;
-    align-items:flex-end;
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-end;
     gap:8px;
-    margin-bottom:10px;
+    margin-bottom:6px;
     text-align:right;
   }
-  .productos-linea-header {
-    display:flex;
-    justify-content:flex-end;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-  .productos-iconos {
-    font-weight:700;
-    color:#3949ab;
-  }
-  .productos-nombre { font-size:13px; color:#424242; }
-  .productos-linea .productos-nombre.indentado {
-    width:100%;
-    font-size:12px;
-    color:#555;
-  }
+  .productos-linea:last-child { margin-bottom:0; }
   .entrega-unidades {
     display:flex;
     flex-wrap:wrap;
-    gap:6px;
+    gap:4px;
     justify-content:flex-end;
   }
   .entrega-unidad {
@@ -535,9 +535,9 @@
     background:#eef0ff;
     color:#1a237e;
     border-radius:10px;
-    min-width:44px;
-    min-height:44px;
-    padding:6px 8px;
+    min-width:36px;
+    min-height:36px;
+    padding:6px;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -562,7 +562,7 @@
     outline-offset:2px;
   }
   .entrega-unidad .unidad-icono {
-    font-size:22px;
+    font-size:20px;
     line-height:1;
   }
   .entrega-unidad.sin-icono .unidad-icono {
@@ -573,22 +573,34 @@
     padding:4px 8px;
     min-width:28px;
   }
-  .entrega-unidad .unidad-variante {
-    font-size:11px;
-    color:#303f9f;
-    line-height:1.1;
-  }
 
   .productos-maestro {
     display:flex;
     justify-content:flex-end;
     align-items:center;
-    gap:10px;
-    margin-bottom:8px;
+    gap:6px;
+    margin-bottom:6px;
     text-align:right;
   }
-  .master-checkbox { width:20px; height:20px; cursor:pointer; transform:scale(1.2); transform-origin:left center; }
-  .master-label { font-weight:bold; font-size:14px; color:#333; }
+  .master-checkbox {
+    width:18px;
+    height:18px;
+    cursor:pointer;
+    transform:scale(1.1);
+    transform-origin:center;
+  }
+
+  .sr-only {
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0, 0, 0, 0);
+    white-space:nowrap;
+    border:0;
+  }
 
   .acciones-pedido {
     display:flex;
@@ -2270,8 +2282,8 @@ function actualizarTabla() {
       <div class="productos-maestro">
         <input type="checkbox" class="master-checkbox" ${masterChecked}
               title="Marcar todo el pedido"
+              aria-label="Marcar todo el pedido"
               onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
-        <span class="master-label">Pedido completo</span>
       </div>
     `;
     if (lineas.length >= 1) {
@@ -2279,11 +2291,6 @@ function actualizarTabla() {
         const entregasLinea = entregasPorLinea.get(l.nombre) || [];
         const unidadesServidas = entregasLinea.filter(Boolean).length;
         const lineaServida = entregasLinea.length > 0 && unidadesServidas === entregasLinea.length;
-        const variantesTexto = l.variantes && Object.keys(l.variantes).length
-          ? `<div class="productos-nombre indentado">${
-              Object.keys(l.variantes).map(v => `${html(v)}: ${l.variantes[v]}`).join(' · ')
-            }</div>`
-          : '';
         const prodInfo = prodMap.get(l.nombre);
         const iconoProd = prodInfo?.icono || '';
         const unidadesMarkup = l.unidades.map((unidad, idx) => {
@@ -2293,24 +2300,27 @@ function actualizarTabla() {
           const contenido = iconoProd
             ? `<span class="unidad-icono">${html(iconoProd)}</span>`
             : `<span class="unidad-icono">${idx + 1}</span>`;
-          const varianteTexto = unidad?.variante
-            ? `<span class="unidad-variante">${html(unidad.variante)}</span>`
-            : '';
           const tituloPartes = [l.nombre, `Unidad ${idx + 1}`];
           if (unidad?.variante) tituloPartes.push(unidad.variante);
           const titulo = html(tituloPartes.join(' · '));
-          return `<button type="button" class="${clases.join(' ')}" title="${titulo}" onclick="toggleEntregaUnidad('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}',${idx})">${contenido}${varianteTexto}</button>`;
+          return `<button type="button" class="${clases.join(' ')}" title="${titulo}" onclick="toggleEntregaUnidad('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}',${idx})">${contenido}</button>`;
         }).join('');
         const lineaLabel = lineaServida ? 'Todo servido' : `Servidas ${unidadesServidas}/${l.cantidad}`;
         const toggleTitle = lineaServida ? 'Desmarcar la fila completa' : 'Marcar toda la fila como servida';
+        const variantesTooltip = l.variantes && Object.keys(l.variantes).length
+          ? Object.keys(l.variantes).map(v => `${v}: ${l.variantes[v]}`).join(' · ')
+          : '';
+        const lineaDescripcion = variantesTooltip ? `${l.nombre} (${variantesTooltip})` : l.nombre;
+        const lineaTooltip = `${lineaDescripcion} · ${lineaLabel}`;
         productosHTML += `
-          <div class="productos-linea">
-            <div class="productos-linea-header">
-              <button type="button" class="entrega-linea-toggle ${lineaServida ? 'servida' : ''}" title="${html(toggleTitle)}" onclick="toggleEntregaLineaCompleta('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}')">${html(lineaLabel)}</button>
-              <span class="productos-iconos">${html(l.iconos)}</span>
-              <span class="productos-nombre">${html(l.nombre)}</span>
-            </div>
-            ${variantesTexto}
+          <div class="productos-linea" title="${html(lineaTooltip)}">
+            <button type="button" class="entrega-linea-toggle icon-only ${lineaServida ? 'servida' : ''}"
+                    title="${html(toggleTitle)}"
+                    aria-label="${html(`${toggleTitle} (${l.nombre})`)}"
+                    onclick="toggleEntregaLineaCompleta('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}')">
+              <span class="sr-only">${html(lineaLabel)}</span>
+              <span aria-hidden="true">${lineaServida ? '✔' : '○'}</span>
+            </button>
             <div class="entrega-unidades">${unidadesMarkup}</div>
           </div>
         `;
