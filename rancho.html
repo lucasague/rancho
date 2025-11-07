@@ -690,9 +690,10 @@
 
   .pago-acciones {
     display:flex;
-    flex-direction:column;
-    gap:4px;
-    align-items:flex-end;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    gap:6px;
+    align-items:center;
     margin-left:auto;
   }
   .pago-btn {
@@ -703,12 +704,46 @@
     cursor:pointer;
     font-weight:600;
     transition:filter 0.2s ease;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
   }
   .pago-btn:hover { filter:brightness(0.95); }
   .pago-btn.efectivo { background:#d9f2d9; color:#1b5e20; }
   .pago-btn.sinpe { background:#e0ebff; color:#1b3c8a; }
   .pago-btn.casa { background:#fff4d5; color:#8a5a00; }
   .pago-btn.simple { background:#eceff1; color:#37474f; }
+  .pago-dropdown {
+    position:relative;
+  }
+  .pago-dropdown::after {
+    content:'▾';
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:10px;
+    color:#8a5a00;
+    pointer-events:none;
+  }
+  .pago-select {
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    border:none;
+    border-radius:6px;
+    padding:6px 26px 6px 10px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    background:#fff4d5;
+    color:#8a5a00;
+  }
+  .pago-select:focus {
+    outline:3px solid rgba(138,90,0,0.25);
+    outline-offset:1px;
+  }
   .pago-badge {
     display:inline-flex;
     align-items:center;
@@ -2450,6 +2485,7 @@ function actualizarTabla() {
         <div class="pago-acciones">
           <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
           <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
+          ${construirSelectorCasas(o.fecha)}
         </div>
       `;
     }
@@ -2580,6 +2616,29 @@ function enviarOrdenACasa(fecha, casaNumero) {
   actualizarTabla();
 }
 
+function construirSelectorCasas(fecha) {
+  const fechaEscapada = jsEsc(fecha);
+  const opciones = Array.from({ length: 6 }, (_, i) => `<option value="${i + 1}">Casa ${i + 1}</option>`).join('');
+  return `
+    <label class="pago-dropdown">
+      <span class="sr-only">Asignar a casa</span>
+      <select class="pago-select" onchange="manejarSeleccionCasa('${fechaEscapada}', this)">
+        <option value="">Casas</option>
+        ${opciones}
+      </select>
+    </label>
+  `;
+}
+
+function manejarSeleccionCasa(fecha, selectEl) {
+  if (!selectEl) return;
+  const casaSeleccionada = selectEl.value;
+  if (!casaSeleccionada) return;
+  enviarOrdenACasa(fecha, casaSeleccionada);
+  selectEl.value = '';
+  selectEl.blur();
+}
+
 function liberarCasa(fecha) {
   if (!fecha) return;
   let ordenes = cargarTabla();
@@ -2615,16 +2674,12 @@ function renderPendientesPago() {
   }
   pendientes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha)).forEach(o => {
     const productos = resumenProductosCorto(o) || '<span class="muted">Sin detalle</span>';
-    const casaBtns = Array.from({ length: 6 }, (_, i) => i + 1).map(num =>
-      `<button type="button" class="pago-btn casa" onclick="enviarOrdenACasa('${jsEsc(o.fecha)}', ${num})">Casa ${num}</button>`
-    ).join('');
+    const selectorCasas = construirSelectorCasas(o.fecha);
     const acciones = `
       <div class="pago-acciones">
         <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
         <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
-      </div>
-      <div class="pago-acciones">
-        ${casaBtns}
+        ${selectorCasas}
       </div>
     `;
     const fila = document.createElement('tr');
