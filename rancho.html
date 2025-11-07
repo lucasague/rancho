@@ -233,6 +233,9 @@
     flex-direction:column;
     gap:12px;
     padding-right:4px;
+    flex:0 0 35%;
+    max-width:35%;
+    margin-left:auto;
   }
 
   .panel-nuevo-pedido {
@@ -858,6 +861,12 @@
 
   @media (max-width: 1024px) {
     .pedidos-layout { flex-direction:column; }
+    .pedidos-right {
+      flex:unset;
+      max-width:none;
+      width:100%;
+      margin-left:0;
+    }
   }
 
   @media (max-width: 900px) {
