@@ -347,6 +347,38 @@
     transition:background 0.2s ease;
   }
   .eliminar-todos-btn:hover { background:#b71c1c; }
+  #tabla th.col-eliminar,
+  #tabla td.col-eliminar {
+    width:32px;
+    padding:4px;
+    text-align:center;
+  }
+  .btn-eliminar-orden {
+    width:18px;
+    height:18px;
+    min-width:18px;
+    padding:0;
+    margin:0;
+    border:none;
+    border-radius:50%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    line-height:1;
+    background:transparent;
+    color:#c62828;
+    cursor:pointer;
+    transition:background 0.2s ease, transform 0.2s ease;
+  }
+  .btn-eliminar-orden:hover {
+    background:rgba(198, 40, 40, 0.12);
+    transform:scale(1.05);
+  }
+  .btn-eliminar-orden:focus-visible {
+    outline:2px solid rgba(198, 40, 40, 0.4);
+    outline-offset:2px;
+  }
   .limpiar-btn {
     width:108px;
     height:108px;
@@ -1195,7 +1227,7 @@
             <th>Importe</th>
             <th>Pago</th>
             <th>Productos</th>
-            <th><button type="button" class="eliminar-todos-btn" onclick="mostrarWarningEliminarTodos()">Eliminar</button></th>
+            <th class="col-eliminar" aria-label="Eliminar orden"></th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -2409,7 +2441,7 @@ function actualizarTabla() {
       <td>${o.cantidad}₡</td>
       <td>${pagoHTML}</td>
       <td>${productosHTML}</td>
-      <td><button onclick="eliminarOrden('${jsEsc(o.fecha)}')">❌</button></td>
+      <td class="col-eliminar"><button type="button" class="btn-eliminar-orden" aria-label="Eliminar orden ${html(o.fecha)}" onclick="eliminarOrden('${jsEsc(o.fecha)}')">&times;</button></td>
     `;
     tbody.appendChild(fila);
 
