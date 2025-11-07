@@ -503,45 +503,6 @@
 
   .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
 
-  .entrega-linea-toggle {
-    border:1px solid #c5cae9;
-    background:#e8eaf6;
-    color:#1a237e;
-    border-radius:20px;
-    padding:4px 12px;
-    font-size:11px;
-    font-weight:700;
-    cursor:pointer;
-    text-transform:uppercase;
-    letter-spacing:0.6px;
-    transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  }
-  .entrega-linea-toggle.icon-only {
-    width:28px;
-    height:28px;
-    border-radius:50%;
-    padding:0;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    font-size:0;
-    line-height:1;
-  }
-  .entrega-linea-toggle.icon-only span[aria-hidden="true"] {
-    font-size:16px;
-    line-height:1;
-  }
-  .entrega-linea-toggle:hover { background:#dfe3ff; }
-  .entrega-linea-toggle.servida {
-    background:#2e7d32;
-    border-color:#2e7d32;
-    color:#fff;
-  }
-  .entrega-linea-toggle:focus-visible {
-    outline:2px solid #1a237e;
-    outline-offset:2px;
-  }
-
   tr.servido { opacity:0.35; }
   tr.orden-casa { background:#fff9e6; }
 
@@ -562,8 +523,8 @@
   .productos-linea:last-child { margin-bottom:0; }
   .entrega-unidades {
     display:flex;
-    flex-wrap:wrap;
-    gap:4px;
+    flex-wrap:nowrap;
+    gap:2px;
     justify-content:flex-end;
   }
   .entrega-unidad {
@@ -2342,7 +2303,6 @@ function actualizarTabla() {
           return `<button type="button" class="${clases.join(' ')}" title="${titulo}" onclick="toggleEntregaUnidad('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}',${idx})">${contenido}</button>`;
         }).join('');
         const lineaLabel = lineaServida ? 'Todo servido' : `Servidas ${unidadesServidas}/${l.cantidad}`;
-        const toggleTitle = lineaServida ? 'Desmarcar la fila completa' : 'Marcar toda la fila como servida';
         const variantesTooltip = l.variantes && Object.keys(l.variantes).length
           ? Object.keys(l.variantes).map(v => `${v}: ${l.variantes[v]}`).join(' · ')
           : '';
@@ -2350,13 +2310,6 @@ function actualizarTabla() {
         const lineaTooltip = `${lineaDescripcion} · ${lineaLabel}`;
         productosHTML += `
           <div class="productos-linea" title="${html(lineaTooltip)}">
-            <button type="button" class="entrega-linea-toggle icon-only ${lineaServida ? 'servida' : ''}"
-                    title="${html(toggleTitle)}"
-                    aria-label="${html(`${toggleTitle} (${l.nombre})`)}"
-                    onclick="toggleEntregaLineaCompleta('${jsEsc(o.fecha)}','${jsEsc(l.nombre)}')">
-              <span class="sr-only">${html(lineaLabel)}</span>
-              <span aria-hidden="true">${lineaServida ? '✔' : '○'}</span>
-            </button>
             <div class="entrega-unidades">${unidadesMarkup}</div>
           </div>
         `;
