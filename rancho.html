@@ -648,21 +648,26 @@
     display:flex;
     justify-content:flex-end;
   }
-  .productos-reset-btn {
+  .master-checkbox-label {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+  }
+  .productos-maestro--completo .master-checkbox-label {
     border:none;
     border-radius:16px;
     background:#e8f5e9;
     color:#1b5e20;
     font-weight:600;
     padding:6px 12px;
-    cursor:pointer;
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
     box-shadow:0 2px 6px rgba(0,0,0,0.12);
   }
-  .productos-reset-btn:hover {
+  .productos-maestro--completo .master-checkbox-label:hover {
     background:#dcedc8;
+  }
+  .master-checkbox-label .master-checkbox {
+    margin:0;
   }
 
   tr.orden-efectivo { background:rgba(76, 175, 80, 0.16); }
@@ -2675,19 +2680,26 @@ function actualizarTabla() {
     if (allServed) {
       productosHTML = `
         <div class="productos-maestro productos-maestro--completo">
-          <button type="button" class="productos-reset-btn" onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
+          <label class="master-checkbox-label">
+            <input type="checkbox" class="master-checkbox" ${masterChecked}
+                  title="Pedido entregado"
+                  aria-label="Pedido entregado"
+                  onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
             <span aria-hidden="true">✅</span>
-            <span>Productos listos (desmarcar)</span>
-          </button>
+            <span>Pedido entregado</span>
+          </label>
         </div>
       `;
     } else {
       productosHTML = `
         <div class="productos-maestro">
-          <input type="checkbox" class="master-checkbox" ${masterChecked}
-                title="Marcar todo el pedido"
-                aria-label="Marcar todo el pedido"
-                onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
+          <label class="master-checkbox-label">
+            <input type="checkbox" class="master-checkbox" ${masterChecked}
+                  title="Marcar todo el pedido"
+                  aria-label="Marcar todo el pedido"
+                  onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
+            <span class="sr-only">Marcar todo el pedido</span>
+          </label>
         </div>
       `;
     }
