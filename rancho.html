@@ -358,14 +358,14 @@
   .eliminar-todos-btn:hover { background:#b71c1c; }
   #tabla th.col-eliminar,
   #tabla td.col-eliminar {
-    width:32px;
+    width:44px;
     padding:4px;
     text-align:center;
   }
   .btn-eliminar-orden {
-    width:18px;
-    height:18px;
-    min-width:18px;
+    width:24px;
+    height:24px;
+    min-width:24px;
     padding:0;
     margin:0;
     border:none;
@@ -373,7 +373,7 @@
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    font-size:10px;
+    font-size:14px;
     line-height:1;
     background:transparent;
     color:#c62828;
@@ -387,6 +387,14 @@
   .btn-eliminar-orden:focus-visible {
     outline:2px solid rgba(198, 40, 40, 0.4);
     outline-offset:2px;
+  }
+  .btn-eliminar-todos {
+    width:28px;
+    height:28px;
+    font-size:16px;
+  }
+  .btn-eliminar-todos:hover {
+    transform:scale(1.08);
   }
   .limpiar-btn {
     width:108px;
@@ -1248,7 +1256,9 @@
             <th>Importe</th>
             <th>Pago</th>
             <th>Productos</th>
-            <th class="col-eliminar" aria-label="Eliminar orden"></th>
+            <th class="col-eliminar" aria-label="Eliminar orden">
+              <button type="button" class="btn-eliminar-orden btn-eliminar-todos" aria-label="Eliminar todas las órdenes" onclick="mostrarWarningEliminarTodos()">&times;</button>
+            </th>
           </tr>
         </thead>
         <tbody></tbody>
