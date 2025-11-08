@@ -662,10 +662,10 @@
 
   .pago-acciones {
     display:flex;
-    flex-wrap:wrap;
-    justify-content:flex-end;
-    gap:6px;
-    align-items:center;
+    flex-direction:column;
+    align-items:flex-end;
+    justify-content:center;
+    gap:4px;
     margin-left:auto;
   }
   .pago-btn {
@@ -963,28 +963,6 @@
     margin-top:0;
   }
 
-  .tabla-responsables {
-    width:100%;
-    border-collapse:collapse;
-  }
-  .tabla-responsables td {
-    border:1px solid #ddd;
-    padding:10px;
-  }
-  .responsable-label {
-    display:flex;
-    align-items:center;
-    gap:12px;
-    cursor:pointer;
-    font-weight:600;
-  }
-  .responsable-label input {
-    width:18px;
-    height:18px;
-  }
-  .responsable-icon {
-    font-size:28px;
-  }
   .apertura-resumen {
     display:flex;
     flex-direction:column;
@@ -1152,79 +1130,12 @@
 <section id="tabApertura" class="tab-content">
   <div class="panel-tercio">
     <div class="apertura-card">
-      <h2>Apertura de caja</h2>
-      <p>Selecciona el responsable de hoy:</p>
-      <table class="tabla-responsables">
-        <tbody>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Marijuan">
-                <span class="responsable-icon">💑</span>
-                <span>Marijuan</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Gabymario">
-                <span class="responsable-icon">💑</span>
-                <span>Gabymario</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Glorilucas" checked>
-                <span class="responsable-icon">💑</span>
-                <span>Glorilucas</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Edurrosa">
-                <span class="responsable-icon">💑</span>
-                <span>Edurrosa</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Coridaniel">
-                <span class="responsable-icon">💑</span>
-                <span>Coridaniel</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Mausicaco">
-                <span class="responsable-icon">💑</span>
-                <span>Mausicaco</span>
-              </label>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="apertura-resumen">
-        <span>Responsable seleccionado: <strong id="aperturaResponsableActual">Glorilucas</strong></span>
-      </div>
-    </div>
-
-    <div class="apertura-card">
       <h3>Fondo de caja</h3>
       <p>Introduce el fondo inicial manualmente o detallando billetes y monedas.</p>
       <div class="fondo-input-group">
         <input id="fondoCajaInput" type="text" inputmode="numeric" value="10000" placeholder="₡" aria-label="Fondo de caja">
-        <button type="button" class="toggle-breakdown" data-target="aperturaBreakdown" aria-expanded="false">Introducir billetes y monedas</button>
       </div>
-      <div id="aperturaBreakdown" class="cash-breakdown" data-context="apertura">
+      <div id="aperturaBreakdown" class="cash-breakdown open" data-context="apertura">
         <table>
           <thead>
             <tr>
@@ -1321,9 +1232,6 @@
           <thead><tr><th>Resumen</th><th>Valor</th></tr></thead>
           <tbody></tbody>
         </table>
-        <div class="cierre-datos">
-          <span>Responsable: <strong id="cierreResponsable">Glorilucas</strong></span>
-        </div>
       </div>
       <div class="cierre-right cierre-card">
         <h2>Conteo de caja</h2>
@@ -1455,7 +1363,6 @@ const PRODUCTOS_POR_DEFECTO = [
   { nombre: 'Gallo', precio: 1000, tipo: 'comida', icono: '🌭', variantes: [] }
 ];
 
-const RESPONSABLES = ['Marijuan', 'Gabymario', 'Glorilucas', 'Edurrosa', 'Coridaniel', 'Mausicaco'];
 const DENOMINACIONES = [
   { valor: 20000, tipo: 'billete', clase: 'billete-20000' },
   { valor: 10000, tipo: 'billete', clase: 'billete-10000' },
@@ -1475,21 +1382,18 @@ let ultimoResumen = { efectivo: 0, sinpe: 0, total: 0 };
 function cargarConfigApertura() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.apertura);
-    if (!raw) return { responsable: 'Glorilucas', fondo: 10000 };
+    if (!raw) return { fondo: 10000 };
     const data = JSON.parse(raw);
-    const responsable = RESPONSABLES.includes(data?.responsable) ? data.responsable : 'Glorilucas';
     const fondo = Number.parseInt(data?.fondo, 10);
     return {
-      responsable,
       fondo: Number.isFinite(fondo) && fondo >= 0 ? fondo : 10000
     };
   } catch {
-    return { responsable: 'Glorilucas', fondo: 10000 };
+    return { fondo: 10000 };
   }
 }
 function guardarConfigApertura() {
   localStorage.setItem(STORAGE_KEYS.apertura, JSON.stringify({
-    responsable: configApertura.responsable,
     fondo: configApertura.fondo
   }));
 }
@@ -1508,16 +1412,9 @@ function etiquetaDenominacion(den) {
 function aplicarConfigApertura() {
   const fondoInput = document.getElementById('fondoCajaInput');
   if (fondoInput) fondoInput.value = obtenerFondoInicial().toString();
-  const radios = document.querySelectorAll('input[name="responsableHoy"]');
-  radios.forEach(radio => {
-    radio.checked = radio.value === configApertura.responsable;
-  });
 }
 function actualizarResumenApertura() {
-  const responsableActual = configApertura.responsable || 'Glorilucas';
   const fondo = obtenerFondoInicial();
-  const respSpan = document.getElementById('aperturaResponsableActual');
-  if (respSpan) respSpan.textContent = responsableActual;
   const fondoSpan = document.getElementById('aperturaFondoActual');
   if (fondoSpan) fondoSpan.textContent = `${formatearColones(fondo)}₡`;
   actualizarPanelCierre();
@@ -1539,6 +1436,17 @@ function inicializarBreakdown(contexto) {
   tbody.querySelectorAll(`.cash-count[data-context="${contexto}"]`).forEach(input => {
     input.addEventListener('input', () => actualizarBreakdown(contexto));
   });
+}
+function limpiarBreakdown(contexto) {
+  const inputs = document.querySelectorAll(`.cash-count[data-context="${contexto}"]`);
+  const cero = `${formatearColones(0)}₡`;
+  inputs.forEach(input => {
+    input.value = '';
+    const celda = input.closest('tr')?.querySelector('.cash-subtotal');
+    if (celda) celda.textContent = cero;
+  });
+  const totalSpan = document.querySelector(`[data-breakdown-total="${contexto}"]`);
+  if (totalSpan) totalSpan.textContent = cero;
 }
 function actualizarBreakdown(contexto) {
   const inputs = Array.from(document.querySelectorAll(`.cash-count[data-context="${contexto}"]`));
@@ -1595,8 +1503,6 @@ function actualizarPanelCierre() {
   const esperado = fondo + ventasEfectivo;
   const diferencia = contado - esperado;
 
-  const responsableSpan = document.getElementById('cierreResponsable');
-  if (responsableSpan) responsableSpan.textContent = configApertura.responsable || 'Glorilucas';
   const fondoSpan = document.getElementById('cierreFondoInicial');
   if (fondoSpan) fondoSpan.textContent = `${formatearColones(fondo)}₡`;
   const esperadoSpan = document.getElementById('cierreEsperado');
@@ -3145,17 +3051,11 @@ document.querySelectorAll('.toggle-breakdown').forEach(btn => {
   });
 });
 
-document.querySelectorAll('input[name="responsableHoy"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    if (!radio.checked) return;
-    configApertura.responsable = radio.value;
-    guardarConfigApertura();
-    actualizarResumenApertura();
-  });
-});
-
 const fondoInput = document.getElementById('fondoCajaInput');
 if (fondoInput) {
+  fondoInput.addEventListener('focus', () => {
+    limpiarBreakdown('apertura');
+  });
   fondoInput.addEventListener('input', () => {
     configApertura.fondo = parseColones(fondoInput.value);
     guardarConfigApertura();
