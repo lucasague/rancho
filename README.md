@@ -14,7 +14,7 @@ Estás editando rancho.html, un punto de venta autónomo (Ignis Latte) empaqueta
 
 La interfaz está dividida en pestañas que se ajustan según el flujo de trabajo diario:
 
-- **Apertura**: permite registrar a la persona responsable del turno y configurar el fondo inicial en caja. También ofrece un desglose opcional por denominaciones para documentar con cuánto efectivo se empieza el día.
+- **Apertura**: permite configurar el fondo inicial en caja. El desglose por denominaciones está siempre visible para documentar con cuánto efectivo se empieza el día y, si se edita el total manualmente, limpia automáticamente los campos del desglose.
 - **Pedidos**: muestra la grilla de productos vendibles, el resumen del pedido actual, sugerencias de cambio y el historial de órdenes registradas. Cada pedido se crea sin pago y desde la misma tabla se marcan los cobros (efectivo o Sinpe) y el estado de entrega de cada producto. El botón flotante abre el panel de pendientes por cliente o por producto.
 - **Cierre**: calcula la diferencia entre el efectivo esperado y el efectivo contado, reutilizando el desglose por denominaciones. Además del resumen clásico incorpora una tabla con todas las órdenes sin pagar para registrarlas o moverlas a una casa antes de enviar el correo automático (vía EmailJS) con el resumen del día.
 - **Productos**: expone un editor para mantener el catálogo. Cada fila permite cambiar nombre, precio, tipo (bebida/comida), icono y variantes. Los cambios se guardan en `localStorage` y se reflejan inmediatamente en la pestaña de pedidos.
@@ -27,12 +27,12 @@ La interfaz está dividida en pestañas que se ajustan según el flujo de trabaj
 - **Gestión de pendientes**: el historial guarda por orden la cantidad y variantes pedidas. Con esa información se construyen vistas agrupadas por cliente y por producto, listando cada unidad pendiente de forma independiente. Cada elemento puede marcarse como servido directamente desde el panel flotante o desde la tabla principal.
 - **Registro de pagos**: cada pedido nace como “pendiente”. Desde la tabla principal, la pestaña de cierre o la pestaña de casas se puede registrar el cobro por efectivo o Sinpe. Las ventas pagadas se suman automáticamente al resumen diario y al correo de cierre.
 - **Casas abiertas**: las órdenes asignadas a las casas 1 a 6 se almacenan junto al historial general, evitando duplicar datos. Desde la pestaña final es posible cobrar, liberar o mantener cada pedido asociado a su casa correspondiente.
-- **Apertura y cierre de caja**: la configuración de apertura persiste en `localStorage`, permitiendo recordar el fondo y el responsable elegido. Durante el cierre se calcula automáticamente la diferencia contra lo esperado usando las ventas en efectivo registradas, se detalla el conteo real de caja y se prepara el correo de reporte con dos archivos CSV incrustados (resumen general e historial de ventas).
+- **Apertura y cierre de caja**: la configuración de apertura persiste en `localStorage`, permitiendo recordar el fondo inicial configurado. Durante el cierre se calcula automáticamente la diferencia contra lo esperado usando las ventas en efectivo registradas, se detalla el conteo real de caja y se prepara el correo de reporte con dos archivos CSV incrustados (resumen general e historial de ventas).
 - **Persistencia local**: productos, órdenes (incluyendo sus asignaciones a casas) y configuración de apertura se almacenan en `localStorage`. Esto permite trabajar sin conexión y conservar el estado entre recargas mientras se usa el mismo navegador.
 
 ## Flujo de uso recomendado
 
-1. **Configura la apertura**: selecciona a la persona responsable y actualiza el fondo de caja si cambió desde el último turno.
+1. **Configura la apertura**: revisa o actualiza el fondo de caja si cambió desde el último turno, ya sea escribiendo el total directamente o ajustándolo con el desglose por denominaciones.
 2. **Registra pedidos** desde la pestaña principal. Cada orden se almacena sin pago; marca los productos entregados y registra el cobro cuando corresponda. Tras escribir el nombre del cliente puedes pulsar Enter para registrar el pedido sin tocar el ratón.
 3. **Clasifica los pedidos por casa** desde la pestaña de cierre (botones “Casa n”) o directamente en la pestaña final de casas para seguir el saldo de cada una.
 4. **Mantén el catálogo al día** en la pestaña de productos cuando haya cambios de precios, iconografía o variantes.
