@@ -358,14 +358,14 @@
   .eliminar-todos-btn:hover { background:#b71c1c; }
   #tabla th.col-eliminar,
   #tabla td.col-eliminar {
-    width:44px;
+    width:132px;
     padding:4px;
     text-align:center;
   }
   .btn-eliminar-orden {
-    width:24px;
-    height:24px;
-    min-width:24px;
+    width:72px;
+    height:72px;
+    min-width:72px;
     padding:0;
     margin:0;
     border:none;
@@ -373,7 +373,7 @@
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    font-size:14px;
+    font-size:42px;
     line-height:1;
     background:transparent;
     color:#c62828;
@@ -389,9 +389,9 @@
     outline-offset:2px;
   }
   .btn-eliminar-todos {
-    width:28px;
-    height:28px;
-    font-size:16px;
+    width:84px;
+    height:84px;
+    font-size:48px;
   }
   .btn-eliminar-todos:hover {
     transform:scale(1.08);
@@ -516,8 +516,38 @@
 
   .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
 
-  tr.servido { opacity:0.35; }
-  tr.orden-casa { background:#fff9e6; }
+  .col-productos,
+  .col-pago {
+    transition:opacity 0.2s ease;
+  }
+  .col-productos.productos-entregados { opacity:0.45; }
+  .col-pago.pago-completado { opacity:0.5; }
+
+  .productos-maestro--completo {
+    display:flex;
+    justify-content:flex-end;
+  }
+  .productos-reset-btn {
+    border:none;
+    border-radius:16px;
+    background:#e8f5e9;
+    color:#1b5e20;
+    font-weight:600;
+    padding:6px 12px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.12);
+  }
+  .productos-reset-btn:hover {
+    background:#dcedc8;
+  }
+
+  tr.orden-efectivo { background:rgba(76, 175, 80, 0.16); }
+  tr.orden-sinpe { background:rgba(63, 81, 181, 0.16); }
+  tr.orden-casa { background:rgba(255, 213, 0, 0.18); }
+  tr.orden-finalizada { opacity:0.35; }
 
   #cliente {
     padding:7px 10px; width:min(520px, 100%); margin:10px 0 0 0; display:block;
@@ -803,18 +833,41 @@
     flex-direction:column;
     gap:12px;
   }
-  .casa-card h3 {
+  .casa-card-titulo {
     margin:0;
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    align-items:center;
+    font-size:18px;
+    gap:12px;
+  }
+  .casa-card-titulo .casa-titulo {
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    font-size:18px;
     gap:8px;
   }
-  .casa-card h3 span:first-child {
+  .casa-card-titulo .casa-conteo {
+    text-align:center;
+    font-size:14px;
+    color:#3949ab;
+    font-weight:600;
+  }
+  .casa-card-titulo .casa-total-h3 {
+    font-weight:700;
+  }
+  .casa-productos-iconos {
     display:flex;
+    flex-wrap:wrap;
+    gap:6px;
     align-items:center;
-    gap:8px;
+  }
+  .casa-producto-icono {
+    font-size:20px;
+    line-height:1;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:20px;
   }
   .casa-pedidos-list {
     list-style:none;
@@ -1667,7 +1720,8 @@ function guardarProductosDesdeTabla() {
   const nombres = new Set();
   for (const r of rows) {
     const nombre = (r.querySelector('.nombre-input')?.value || '').trim();
-    const precio = Number(r.querySelector('.number')?.value || 0);
+    const precioRaw = r.querySelector('.number')?.value;
+    const precio = Number(precioRaw);
     const tipo = r.querySelector('.tipo-select')?.value === 'bebida' ? 'bebida' : 'comida';
     const icono = (r.querySelector('.icono-input')?.value || '').trim();
     const variantesStr = (r.querySelector('.variantes-input')?.value || '').trim();
@@ -1675,9 +1729,13 @@ function guardarProductosDesdeTabla() {
 
     if (!nombre) continue;
     if (nombres.has(nombre)) { alert(`Nombre duplicado: "${nombre}". Cambia alguno antes de guardar.`); return; }
+    if (!Number.isFinite(precio) || precio <= 0) {
+      alert(`Precio inválido para "${nombre || 'producto sin nombre'}". Ingresa un valor mayor que cero.`);
+      return;
+    }
     nombres.add(nombre);
 
-    nuevos.push({ nombre, precio: Math.max(0, Math.floor(precio)), tipo, icono, variantes });
+    nuevos.push({ nombre, precio: Math.max(1, Math.floor(precio)), tipo, icono, variantes });
   }
   guardarProductos(nuevos);
   setEstadoGuardado('Cambios guardados.');
@@ -2257,7 +2315,7 @@ function construirLineasPorProducto(o) {
     } else if (unidades.length > cant) {
       unidades.length = cant;
     }
-    lineas.push({ nombre, cantidad: cant, iconos, variantes: vars, tieneIcono: !!icono, unidades });
+    lineas.push({ nombre, cantidad: cant, iconos, icono, variantes: vars, tieneIcono: !!icono, unidades });
   }
   lineas.sort((a,b) => a.nombre.localeCompare(b.nombre));
   return lineas;
@@ -2411,14 +2469,26 @@ function actualizarTabla() {
       return entregasLinea.length > 0 && entregasLinea.every(Boolean);
     });
     const masterChecked = allServed ? 'checked' : '';
-    let productosHTML = `
-      <div class="productos-maestro">
-        <input type="checkbox" class="master-checkbox" ${masterChecked}
-              title="Marcar todo el pedido"
-              aria-label="Marcar todo el pedido"
-              onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
-      </div>
-    `;
+    let productosHTML = '';
+    if (allServed) {
+      productosHTML = `
+        <div class="productos-maestro productos-maestro--completo">
+          <button type="button" class="productos-reset-btn" onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
+            <span aria-hidden="true">✅</span>
+            <span>Productos listos (desmarcar)</span>
+          </button>
+        </div>
+      `;
+    } else {
+      productosHTML = `
+        <div class="productos-maestro">
+          <input type="checkbox" class="master-checkbox" ${masterChecked}
+                title="Marcar todo el pedido"
+                aria-label="Marcar todo el pedido"
+                onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
+        </div>
+      `;
+    }
     if (lineas.length >= 1) {
       lineas.forEach(l => {
         const entregasLinea = entregasPorLinea.get(l.nombre) || [];
@@ -2447,11 +2517,13 @@ function actualizarTabla() {
           : '';
         const lineaDescripcion = variantesTooltip ? `${l.nombre} (${variantesTooltip})` : l.nombre;
         const lineaTooltip = `${lineaDescripcion} · ${lineaLabel}`;
-        productosHTML += `
-          <div class="productos-linea" title="${html(lineaTooltip)}">
-            <div class="entrega-unidades">${unidadesMarkup}</div>
-          </div>
-        `;
+        if (!allServed) {
+          productosHTML += `
+            <div class="productos-linea" title="${html(lineaTooltip)}">
+              <div class="entrega-unidades">${unidadesMarkup}</div>
+            </div>
+          `;
+        }
 
         const pendientesIndices = [];
         for (let idx = 0; idx < entregasLinea.length; idx++) {
@@ -2482,35 +2554,51 @@ function actualizarTabla() {
     }
 
     const fila = document.createElement('tr');
-    if (allServed) fila.classList.add('servido');
-    if (enCasa) fila.classList.add('orden-casa');
+    const filaClases = [];
+    const pagoCompleto = esPagada || enCasa;
+    if (esPagada) {
+      if (o.metodo === 'efectivo') filaClases.push('orden-efectivo');
+      if (o.metodo === 'sinpe') filaClases.push('orden-sinpe');
+    }
+    if (enCasa) filaClases.push('orden-casa');
+    if (pagoCompleto && allServed) filaClases.push('orden-finalizada');
+    if (filaClases.length) fila.className = filaClases.join(' ');
 
     const fechaEscapada = jsEsc(o.fecha);
     const clasesEfectivo = ['pago-btn', 'efectivo'];
     const clasesSinpe = ['pago-btn', 'sinpe'];
-    if (esPagada && o.metodo === 'efectivo') clasesEfectivo.push('active');
-    if (esPagada && o.metodo === 'sinpe') clasesSinpe.push('active');
-
-    const botonesPago = [
-      `<button type="button" class="${clasesEfectivo.join(' ')}" onclick="registrarPago('${fechaEscapada}','efectivo')">Efectivo</button>`,
-      `<button type="button" class="${clasesSinpe.join(' ')}" onclick="registrarPago('${fechaEscapada}','sinpe')">Sinpe</button>`
-    ];
-
-    if (enCasa) {
+    let botonesPago = [];
+    if (esPagada) {
+      if (o.metodo === 'efectivo') {
+        clasesEfectivo.push('active');
+        botonesPago = [`<button type="button" class="${clasesEfectivo.join(' ')}" onclick="registrarPago('${fechaEscapada}','efectivo')">Efectivo</button>`];
+      } else if (o.metodo === 'sinpe') {
+        clasesSinpe.push('active');
+        botonesPago = [`<button type="button" class="${clasesSinpe.join(' ')}" onclick="registrarPago('${fechaEscapada}','sinpe')">Sinpe</button>`];
+      }
+    } else if (enCasa) {
       const casaTexto = o.casa ? `Casa ${o.casa}` : 'Casa';
-      botonesPago.push(`<button type="button" class="pago-btn casa active" onclick="desmarcarCasa('${fechaEscapada}')">${html(casaTexto)}</button>`);
+      botonesPago = [`<button type="button" class="pago-btn casa active" onclick="desmarcarCasa('${fechaEscapada}')">${html(casaTexto)}</button>`];
     } else {
-      botonesPago.push(construirSelectorCasas(o.fecha));
+      botonesPago = [
+        `<button type="button" class="${clasesEfectivo.join(' ')}" onclick="registrarPago('${fechaEscapada}','efectivo')">Efectivo</button>`,
+        `<button type="button" class="${clasesSinpe.join(' ')}" onclick="registrarPago('${fechaEscapada}','sinpe')">Sinpe</button>`,
+        construirSelectorCasas(o.fecha)
+      ];
     }
 
     const pagoHTML = `<div class="pago-acciones">${botonesPago.join('')}</div>`;
+    const productosTdClasses = ['col-productos'];
+    if (allServed) productosTdClasses.push('productos-entregados');
+    const pagoTdClasses = ['col-pago'];
+    if (pagoCompleto) pagoTdClasses.push('pago-completado');
 
     fila.innerHTML = `
       <td class="col-fecha">${html(o.fecha)}</td>
       <td>${html(o.cliente || '')}</td>
       <td>${o.cantidad}₡</td>
-      <td>${pagoHTML}</td>
-      <td>${productosHTML}</td>
+      <td class="${pagoTdClasses.join(' ')}">${pagoHTML}</td>
+      <td class="${productosTdClasses.join(' ')}">${productosHTML}</td>
       <td class="col-eliminar"><button type="button" class="btn-eliminar-orden" aria-label="Eliminar orden ${html(o.fecha)}" onclick="eliminarOrden('${jsEsc(o.fecha)}')">&times;</button></td>
     `;
     tbody.appendChild(fila);
@@ -2688,6 +2776,24 @@ function resumenProductosCorto(o) {
   }).join('<br>');
 }
 
+function resumenProductosPlano(o) {
+  return construirLineasPorProducto(o).map(l => {
+    const variantes = l.variantes && Object.keys(l.variantes).length
+      ? ` (${Object.keys(l.variantes).map(v => `${v}: ${l.variantes[v]}`).join(', ')})`
+      : '';
+    return `${l.cantidad} ${l.nombre}${variantes}`;
+  }).join(', ');
+}
+
+function construirIconosProductos(o) {
+  return construirLineasPorProducto(o).map(l => {
+    const simbolo = l.icono && l.icono.trim() ? l.icono : l.nombre.charAt(0).toUpperCase();
+    if (!l.cantidad) return '';
+    const iconoHtml = html(simbolo);
+    return Array.from({ length: l.cantidad }, () => `<span class="casa-producto-icono">${iconoHtml}</span>`).join('');
+  }).join('');
+}
+
 function renderPendientesPago() {
   const tbody = document.querySelector('#tablaPendientesPago tbody');
   if (!tbody) return;
@@ -2773,31 +2879,36 @@ function renderCasas() {
     const card = document.createElement('article');
     card.className = 'casa-card';
     const titulo = construirTituloCasa(numero);
-    const headerHTML = `<h3><span>${titulo}</span><span>${lista.length} pedido${lista.length === 1 ? '' : 's'}</span></h3>`;
+    const ordenados = lista.slice().sort((a, b) => fechaTextoToMs(a.fecha) - fechaTextoToMs(b.fecha));
+    const totalPedidos = ordenados.length;
+    const totalMonto = ordenados.reduce((sum, o) => sum + (Number(o.cantidad) || 0), 0);
+    const headerHTML = `
+      <h3 class="casa-card-titulo">
+        <span class="casa-titulo">${titulo}</span>
+        <span class="casa-conteo">${totalPedidos === 1 ? '1 pedido' : `${totalPedidos} pedidos`}</span>
+        <span class="casa-total-h3">${formatearColones(totalMonto)}₡</span>
+      </h3>
+    `;
     card.innerHTML = headerHTML;
 
-    if (!lista.length) {
+    if (!totalPedidos) {
       card.innerHTML += '<div class="casa-vacia">Sin pedidos asignados.</div>';
     } else {
       const ul = document.createElement('ul');
       ul.className = 'casa-pedidos-list';
-      const ordenados = lista.slice().sort((a, b) => fechaTextoToMs(a.fecha) - fechaTextoToMs(b.fecha));
-      let total = 0;
       ordenados.forEach(o => {
         const li = document.createElement('li');
         li.className = 'casa-pedido';
-        const productos = resumenProductosCorto(o) || '<span class="muted">Sin detalle</span>';
-        total += Number(o.cantidad) || 0;
+        const resumenTexto = resumenProductosPlano(o);
+        const iconos = construirIconosProductos(o);
+        const iconosTitulo = resumenTexto ? ` title="${html(resumenTexto)}"` : '';
         li.innerHTML = `
           <div class="casa-pedido-header">
-            <span>${html(o.cliente || 'Sin nombre')}</span>
-            <span>${formatearColones(o.cantidad)}₡</span>
+            <span>${html(o.fecha)}</span>
+            <span>${formatearColones(Number(o.cantidad) || 0)}₡</span>
           </div>
-          <div class="productos-nombre">${productos}</div>
-          <div class="casa-pedido-acciones">
-            <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
-            <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
-            <button type="button" class="pago-btn casa active" onclick="desmarcarCasa('${jsEsc(o.fecha)}')">Casa ${numero}</button>
+          <div class="casa-productos-iconos"${iconosTitulo}>
+            ${iconos || '<span class="casa-producto-icono">•</span>'}
           </div>
         `;
         ul.appendChild(li);
@@ -2806,7 +2917,7 @@ function renderCasas() {
 
       const totalDiv = document.createElement('div');
       totalDiv.className = 'casa-total';
-      totalDiv.innerHTML = `Total adeudado: <strong>${formatearColones(total)}₡</strong>`;
+      totalDiv.innerHTML = `Total adeudado: <strong>${formatearColones(totalMonto)}₡</strong>`;
       card.appendChild(totalDiv);
 
       const accionesDiv = document.createElement('div');
