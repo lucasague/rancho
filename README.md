@@ -14,7 +14,7 @@ Estás editando rancho.html, un punto de venta autónomo (Ignis Latte) empaqueta
 
 La interfaz está dividida en pestañas que se ajustan según el flujo de trabajo diario:
 
-- **Apertura**: permite registrar a la persona responsable del turno y configurar el fondo inicial en caja. También ofrece un desglose opcional por denominaciones para documentar con cuánto efectivo se empieza el día.
+- **Apertura**: permite configurar el fondo inicial en caja. El desglose por denominaciones está siempre visible para documentar con cuánto efectivo se empieza el día y, si se edita el total manualmente, limpia automáticamente los campos del desglose.
 - **Pedidos**: muestra la grilla de productos vendibles, el resumen del pedido actual, sugerencias de cambio y el historial de órdenes registradas. Cada pedido se crea sin pago y desde la misma tabla se marcan los cobros (efectivo o Sinpe) y el estado de entrega de cada producto. El botón flotante abre el panel de pendientes por cliente o por producto.
 - **Cierre**: calcula la diferencia entre el efectivo esperado y el efectivo contado, reutilizando el desglose por denominaciones. Además del resumen clásico incorpora una tabla con todas las órdenes sin pagar para registrarlas o moverlas a una casa antes de enviar el correo automático (vía EmailJS) con el resumen del día; los pedidos que se envían a cuentas abiertas se trasladan automáticamente y se conservan entre turnos.
 - **Productos**: expone un editor para mantener el catálogo. Cada fila permite cambiar nombre, precio, tipo (bebida/comida), icono y variantes. Los cambios se guardan en `localStorage` y se reflejan inmediatamente en la pestaña de pedidos.
@@ -32,7 +32,7 @@ La interfaz está dividida en pestañas que se ajustan según el flujo de trabaj
 
 ## Flujo de uso recomendado
 
-1. **Configura la apertura**: selecciona a la persona responsable y actualiza el fondo de caja si cambió desde el último turno.
+1. **Configura la apertura**: revisa o actualiza el fondo de caja si cambió desde el último turno, ya sea escribiendo el total directamente o ajustándolo con el desglose por denominaciones.
 2. **Registra pedidos** desde la pestaña principal. Cada orden se almacena sin pago; marca los productos entregados y registra el cobro cuando corresponda. Tras escribir el nombre del cliente puedes pulsar Enter para registrar el pedido sin tocar el ratón.
 3. **Clasifica los pedidos por casa** desde la pestaña de cierre (botones “Casa n”) o directamente en la pestaña final de cuentas abiertas para seguir el saldo de cada una.
 4. **Mantén el catálogo al día** en la pestaña de productos cuando haya cambios de precios, iconografía o variantes.

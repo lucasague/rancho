@@ -358,14 +358,14 @@
   .eliminar-todos-btn:hover { background:#b71c1c; }
   #tabla th.col-eliminar,
   #tabla td.col-eliminar {
-    width:32px;
+    width:44px;
     padding:4px;
     text-align:center;
   }
   .btn-eliminar-orden {
-    width:18px;
-    height:18px;
-    min-width:18px;
+    width:24px;
+    height:24px;
+    min-width:24px;
     padding:0;
     margin:0;
     border:none;
@@ -373,7 +373,7 @@
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    font-size:10px;
+    font-size:14px;
     line-height:1;
     background:transparent;
     color:#c62828;
@@ -387,6 +387,14 @@
   .btn-eliminar-orden:focus-visible {
     outline:2px solid rgba(198, 40, 40, 0.4);
     outline-offset:2px;
+  }
+  .btn-eliminar-todos {
+    width:28px;
+    height:28px;
+    font-size:16px;
+  }
+  .btn-eliminar-todos:hover {
+    transform:scale(1.08);
   }
   .limpiar-btn {
     width:108px;
@@ -654,10 +662,10 @@
 
   .pago-acciones {
     display:flex;
-    flex-wrap:wrap;
-    justify-content:flex-end;
-    gap:6px;
-    align-items:center;
+    flex-direction:column;
+    align-items:flex-end;
+    justify-content:center;
+    gap:4px;
     margin-left:auto;
   }
   .pago-btn {
@@ -677,7 +685,10 @@
   .pago-btn.efectivo { background:#d9f2d9; color:#1b5e20; }
   .pago-btn.sinpe { background:#e0ebff; color:#1b3c8a; }
   .pago-btn.casa { background:#fff4d5; color:#8a5a00; }
-  .pago-btn.simple { background:#eceff1; color:#37474f; }
+  .pago-btn.active {
+    box-shadow:0 0 0 2px rgba(0,0,0,0.12) inset;
+    filter:brightness(0.92);
+  }
   .pago-dropdown {
     position:relative;
   }
@@ -708,32 +719,6 @@
     outline:3px solid rgba(138,90,0,0.25);
     outline-offset:1px;
   }
-  .pago-badge {
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    border-radius:999px;
-    padding:4px 10px;
-    font-weight:600;
-    font-size:12px;
-  }
-  .pago-badge.pago-efectivo { background:#2e7d32; color:#fff; }
-  .pago-badge.pago-sinpe { background:#1b3c8a; color:#fff; }
-  .pago-badge.pago-pendiente { background:#eceff1; color:#455a64; }
-  .pago-badge.pago-casa { background:#fff4d5; color:#8a5a00; }
-  .pago-badge button {
-    border:none;
-    border-radius:999px;
-    padding:2px 8px;
-    font-size:11px;
-    cursor:pointer;
-    color:inherit;
-    background:rgba(255,255,255,0.2);
-  }
-  .pago-badge button:hover {
-    background:rgba(0,0,0,0.15);
-  }
-
   @media (max-width: 1024px) {
     .accion-redonda {
       width:54px;
@@ -976,28 +961,6 @@
     margin-top:0;
   }
 
-  .tabla-responsables {
-    width:100%;
-    border-collapse:collapse;
-  }
-  .tabla-responsables td {
-    border:1px solid #ddd;
-    padding:10px;
-  }
-  .responsable-label {
-    display:flex;
-    align-items:center;
-    gap:12px;
-    cursor:pointer;
-    font-weight:600;
-  }
-  .responsable-label input {
-    width:18px;
-    height:18px;
-  }
-  .responsable-icon {
-    font-size:28px;
-  }
   .apertura-resumen {
     display:flex;
     flex-direction:column;
@@ -1165,79 +1128,12 @@
 <section id="tabApertura" class="tab-content">
   <div class="panel-tercio">
     <div class="apertura-card">
-      <h2>Apertura de caja</h2>
-      <p>Selecciona el responsable de hoy:</p>
-      <table class="tabla-responsables">
-        <tbody>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Marijuan">
-                <span class="responsable-icon">💑</span>
-                <span>Marijuan</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Gabymario">
-                <span class="responsable-icon">💑</span>
-                <span>Gabymario</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Glorilucas" checked>
-                <span class="responsable-icon">💑</span>
-                <span>Glorilucas</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Edurrosa">
-                <span class="responsable-icon">💑</span>
-                <span>Edurrosa</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Coridaniel">
-                <span class="responsable-icon">💑</span>
-                <span>Coridaniel</span>
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label class="responsable-label">
-                <input type="radio" name="responsableHoy" value="Mausicaco">
-                <span class="responsable-icon">💑</span>
-                <span>Mausicaco</span>
-              </label>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="apertura-resumen">
-        <span>Responsable seleccionado: <strong id="aperturaResponsableActual">Glorilucas</strong></span>
-      </div>
-    </div>
-
-    <div class="apertura-card">
       <h3>Fondo de caja</h3>
       <p>Introduce el fondo inicial manualmente o detallando billetes y monedas.</p>
       <div class="fondo-input-group">
         <input id="fondoCajaInput" type="text" inputmode="numeric" value="10000" placeholder="₡" aria-label="Fondo de caja">
-        <button type="button" class="toggle-breakdown" data-target="aperturaBreakdown" aria-expanded="false">Introducir billetes y monedas</button>
       </div>
-      <div id="aperturaBreakdown" class="cash-breakdown" data-context="apertura">
+      <div id="aperturaBreakdown" class="cash-breakdown open" data-context="apertura">
         <table>
           <thead>
             <tr>
@@ -1269,7 +1165,9 @@
             <th>Importe</th>
             <th>Pago</th>
             <th>Productos</th>
-            <th class="col-eliminar" aria-label="Eliminar orden"></th>
+            <th class="col-eliminar" aria-label="Eliminar orden">
+              <button type="button" class="btn-eliminar-orden btn-eliminar-todos" aria-label="Eliminar todas las órdenes" onclick="mostrarWarningEliminarTodos()">&times;</button>
+            </th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1332,9 +1230,6 @@
           <thead><tr><th>Resumen</th><th>Valor</th></tr></thead>
           <tbody></tbody>
         </table>
-        <div class="cierre-datos">
-          <span>Responsable: <strong id="cierreResponsable">Glorilucas</strong></span>
-        </div>
       </div>
       <div class="cierre-right cierre-card">
         <h2>Conteo de caja</h2>
@@ -1467,7 +1362,6 @@ const PRODUCTOS_POR_DEFECTO = [
   { nombre: 'Gallo', precio: 1000, tipo: 'comida', icono: '🌭', variantes: [] }
 ];
 
-const RESPONSABLES = ['Marijuan', 'Gabymario', 'Glorilucas', 'Edurrosa', 'Coridaniel', 'Mausicaco'];
 const DENOMINACIONES = [
   { valor: 20000, tipo: 'billete', clase: 'billete-20000' },
   { valor: 10000, tipo: 'billete', clase: 'billete-10000' },
@@ -1489,21 +1383,18 @@ let ultimoResumen = { efectivo: 0, sinpe: 0, total: 0 };
 function cargarConfigApertura() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.apertura);
-    if (!raw) return { responsable: 'Glorilucas', fondo: 10000 };
+    if (!raw) return { fondo: 10000 };
     const data = JSON.parse(raw);
-    const responsable = RESPONSABLES.includes(data?.responsable) ? data.responsable : 'Glorilucas';
     const fondo = Number.parseInt(data?.fondo, 10);
     return {
-      responsable,
       fondo: Number.isFinite(fondo) && fondo >= 0 ? fondo : 10000
     };
   } catch {
-    return { responsable: 'Glorilucas', fondo: 10000 };
+    return { fondo: 10000 };
   }
 }
 function guardarConfigApertura() {
   localStorage.setItem(STORAGE_KEYS.apertura, JSON.stringify({
-    responsable: configApertura.responsable,
     fondo: configApertura.fondo
   }));
 }
@@ -1522,16 +1413,9 @@ function etiquetaDenominacion(den) {
 function aplicarConfigApertura() {
   const fondoInput = document.getElementById('fondoCajaInput');
   if (fondoInput) fondoInput.value = obtenerFondoInicial().toString();
-  const radios = document.querySelectorAll('input[name="responsableHoy"]');
-  radios.forEach(radio => {
-    radio.checked = radio.value === configApertura.responsable;
-  });
 }
 function actualizarResumenApertura() {
-  const responsableActual = configApertura.responsable || 'Glorilucas';
   const fondo = obtenerFondoInicial();
-  const respSpan = document.getElementById('aperturaResponsableActual');
-  if (respSpan) respSpan.textContent = responsableActual;
   const fondoSpan = document.getElementById('aperturaFondoActual');
   if (fondoSpan) fondoSpan.textContent = `${formatearColones(fondo)}₡`;
   actualizarPanelCierre();
@@ -1553,6 +1437,17 @@ function inicializarBreakdown(contexto) {
   tbody.querySelectorAll(`.cash-count[data-context="${contexto}"]`).forEach(input => {
     input.addEventListener('input', () => actualizarBreakdown(contexto));
   });
+}
+function limpiarBreakdown(contexto) {
+  const inputs = document.querySelectorAll(`.cash-count[data-context="${contexto}"]`);
+  const cero = `${formatearColones(0)}₡`;
+  inputs.forEach(input => {
+    input.value = '';
+    const celda = input.closest('tr')?.querySelector('.cash-subtotal');
+    if (celda) celda.textContent = cero;
+  });
+  const totalSpan = document.querySelector(`[data-breakdown-total="${contexto}"]`);
+  if (totalSpan) totalSpan.textContent = cero;
 }
 function actualizarBreakdown(contexto) {
   const inputs = Array.from(document.querySelectorAll(`.cash-count[data-context="${contexto}"]`));
@@ -1609,8 +1504,6 @@ function actualizarPanelCierre() {
   const esperado = fondo + ventasEfectivo;
   const diferencia = contado - esperado;
 
-  const responsableSpan = document.getElementById('cierreResponsable');
-  if (responsableSpan) responsableSpan.textContent = configApertura.responsable || 'Glorilucas';
   const fondoSpan = document.getElementById('cierreFondoInicial');
   if (fondoSpan) fondoSpan.textContent = `${formatearColones(fondo)}₡`;
   const esperadoSpan = document.getElementById('cierreEsperado');
@@ -2497,30 +2390,25 @@ function actualizarTabla() {
     if (allServed) fila.classList.add('servido');
     if (enCasa) fila.classList.add('orden-casa');
 
-    let pagoHTML = '';
-    if (esPagada) {
-      const clasePago = o.metodo === 'sinpe' ? 'pago-sinpe' : 'pago-efectivo';
-      const textoPago = o.metodo === 'sinpe' ? 'Sinpe' : 'Efectivo';
-      pagoHTML = `<span class="pago-badge ${clasePago}">${html(textoPago)}<button type="button" onclick="desmarcarPago('${jsEsc(o.fecha)}')">Deshacer</button></span>`;
-    } else if (enCasa) {
+    const fechaEscapada = jsEsc(o.fecha);
+    const clasesEfectivo = ['pago-btn', 'efectivo'];
+    const clasesSinpe = ['pago-btn', 'sinpe'];
+    if (esPagada && o.metodo === 'efectivo') clasesEfectivo.push('active');
+    if (esPagada && o.metodo === 'sinpe') clasesSinpe.push('active');
+
+    const botonesPago = [
+      `<button type="button" class="${clasesEfectivo.join(' ')}" onclick="registrarPago('${fechaEscapada}','efectivo')">Efectivo</button>`,
+      `<button type="button" class="${clasesSinpe.join(' ')}" onclick="registrarPago('${fechaEscapada}','sinpe')">Sinpe</button>`
+    ];
+
+    if (enCasa) {
       const casaTexto = o.casa ? `Casa ${o.casa}` : 'Casa';
-      pagoHTML = `
-        <div class="pago-acciones">
-          <span class="pago-badge pago-casa">${html(casaTexto)}</span>
-          <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
-          <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
-          <button type="button" class="pago-btn simple" onclick="liberarCasa('${jsEsc(o.fecha)}')">Liberar</button>
-        </div>
-      `;
+      botonesPago.push(`<button type="button" class="pago-btn casa active" onclick="desmarcarCasa('${fechaEscapada}')">${html(casaTexto)}</button>`);
     } else {
-      pagoHTML = `
-        <div class="pago-acciones">
-          <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
-          <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
-          ${construirSelectorCasas(o.fecha)}
-        </div>
-      `;
+      botonesPago.push(construirSelectorCasas(o.fecha));
     }
+
+    const pagoHTML = `<div class="pago-acciones">${botonesPago.join('')}</div>`;
 
     fila.innerHTML = `
       <td class="col-fecha">${html(o.fecha)}</td>
@@ -2628,23 +2516,18 @@ function registrarPago(fecha, metodo) {
   const idx = ordenes.findIndex(o => o.fecha === fecha);
   if (idx === -1) return;
   const orden = ordenes[idx];
-  orden.estado = ESTADOS_ORDEN.PAGADO;
-  orden.metodo = metodo;
-  orden.casa = null;
-  orden.pagoFecha = new Date().toISOString();
-  guardarTabla(ordenes);
-  actualizarTabla();
-}
-
-function desmarcarPago(fecha) {
-  if (!fecha) return;
-  let ordenes = cargarTabla();
-  const idx = ordenes.findIndex(o => o.fecha === fecha);
-  if (idx === -1) return;
-  const orden = ordenes[idx];
-  orden.estado = ESTADOS_ORDEN.PENDIENTE;
-  orden.metodo = null;
-  orden.pagoFecha = null;
+  const mismoMetodoSeleccionado = orden.estado === ESTADOS_ORDEN.PAGADO && orden.metodo === metodo;
+  if (mismoMetodoSeleccionado) {
+    orden.estado = ESTADOS_ORDEN.PENDIENTE;
+    orden.metodo = null;
+    orden.casa = null;
+    orden.pagoFecha = null;
+  } else {
+    orden.estado = ESTADOS_ORDEN.PAGADO;
+    orden.metodo = metodo;
+    orden.casa = null;
+    orden.pagoFecha = new Date().toISOString();
+  }
   guardarTabla(ordenes);
   actualizarTabla();
 }
@@ -2687,7 +2570,7 @@ function manejarSeleccionCasa(fecha, selectEl) {
   selectEl.blur();
 }
 
-function liberarCasa(fecha) {
+function desmarcarCasa(fecha) {
   if (!fecha) return;
   let ordenes = cargarTabla();
   const idx = ordenes.findIndex(o => o.fecha === fecha);
@@ -2816,6 +2699,11 @@ function renderCasas() {
             <span>${formatearColones(o.cantidad)}₡</span>
           </div>
           <div class="productos-nombre">${productos}</div>
+          <div class="casa-pedido-acciones">
+            <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
+            <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
+            <button type="button" class="pago-btn casa active" onclick="desmarcarCasa('${jsEsc(o.fecha)}')">Casa ${numero}</button>
+          </div>
         `;
         ul.appendChild(li);
       });
@@ -3320,17 +3208,11 @@ document.querySelectorAll('.toggle-breakdown').forEach(btn => {
   });
 });
 
-document.querySelectorAll('input[name="responsableHoy"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    if (!radio.checked) return;
-    configApertura.responsable = radio.value;
-    guardarConfigApertura();
-    actualizarResumenApertura();
-  });
-});
-
 const fondoInput = document.getElementById('fondoCajaInput');
 if (fondoInput) {
+  fondoInput.addEventListener('focus', () => {
+    limpiarBreakdown('apertura');
+  });
   fondoInput.addEventListener('input', () => {
     configApertura.fondo = parseColones(fondoInput.value);
     guardarConfigApertura();
