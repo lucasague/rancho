@@ -516,8 +516,38 @@
 
   .pendiente-checkbox { width:16px; height:16px; cursor:pointer; vertical-align:middle; margin-right:6px; }
 
-  tr.servido { opacity:0.35; }
-  tr.orden-casa { background:#fff9e6; }
+  .col-productos,
+  .col-pago {
+    transition:opacity 0.2s ease;
+  }
+  .col-productos.productos-entregados { opacity:0.45; }
+  .col-pago.pago-completado { opacity:0.5; }
+
+  .productos-maestro--completo {
+    display:flex;
+    justify-content:flex-end;
+  }
+  .productos-reset-btn {
+    border:none;
+    border-radius:16px;
+    background:#e8f5e9;
+    color:#1b5e20;
+    font-weight:600;
+    padding:6px 12px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.12);
+  }
+  .productos-reset-btn:hover {
+    background:#dcedc8;
+  }
+
+  tr.orden-efectivo { background:rgba(76, 175, 80, 0.16); }
+  tr.orden-sinpe { background:rgba(63, 81, 181, 0.16); }
+  tr.orden-casa { background:rgba(255, 213, 0, 0.18); }
+  tr.orden-finalizada { opacity:0.35; }
 
   #cliente {
     padding:7px 10px; width:min(520px, 100%); margin:10px 0 0 0; display:block;
@@ -2316,14 +2346,26 @@ function actualizarTabla() {
       return entregasLinea.length > 0 && entregasLinea.every(Boolean);
     });
     const masterChecked = allServed ? 'checked' : '';
-    let productosHTML = `
-      <div class="productos-maestro">
-        <input type="checkbox" class="master-checkbox" ${masterChecked}
-              title="Marcar todo el pedido"
-              aria-label="Marcar todo el pedido"
-              onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
-      </div>
-    `;
+    let productosHTML = '';
+    if (allServed) {
+      productosHTML = `
+        <div class="productos-maestro productos-maestro--completo">
+          <button type="button" class="productos-reset-btn" onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
+            <span aria-hidden="true">✅</span>
+            <span>Productos listos (desmarcar)</span>
+          </button>
+        </div>
+      `;
+    } else {
+      productosHTML = `
+        <div class="productos-maestro">
+          <input type="checkbox" class="master-checkbox" ${masterChecked}
+                title="Marcar todo el pedido"
+                aria-label="Marcar todo el pedido"
+                onclick="toggleEntregaMaestro('${jsEsc(o.fecha)}')">
+        </div>
+      `;
+    }
     if (lineas.length >= 1) {
       lineas.forEach(l => {
         const entregasLinea = entregasPorLinea.get(l.nombre) || [];
@@ -2352,11 +2394,13 @@ function actualizarTabla() {
           : '';
         const lineaDescripcion = variantesTooltip ? `${l.nombre} (${variantesTooltip})` : l.nombre;
         const lineaTooltip = `${lineaDescripcion} · ${lineaLabel}`;
-        productosHTML += `
-          <div class="productos-linea" title="${html(lineaTooltip)}">
-            <div class="entrega-unidades">${unidadesMarkup}</div>
-          </div>
-        `;
+        if (!allServed) {
+          productosHTML += `
+            <div class="productos-linea" title="${html(lineaTooltip)}">
+              <div class="entrega-unidades">${unidadesMarkup}</div>
+            </div>
+          `;
+        }
 
         const pendientesIndices = [];
         for (let idx = 0; idx < entregasLinea.length; idx++) {
@@ -2387,35 +2431,51 @@ function actualizarTabla() {
     }
 
     const fila = document.createElement('tr');
-    if (allServed) fila.classList.add('servido');
-    if (enCasa) fila.classList.add('orden-casa');
+    const filaClases = [];
+    const pagoCompleto = esPagada || enCasa;
+    if (esPagada) {
+      if (o.metodo === 'efectivo') filaClases.push('orden-efectivo');
+      if (o.metodo === 'sinpe') filaClases.push('orden-sinpe');
+    }
+    if (enCasa) filaClases.push('orden-casa');
+    if (pagoCompleto && allServed) filaClases.push('orden-finalizada');
+    if (filaClases.length) fila.className = filaClases.join(' ');
 
     const fechaEscapada = jsEsc(o.fecha);
     const clasesEfectivo = ['pago-btn', 'efectivo'];
     const clasesSinpe = ['pago-btn', 'sinpe'];
-    if (esPagada && o.metodo === 'efectivo') clasesEfectivo.push('active');
-    if (esPagada && o.metodo === 'sinpe') clasesSinpe.push('active');
-
-    const botonesPago = [
-      `<button type="button" class="${clasesEfectivo.join(' ')}" onclick="registrarPago('${fechaEscapada}','efectivo')">Efectivo</button>`,
-      `<button type="button" class="${clasesSinpe.join(' ')}" onclick="registrarPago('${fechaEscapada}','sinpe')">Sinpe</button>`
-    ];
-
-    if (enCasa) {
+    let botonesPago = [];
+    if (esPagada) {
+      if (o.metodo === 'efectivo') {
+        clasesEfectivo.push('active');
+        botonesPago = [`<button type="button" class="${clasesEfectivo.join(' ')}" onclick="registrarPago('${fechaEscapada}','efectivo')">Efectivo</button>`];
+      } else if (o.metodo === 'sinpe') {
+        clasesSinpe.push('active');
+        botonesPago = [`<button type="button" class="${clasesSinpe.join(' ')}" onclick="registrarPago('${fechaEscapada}','sinpe')">Sinpe</button>`];
+      }
+    } else if (enCasa) {
       const casaTexto = o.casa ? `Casa ${o.casa}` : 'Casa';
-      botonesPago.push(`<button type="button" class="pago-btn casa active" onclick="desmarcarCasa('${fechaEscapada}')">${html(casaTexto)}</button>`);
+      botonesPago = [`<button type="button" class="pago-btn casa active" onclick="desmarcarCasa('${fechaEscapada}')">${html(casaTexto)}</button>`];
     } else {
-      botonesPago.push(construirSelectorCasas(o.fecha));
+      botonesPago = [
+        `<button type="button" class="${clasesEfectivo.join(' ')}" onclick="registrarPago('${fechaEscapada}','efectivo')">Efectivo</button>`,
+        `<button type="button" class="${clasesSinpe.join(' ')}" onclick="registrarPago('${fechaEscapada}','sinpe')">Sinpe</button>`,
+        construirSelectorCasas(o.fecha)
+      ];
     }
 
     const pagoHTML = `<div class="pago-acciones">${botonesPago.join('')}</div>`;
+    const productosTdClasses = ['col-productos'];
+    if (allServed) productosTdClasses.push('productos-entregados');
+    const pagoTdClasses = ['col-pago'];
+    if (pagoCompleto) pagoTdClasses.push('pago-completado');
 
     fila.innerHTML = `
       <td class="col-fecha">${html(o.fecha)}</td>
       <td>${html(o.cliente || '')}</td>
       <td>${o.cantidad}₡</td>
-      <td>${pagoHTML}</td>
-      <td>${productosHTML}</td>
+      <td class="${pagoTdClasses.join(' ')}">${pagoHTML}</td>
+      <td class="${productosTdClasses.join(' ')}">${productosHTML}</td>
       <td class="col-eliminar"><button type="button" class="btn-eliminar-orden" aria-label="Eliminar orden ${html(o.fecha)}" onclick="eliminarOrden('${jsEsc(o.fecha)}')">&times;</button></td>
     `;
     tbody.appendChild(fila);
