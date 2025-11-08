@@ -824,6 +824,12 @@
     align-items:center;
     justify-content:space-between;
     font-size:18px;
+    gap:8px;
+  }
+  .casa-card h3 span:first-child {
+    display:flex;
+    align-items:center;
+    gap:8px;
   }
   .casa-pedidos-list {
     list-style:none;
@@ -857,6 +863,21 @@
   .casa-vacia {
     color:#90a4ae;
     font-style:italic;
+  }
+  .casa-bandera {
+    font-size:20px;
+    line-height:1;
+  }
+  .casa-total {
+    font-weight:600;
+    text-align:right;
+    margin-top:4px;
+  }
+  .casa-acciones {
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:4px;
   }
 
   @media (max-width: 1024px) {
@@ -1399,8 +1420,8 @@
 <!-- TAB: CASAS -->
 <section id="tabCasas" class="tab-content" style="display:none;">
   <div class="casas-wrapper">
-    <h2>Casas abiertas</h2>
-    <p class="help">Envía pedidos pendientes a cada casa o regístralos como pagados directamente desde esta vista.</p>
+    <h2>Cuentas abiertas</h2>
+    <p class="help">Consulta el saldo acumulado de cada casa y liquida la cuenta completa cuando realicen el pago.</p>
     <div class="casas-grid" id="casasGrid"></div>
   </div>
 </section>
@@ -1426,7 +1447,8 @@
 const STORAGE_KEYS = {
   productos: 'ignis_productos_v2', // v2 por variantes
   ordenes: 'ordenes_v2',
-  apertura: 'config_apertura_caja_v1'
+  apertura: 'config_apertura_caja_v1',
+  cuentas: 'ignis_cuentas_abiertas_v1'
 };
 
 const PRECIO_COMBO = 999999; // tu valor actual
@@ -1458,6 +1480,8 @@ const DENOMINACIONES = [
   { valor: 25, tipo: 'moneda', clase: '' },
   { valor: 10, tipo: 'moneda', clase: '' }
 ];
+
+const TOTAL_CASAS = 6;
 
 let configApertura = cargarConfigApertura();
 let ultimoResumen = { efectivo: 0, sinpe: 0, total: 0 };
@@ -2062,7 +2086,7 @@ function clonarVariantesMapa(vars) {
 
 function normalizarNumeroCasa(valor) {
   const num = Number.parseInt(valor, 10);
-  return Number.isInteger(num) && num >= 1 && num <= 6 ? num : null;
+  return Number.isInteger(num) && num >= 1 && num <= TOTAL_CASAS ? num : null;
 }
 
 function esOrdenPagada(orden) {
@@ -2082,6 +2106,68 @@ const ESTADOS_ORDEN = {
   PAGADO: 'pagado',
   CASA: 'casa'
 };
+
+function crearMapaCuentasVacio() {
+  const base = {};
+  for (let i = 1; i <= TOTAL_CASAS; i++) {
+    base[i] = [];
+  }
+  return base;
+}
+
+function clonarOrdenParaCuenta(orden, casaNumero) {
+  const casa = normalizarNumeroCasa(casaNumero ?? orden?.casa);
+  if (!casa) return null;
+  return {
+    fecha: orden?.fecha || new Date().toLocaleString(),
+    cliente: orden?.cliente || '',
+    cantidad: Number(orden?.cantidad) || 0,
+    productos: clonarMapaProductos(orden?.productos || {}),
+    variantes: clonarVariantesMapa(orden?.variantes || {}),
+    estado: ESTADOS_ORDEN.CASA,
+    casa,
+    metodo: null,
+    pagoFecha: null
+  };
+}
+
+function cargarCuentasAbiertas() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.cuentas);
+    if (!raw) return crearMapaCuentasVacio();
+    const data = JSON.parse(raw);
+    const base = crearMapaCuentasVacio();
+    Object.keys(base).forEach(key => {
+      const lista = Array.isArray(data?.[key]) ? data[key] : [];
+      base[key] = lista.map(item => clonarOrdenParaCuenta(item, key)).filter(Boolean);
+    });
+    return base;
+  } catch {
+    return crearMapaCuentasVacio();
+  }
+}
+
+function guardarCuentasAbiertas(cuentas) {
+  const base = crearMapaCuentasVacio();
+  Object.keys(base).forEach(key => {
+    const lista = Array.isArray(cuentas?.[key]) ? cuentas[key] : [];
+    base[key] = lista.map(item => clonarOrdenParaCuenta(item, key)).filter(Boolean);
+  });
+  localStorage.setItem(STORAGE_KEYS.cuentas, JSON.stringify(base));
+}
+
+function crearOrdenPagadaDesdeCuenta(ordenCuenta, metodo, fechaPagoIso) {
+  const copia = clonarOrdenParaCuenta(ordenCuenta, ordenCuenta?.casa);
+  if (!copia) return null;
+  return {
+    ...copia,
+    entregas: {},
+    estado: ESTADOS_ORDEN.PAGADO,
+    metodo,
+    casa: null,
+    pagoFecha: fechaPagoIso
+  };
+}
 
 function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, metodo = null, estado = ESTADOS_ORDEN.PENDIENTE, casa = null, entregasServidas = false }) {
   const productosCopia = clonarMapaProductos(productos);
@@ -2580,7 +2666,7 @@ function enviarOrdenACasa(fecha, casaNumero) {
 
 function construirSelectorCasas(fecha) {
   const fechaEscapada = jsEsc(fecha);
-  const opciones = Array.from({ length: 6 }, (_, i) => `<option value="${i + 1}">Casa ${i + 1}</option>`).join('');
+  const opciones = Array.from({ length: TOTAL_CASAS }, (_, i) => `<option value="${i + 1}">Casa ${i + 1}</option>`).join('');
   return `
     <label class="pago-dropdown">
       <span class="sr-only">Asignar a casa</span>
@@ -2656,11 +2742,37 @@ function renderPendientesPago() {
   });
 }
 
+function obtenerBanderasCasa(numero) {
+  switch (numero) {
+    case 1:
+      return ['🇲🇽'];
+    case 2:
+      return ['🇨🇷'];
+    case 3:
+    case 4:
+    case 6:
+      return ['🇪🇸'];
+    case 5:
+      return ['🇻🇪', '🇺🇸'];
+    default:
+      return [];
+  }
+}
+
+function construirTituloCasa(numero) {
+  const banderas = obtenerBanderasCasa(numero);
+  if (!banderas.length) return `Casa ${numero}`;
+  const banderasHTML = banderas.map(flag => `<span class="casa-bandera">${flag}</span>`).join(' ');
+  return `Casa ${numero} ${banderasHTML}`;
+}
+
 function renderCasas() {
   const grid = document.getElementById('casasGrid');
   if (!grid) return;
   const ordenes = cargarTabla();
-  const casas = new Map(Array.from({ length: 6 }, (_, i) => [i + 1, []]));
+  const cuentas = cargarCuentasAbiertas();
+  const casas = new Map(Array.from({ length: TOTAL_CASAS }, (_, i) => [i + 1, []]));
+
   ordenes.forEach(o => {
     if (!esOrdenEnCasa(o)) return;
     const casa = normalizarNumeroCasa(o.casa) || normalizarNumeroCasa(detectarCasaDesdeNombre(o.cliente));
@@ -2668,38 +2780,98 @@ function renderCasas() {
     casas.get(casa).push(o);
   });
 
+  Object.keys(cuentas).forEach(key => {
+    const numero = Number(key);
+    if (!casas.has(numero)) casas.set(numero, []);
+    const lista = cuentas[key] || [];
+    lista.forEach(o => {
+      const copia = clonarOrdenParaCuenta(o, numero);
+      if (copia) casas.get(numero).push(copia);
+    });
+  });
+
   grid.innerHTML = '';
   casas.forEach((lista, numero) => {
     const card = document.createElement('article');
     card.className = 'casa-card';
-    card.innerHTML = `<h3>Casa ${numero}<span>${lista.length} pedido${lista.length === 1 ? '' : 's'}</span></h3>`;
+    const titulo = construirTituloCasa(numero);
+    const headerHTML = `<h3><span>${titulo}</span><span>${lista.length} pedido${lista.length === 1 ? '' : 's'}</span></h3>`;
+    card.innerHTML = headerHTML;
+
     if (!lista.length) {
       card.innerHTML += '<div class="casa-vacia">Sin pedidos asignados.</div>';
     } else {
       const ul = document.createElement('ul');
       ul.className = 'casa-pedidos-list';
-      lista.sort((a, b) => new Date(a.fecha) - new Date(b.fecha)).forEach(o => {
+      const ordenados = lista.slice().sort((a, b) => fechaTextoToMs(a.fecha) - fechaTextoToMs(b.fecha));
+      let total = 0;
+      ordenados.forEach(o => {
         const li = document.createElement('li');
         li.className = 'casa-pedido';
         const productos = resumenProductosCorto(o) || '<span class="muted">Sin detalle</span>';
+        total += Number(o.cantidad) || 0;
         li.innerHTML = `
           <div class="casa-pedido-header">
             <span>${html(o.cliente || 'Sin nombre')}</span>
             <span>${formatearColones(o.cantidad)}₡</span>
           </div>
           <div class="productos-nombre">${productos}</div>
-          <div class="casa-pedido-acciones">
-            <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
-            <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
-            <button type="button" class="pago-btn simple" onclick="liberarCasa('${jsEsc(o.fecha)}')">Retirar</button>
-          </div>
         `;
         ul.appendChild(li);
       });
       card.appendChild(ul);
+
+      const totalDiv = document.createElement('div');
+      totalDiv.className = 'casa-total';
+      totalDiv.innerHTML = `Total adeudado: <strong>${formatearColones(total)}₡</strong>`;
+      card.appendChild(totalDiv);
+
+      const accionesDiv = document.createElement('div');
+      accionesDiv.className = 'casa-acciones';
+      accionesDiv.innerHTML = `<button type="button" class="pago-btn simple" onclick="liquidarCasa(${numero})">Marcar como pagada</button>`;
+      card.appendChild(accionesDiv);
     }
+
     grid.appendChild(card);
   });
+}
+
+function liquidarCasa(numeroCasa) {
+  const casa = normalizarNumeroCasa(numeroCasa);
+  if (!casa) return;
+  let ordenes = cargarTabla();
+  const cuentas = cargarCuentasAbiertas();
+  const clave = String(casa);
+  const pendientesTabla = ordenes.filter(o => esOrdenEnCasa(o) && normalizarNumeroCasa(o.casa) === casa);
+  const pendientesGuardados = Array.isArray(cuentas[clave]) ? cuentas[clave] : [];
+  if (!pendientesTabla.length && !pendientesGuardados.length) {
+    alert('No hay pedidos pendientes para esta casa.');
+    return;
+  }
+
+  const totalPendiente = pendientesTabla.reduce((sum, o) => sum + (Number(o.cantidad) || 0), 0)
+    + pendientesGuardados.reduce((sum, o) => sum + (Number(o.cantidad) || 0), 0);
+  const confirmado = confirm(`¿Confirmas que la Casa ${casa} pagó ${formatearColones(totalPendiente)}₡? Se registrará como pago en efectivo.`);
+  if (!confirmado) return;
+
+  const fechaPago = new Date().toISOString();
+  pendientesTabla.forEach(o => {
+    o.estado = ESTADOS_ORDEN.PAGADO;
+    o.metodo = 'efectivo';
+    o.casa = null;
+    o.pagoFecha = fechaPago;
+  });
+
+  const nuevasPagadas = pendientesGuardados.map(o => crearOrdenPagadaDesdeCuenta(o, 'efectivo', fechaPago)).filter(Boolean);
+  cuentas[clave] = [];
+
+  if (nuevasPagadas.length) {
+    ordenes = ordenes.concat(nuevasPagadas);
+  }
+
+  guardarTabla(ordenes);
+  guardarCuentasAbiertas(cuentas);
+  actualizarTabla();
 }
 
 function detectarCasaDesdeNombre(nombre) {
@@ -3011,7 +3183,8 @@ function cerrarCaja() {
 
   const ordenes = cargarTabla();
   const pagadas = ordenes.filter(esOrdenPagada);
-  const pendientes = ordenes.filter(o => !esOrdenPagada(o));
+  const casas = ordenes.filter(esOrdenEnCasa);
+  const pendientes = ordenes.filter(esOrdenPendientePago);
   const fecha = new Date().toISOString().split('T')[0];
   const subject = `Ignis Latte - Cierre de caja ${fecha}`;
   const message = `Cierre automático generado el ${fecha}`;
@@ -3067,6 +3240,18 @@ function cerrarCaja() {
     email: "info@ignismundi.org"
   }).then(() => {
     alert("Correo enviado con éxito.");
+    if (casas.length) {
+      const cuentas = cargarCuentasAbiertas();
+      casas.forEach(o => {
+        const casaNumero = normalizarNumeroCasa(o.casa) || normalizarNumeroCasa(detectarCasaDesdeNombre(o.cliente));
+        if (!casaNumero) return;
+        const clave = String(casaNumero);
+        if (!Array.isArray(cuentas[clave])) cuentas[clave] = [];
+        cuentas[clave].push(clonarOrdenParaCuenta(o, casaNumero));
+      });
+      guardarCuentasAbiertas(cuentas);
+    }
+
     if (pendientes.length > 0) {
       guardarTabla(pendientes);
     } else {
