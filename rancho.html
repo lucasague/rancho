@@ -1353,7 +1353,7 @@
           <th style="width:24%;">Nombre</th>
           <th style="width:14%;">Precio (₡)</th>
           <th style="width:14%;">Tipo</th>
-          <th style="width:14%;">Icono(s)</th>
+          <th style="width:14%;">Icono</th>
           <th style="width:30%;">Variantes (coma)</th>
           <th style="width:4%;">Borrar</th>
         </tr>
@@ -1413,6 +1413,30 @@ const PRODUCTOS_POR_DEFECTO = [
   { nombre: 'Empanada', precio: 700, tipo: 'comida', icono: '🥟', variantes: ['Queso', 'Frijol', 'Mixta'] },
   { nombre: 'Emp. pizza', precio: 1000, tipo: 'comida', icono: '🍕', variantes: [] },
   { nombre: 'Gallo', precio: 1000, tipo: 'comida', icono: '🌭', variantes: [] }
+];
+
+const ICONO_SUGERENCIA_GENERAL = '🍽️';
+const REGLAS_ICONOS_SUGERIDOS = [
+  { icono: '☕', claves: ['cafe', 'latte', 'espresso', 'capuchino', 'capuccino'] },
+  { icono: '🍵', claves: ['te', 'té', 'matcha'] },
+  { icono: '🥤', claves: ['refresco', 'fresco', 'jugo', 'juice', 'batido', 'smoothie', 'granizado'] },
+  { icono: '🍰', claves: ['pastel', 'cake', 'torta', 'cheesecake'] },
+  { icono: '🍪', claves: ['galleta', 'cookie'] },
+  { icono: '🍩', claves: ['donut', 'dona', 'rosquilla'] },
+  { icono: '🍫', claves: ['chocolate', 'cacao', 'mr beast'] },
+  { icono: '🍧', claves: ['helado', 'sundae', 'sorbet', 'sorbetto'] },
+  { icono: '🍦', claves: ['cono', 'soft'] },
+  { icono: '🥞', claves: ['crepa', 'crepe', 'waffle', 'panqueque'] },
+  { icono: '🥟', claves: ['empanada'] },
+  { icono: '🍕', claves: ['pizza', 'emp. pizza'] },
+  { icono: '🌭', claves: ['gallo', 'perro', 'hot dog'] },
+  { icono: '🥪', claves: ['sandwich', 'sándwich', 'baguette'] },
+  { icono: '🍔', claves: ['hamburguesa', 'burger'] },
+  { icono: '🌮', claves: ['taco', 'burrito'] },
+  { icono: '🍗', claves: ['pollo', 'chicken', 'alitas'] },
+  { icono: '🍹', claves: ['coctel', 'cóctel', 'cocktail', 'mojito'] },
+  { icono: '🍺', claves: ['cerveza', 'beer'] },
+  { icono: '🍸', claves: ['gin', 'licor', 'trago'] }
 ];
 
 const DENOMINACIONES = [
@@ -1665,6 +1689,7 @@ function renderEditorProductos() {
       <td style="text-align:center;"><button onclick="borrarFilaProducto(this)">🗑️</button></td>
     `;
     tbody.appendChild(tr);
+    configurarSugerenciaIcono(tr);
   });
   setEstadoGuardado('');
 }
@@ -1685,6 +1710,7 @@ function agregarFilaProducto() {
     <td style="text-align:center;"><button onclick="borrarFilaProducto(this)">🗑️</button></td>
   `;
   tbody.appendChild(tr);
+  configurarSugerenciaIcono(tr);
 }
 function borrarFilaProducto(btn) { btn.closest('tr')?.remove(); }
 
@@ -1721,6 +1747,75 @@ function restablecerProductos() {
   setEstadoGuardado('Restablecido a valores por defecto.');
 }
 function setEstadoGuardado(txt) { document.getElementById('estadoGuardado').textContent = txt || ''; }
+
+function normalizarTextoIcono(texto) {
+  if (!texto) return '';
+  try {
+    return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  } catch (e) {
+    return String(texto).toLowerCase();
+  }
+}
+
+function obtenerIconoSugerido(nombre) {
+  const base = normalizarTextoIcono(nombre);
+  if (!base) return '';
+  for (const regla of REGLAS_ICONOS_SUGERIDOS) {
+    if (regla.claves.some(clave => base.includes(clave))) {
+      return regla.icono;
+    }
+  }
+  return ICONO_SUGERENCIA_GENERAL;
+}
+
+function configurarSugerenciaIcono(tr) {
+  const nombreInput = tr.querySelector('.nombre-input');
+  const iconoInput = tr.querySelector('.icono-input');
+  if (!nombreInput || !iconoInput) return;
+
+  function aplicarSugerencia() {
+    const sugerido = obtenerIconoSugerido(nombreInput.value.trim());
+    if (!sugerido) return;
+    const manual = iconoInput.dataset.manual === 'true';
+    const actual = iconoInput.value.trim();
+    const prevAuto = iconoInput.dataset.prevAuto || '';
+    if (!manual || !actual || actual === prevAuto) {
+      if (actual !== sugerido) {
+        iconoInput.value = sugerido;
+      }
+      iconoInput.dataset.prevAuto = sugerido;
+      iconoInput.dataset.manual = 'false';
+    } else {
+      iconoInput.dataset.prevAuto = sugerido;
+    }
+  }
+
+  function actualizarManual() {
+    const actual = iconoInput.value.trim();
+    const prevAuto = iconoInput.dataset.prevAuto || '';
+    if (!actual) {
+      iconoInput.dataset.manual = 'false';
+      aplicarSugerencia();
+    } else if (prevAuto && actual === prevAuto) {
+      iconoInput.dataset.manual = 'false';
+    } else {
+      iconoInput.dataset.manual = 'true';
+    }
+  }
+
+  iconoInput.addEventListener('input', actualizarManual);
+  iconoInput.addEventListener('change', actualizarManual);
+  nombreInput.addEventListener('input', aplicarSugerencia);
+
+  if (!iconoInput.value.trim()) {
+    iconoInput.dataset.manual = 'false';
+    aplicarSugerencia();
+  } else {
+    iconoInput.dataset.manual = 'true';
+    iconoInput.dataset.prevAuto = iconoInput.value.trim();
+  }
+}
+
 function html(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function jsEsc(s){
   return String(s).replace(/[\\'"\n\r]/g, c => ({
