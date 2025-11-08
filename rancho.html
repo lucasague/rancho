@@ -451,8 +451,129 @@
     list-style:none;
     padding:0;
     margin:8px 0 0 0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
   }
-  #sugerenciaCambio li { margin-bottom:4px; }
+  #sugerenciaCambio li { margin:0; }
+  .cambio-billete {
+    width:100%;
+    border:1px solid #c5cae9;
+    border-radius:8px;
+    padding:8px 10px;
+    background:#f5f7ff;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .cambio-billete:hover {
+    transform:translateY(-1px);
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+  }
+  .cambio-billete.active {
+    border-color:#3949ab;
+    background:#e0e4ff;
+    box-shadow:0 0 0 2px rgba(57,73,171,0.25);
+  }
+  .cambio-billete .cambio-denominacion {
+    font-weight:bold;
+  }
+  .cambio-billete .cambio-detalle {
+    font-size:12px;
+    color:#3949ab;
+  }
+  .cambio-billete.disabled {
+    opacity:0.5;
+    cursor:not-allowed;
+    pointer-events:none;
+  }
+  .cambio-propina-actual {
+    margin-top:8px;
+    font-size:12px;
+    color:#2e7d32;
+  }
+  .propina-panel {
+    margin-top:10px;
+    border-top:1px dashed #c5cae9;
+    padding-top:8px;
+  }
+  .propina-info {
+    font-size:12px;
+    color:#37474f;
+  }
+  .propina-billetes {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:6px;
+  }
+  .propina-billete {
+    border:1px solid #c5cae9;
+    border-radius:999px;
+    padding:6px 10px;
+    font-size:12px;
+    background:#f5f7ff;
+    cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .propina-billete:hover {
+    transform:translateY(-1px);
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  }
+  .propina-billete.active {
+    border-color:#3949ab;
+    background:#e0e4ff;
+    box-shadow:0 0 0 2px rgba(57,73,171,0.2);
+  }
+  .propina-billete:disabled {
+    opacity:0.45;
+    cursor:not-allowed;
+    transform:none;
+    box-shadow:none;
+  }
+  .propina-manual {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:6px;
+    align-items:center;
+  }
+  .propina-manual input {
+    padding:6px 8px;
+    border:1px solid #c5cae9;
+    border-radius:6px;
+    min-width:90px;
+  }
+  .propina-manual button {
+    border:1px solid #c5cae9;
+    background:#fff;
+    padding:6px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:12px;
+  }
+  .propina-manual button:hover {
+    background:#f0f2ff;
+  }
+  .propina-manual .propina-reset {
+    color:#c62828;
+    border-color:#ef9a9a;
+    background:#ffebee;
+  }
+  .propina-manual .propina-reset:hover {
+    background:#ffcdd2;
+  }
+  .importe-propina,
+  .importe-total {
+    font-size:12px;
+    display:block;
+  }
+  .importe-total {
+    font-weight:bold;
+    color:#2e7d32;
+  }
   .indentado { padding-left:20px; color:#555; font-size:90%; text-align:left; }
 
   .warning-overlay {
@@ -1400,7 +1521,7 @@ const STORAGE_KEYS = {
 };
 
 const PRECIO_COMBO = 999999; // tu valor actual
-const CAMBIOS_SUGERIDOS = [1000, 2000, 5000, 10000];
+const CAMBIOS_SUGERIDOS = [1000, 2000, 5000, 10000, 20000];
 
 const PRODUCTOS_POR_DEFECTO = [
   { nombre: 'Café', precio: 500, tipo: 'bebida', icono: '☕', variantes: [] },
@@ -1455,7 +1576,7 @@ const DENOMINACIONES = [
 const TOTAL_CASAS = 6;
 
 let configApertura = cargarConfigApertura();
-let ultimoResumen = { efectivo: 0, sinpe: 0, total: 0 };
+let ultimoResumen = { efectivo: 0, sinpe: 0, total: 0, propinas: 0 };
 
 function cargarConfigApertura() {
   try {
@@ -1835,10 +1956,42 @@ function formatearColones(valor) {
   return Number.isFinite(numero) ? numero.toLocaleString('es-CR') : '0';
 }
 
+function normalizarPropina(valor) {
+  const numero = Number(valor);
+  if (!Number.isFinite(numero) || numero <= 0) return 0;
+  return Math.floor(numero);
+}
+
+function normalizarBilletePropina(valor) {
+  const numero = Number(valor);
+  if (!Number.isFinite(numero) || numero <= 0) return null;
+  return Math.floor(numero);
+}
+
+function calcularPropinaDesdeBillete(total, billete) {
+  const base = Number(total) || 0;
+  const valorBillete = Number(billete) || 0;
+  if (!Number.isFinite(base) || !Number.isFinite(valorBillete)) return 0;
+  return Math.max(0, valorBillete - base);
+}
+
+function obtenerClaseBillete(valor) {
+  switch (Number(valor)) {
+    case 1000: return 'billete-1000';
+    case 2000: return 'billete-2000';
+    case 5000: return 'billete-5000';
+    case 10000: return 'billete-10000';
+    case 20000: return 'billete-20000';
+    default: return '';
+  }
+}
+
 /* =================== PEDIDOS: selección con variantes =================== */
 let productosNodos = [];              // nodos de la grilla
 let seleccionActual = {};             // { [producto]: { total:number, variantes: { [var]: number } } }
 let pendientesData = { porCliente: [], porProducto: [] };
+let billetePropinaSeleccionado = null;
+let propinaSeleccionada = 0;
 
 function crearProductos() {
   const grid = document.getElementById('productosGrid');
@@ -2079,18 +2232,41 @@ function actualizarResumen() {
   resumen.innerHTML = lineasResumen.length ? lineasResumen.join('') : '<span class="muted">Sin productos seleccionados</span>';
   totalNodo.innerHTML = `<strong>Total: ${formatearColones(total)}₡</strong>`;
 
+  if (sugerenciaCambio) sugerenciaCambio.dataset.totalActual = total;
+
   if (total <= 0) {
+    billetePropinaSeleccionado = null;
+    propinaSeleccionada = 0;
     sugerenciaCambio.innerHTML = '<strong>Cambio</strong><br><span class="muted">Añade productos para ver sugerencias.</span>';
   } else {
+    if (billetePropinaSeleccionado !== null && billetePropinaSeleccionado < total) {
+      billetePropinaSeleccionado = null;
+      propinaSeleccionada = 0;
+    } else if (billetePropinaSeleccionado !== null) {
+      propinaSeleccionada = calcularPropinaDesdeBillete(total, billetePropinaSeleccionado);
+    } else {
+      propinaSeleccionada = 0;
+    }
+
     const opciones = CAMBIOS_SUGERIDOS.filter(monto => monto >= total);
     if (!opciones.length) {
       sugerenciaCambio.innerHTML = '<strong>Cambio</strong><br><span class="muted">Sin opciones disponibles.</span>';
     } else {
       const items = opciones.map(monto => {
-        const cambio = monto - total;
-        return `<li>${formatearColones(monto)}₡ → ${formatearColones(cambio)}₡</li>`;
+        const clases = ['cambio-billete'];
+        const claseBillete = obtenerClaseBillete(monto);
+        if (claseBillete) clases.push(claseBillete);
+        if (billetePropinaSeleccionado === monto) clases.push('active');
+        const cambio = calcularPropinaDesdeBillete(total, monto);
+        const detalle = cambio > 0
+          ? `Propina: ${formatearColones(cambio)}₡`
+          : 'Sin cambio';
+        return `<li><button type="button" class="${clases.join(' ')}" data-cambio-billete="${monto}"><span class="cambio-denominacion">₡${formatearColones(monto)}</span><span class="cambio-detalle">${detalle}</span></button></li>`;
       }).join('');
-      sugerenciaCambio.innerHTML = `<strong>Cambio</strong><ul>${items}</ul>`;
+      const mensajePropina = billetePropinaSeleccionado !== null
+        ? `<div class="cambio-propina-actual">Paga con ₡${formatearColones(billetePropinaSeleccionado)} — ${propinaSeleccionada > 0 ? `Propina: <strong>${formatearColones(propinaSeleccionada)}₡</strong>` : 'Sin cambio'}</div>`
+        : '';
+      sugerenciaCambio.innerHTML = `<strong>Cambio</strong><ul>${items}</ul>${mensajePropina}`;
     }
   }
 }
@@ -2173,7 +2349,9 @@ function clonarOrdenParaCuenta(orden, casaNumero) {
     estado: ESTADOS_ORDEN.CASA,
     casa,
     metodo: null,
-    pagoFecha: null
+    pagoFecha: null,
+    propina: normalizarPropina(orden?.propina),
+    billetePropina: normalizarBilletePropina(orden?.billetePropina)
   };
 }
 
@@ -2211,11 +2389,13 @@ function crearOrdenPagadaDesdeCuenta(ordenCuenta, metodo, fechaPagoIso) {
     estado: ESTADOS_ORDEN.PAGADO,
     metodo,
     casa: null,
-    pagoFecha: fechaPagoIso
+    pagoFecha: fechaPagoIso,
+    propina: normalizarPropina(ordenCuenta?.propina),
+    billetePropina: normalizarBilletePropina(ordenCuenta?.billetePropina)
   };
 }
 
-function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, metodo = null, estado = ESTADOS_ORDEN.PENDIENTE, casa = null, entregasServidas = false }) {
+function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, metodo = null, estado = ESTADOS_ORDEN.PENDIENTE, casa = null, entregasServidas = false, propina = 0, billetePropina = null }) {
   const productosCopia = clonarMapaProductos(productos);
   const variantesCopia = clonarVariantesMapa(variantes);
   const PRODS = cargarProductos();
@@ -2232,18 +2412,29 @@ function crearOrdenRegistro({ cliente = '', productos = {}, variantes = {}, meto
   const casaNormalizada = estadoNormalizado === ESTADOS_ORDEN.CASA
     ? normalizarNumeroCasa(casa)
     : null;
+  const totalCalculado = calcularTotalDesdeMapa(productosCopia, PRODS).total;
+  let propinaNormalizada = normalizarPropina(propina);
+  let billeteNormalizado = normalizarBilletePropina(billetePropina);
+  if (billeteNormalizado !== null && billeteNormalizado < totalCalculado) {
+    billeteNormalizado = null;
+  }
+  if (billeteNormalizado !== null) {
+    propinaNormalizada = calcularPropinaDesdeBillete(totalCalculado, billeteNormalizado);
+  }
 
   return {
     fecha: new Date().toLocaleString(),
     cliente,
-    cantidad: calcularTotalDesdeMapa(productosCopia, PRODS).total,
+    cantidad: totalCalculado,
     metodo: metodoNormalizado,
     productos: productosCopia,
     variantes: variantesCopia,
     entregas,
     estado: estadoNormalizado,
     casa: casaNormalizada,
-    pagoFecha: estadoNormalizado === ESTADOS_ORDEN.PAGADO ? new Date().toISOString() : null
+    pagoFecha: estadoNormalizado === ESTADOS_ORDEN.PAGADO ? new Date().toISOString() : null,
+    propina: propinaNormalizada,
+    billetePropina: billeteNormalizado
   };
 }
 
@@ -2284,12 +2475,23 @@ function normalizarOrden(raw) {
       : new Date().toISOString();
   }
 
+  let propina = normalizarPropina(raw.propina);
+  let billetePropina = normalizarBilletePropina(raw.billetePropina);
+  if (billetePropina !== null && billetePropina < copia.cantidad) {
+    billetePropina = null;
+  }
+  if (billetePropina !== null) {
+    propina = calcularPropinaDesdeBillete(copia.cantidad, billetePropina);
+  }
+
   return {
     ...copia,
     metodo,
     estado,
     casa,
-    pagoFecha
+    pagoFecha,
+    propina,
+    billetePropina
   };
 }
 
@@ -2421,7 +2623,7 @@ function actualizarTabla() {
   const prodMap = new Map(PRODS.map(p => [p.nombre, p]));
   let ordenes = cargarTabla();
   let tbody = document.querySelector('#tabla tbody');
-  let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
+  let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {}, propinas: 0 };
   const pendientesCliente = new Map();
   const pendientesProducto = new Map();
   const registrarPendienteProducto = (productoNombre, varianteNombre, indiceUnidad, icono, clienteNombre, fechaTexto, fechaValor) => {
@@ -2588,14 +2790,50 @@ function actualizarTabla() {
     }
 
     const pagoHTML = `<div class="pago-acciones">${botonesPago.join('')}</div>`;
-    const productosTdClasses = ['col-productos'];
-    if (allServed) productosTdClasses.push('productos-entregados');
-    const pagoTdClasses = ['col-pago'];
-    if (pagoCompleto) pagoTdClasses.push('pago-completado');
+    const baseMonto = Number(o.cantidad) || 0;
+    const propinaOrden = normalizarPropina(o.propina);
+    const billeteActual = normalizarBilletePropina(o.billetePropina);
+    const totalCobrado = baseMonto + propinaOrden;
+    const importeHTML = propinaOrden > 0
+      ? `<div>${formatearColones(baseMonto)}₡</div><span class="importe-propina">Propina: ${formatearColones(propinaOrden)}₡</span><span class="importe-total">Total cobrado: ${formatearColones(totalCobrado)}₡</span>`
+      : `<div>${formatearColones(baseMonto)}₡</div>`;
+    const infoPartes = [];
+    if (propinaOrden > 0) {
+      infoPartes.push(`Propina registrada: ${formatearColones(propinaOrden)}₡`);
+    } else {
+      infoPartes.push('Sin propina registrada.');
+    }
+    if (billeteActual !== null) {
+      infoPartes.push(`Billete: ₡${formatearColones(billeteActual)}`);
+    }
+    const infoTexto = infoPartes.join(' · ');
+    const billetesTabla = CAMBIOS_SUGERIDOS.map(monto => {
+      const clases = ['propina-billete'];
+      const claseBillete = obtenerClaseBillete(monto);
+      if (claseBillete) clases.push(claseBillete);
+      if (billeteActual === monto) clases.push('active');
+      const disabled = monto < baseMonto ? ' disabled' : '';
+      return `<button type="button" class="${clases.join(' ')}" data-propina-billete="${monto}" data-fecha="${fechaEscapada}"${disabled}>₡${formatearColones(monto)}</button>`;
+    }).join('');
+    const propinaPanelHTML = `
+      <div class="propina-panel" data-fecha="${fechaEscapada}" data-total-base="${baseMonto}">
+        <div class="propina-info">${html(infoTexto)}</div>
+        <div class="propina-billetes">${billetesTabla}</div>
+        <div class="propina-manual">
+          <input type="text" inputmode="numeric" placeholder="Propina ₡" value="${propinaOrden > 0 ? html(String(propinaOrden)) : ''}" data-propina-input="${fechaEscapada}">
+          <button type="button" class="propina-guardar" data-guardar-propina="${fechaEscapada}">Guardar</button>
+          <button type="button" class="propina-reset" data-reset-propina="${fechaEscapada}">Sin propina</button>
+        </div>
+      </div>
+    `;
+    const pagoCompletoHTML = `${pagoHTML}${propinaPanelHTML}`;
 
     fila.innerHTML = `
       <td class="col-fecha">${html(o.fecha)}</td>
       <td>${html(o.cliente || '')}</td>
+      <td>${importeHTML}</td>
+      <td>${pagoCompletoHTML}</td>
+      <td>${productosHTML}</td>
       <td>${o.cantidad}₡</td>
       <td class="${pagoTdClasses.join(' ')}">${pagoHTML}</td>
       <td class="${productosTdClasses.join(' ')}">${productosHTML}</td>
@@ -2604,8 +2842,9 @@ function actualizarTabla() {
     tbody.appendChild(fila);
 
     if (esPagada) {
-      resumen[o.metodo] = (resumen[o.metodo] || 0) + o.cantidad;
-      resumen.total += o.cantidad;
+      resumen[o.metodo] = (resumen[o.metodo] || 0) + totalCobrado;
+      resumen.total += totalCobrado;
+      resumen.propinas += propinaOrden;
       for (let p in o.productos) {
         resumen.productos[p] = (resumen.productos[p] || 0) + o.productos[p];
       }
@@ -2670,9 +2909,10 @@ function actualizarTabla() {
 
   let resumenTbody = document.querySelector('#tablaResumen tbody');
   resumenTbody.innerHTML = '';
-  resumenTbody.innerHTML += `<tr><td>Total Recaudado</td><td>${resumen.total}₡</td></tr>`;
-  resumenTbody.innerHTML += `<tr><td>Total Efectivo</td><td>${resumen.efectivo || 0}₡</td></tr>`;
-  resumenTbody.innerHTML += `<tr><td>Total Sinpe</td><td>${resumen.sinpe || 0}₡</td></tr>`;
+  resumenTbody.innerHTML += `<tr><td>Total Recaudado</td><td>${formatearColones(resumen.total)}₡</td></tr>`;
+  resumenTbody.innerHTML += `<tr><td>Total Efectivo</td><td>${formatearColones(resumen.efectivo || 0)}₡</td></tr>`;
+  resumenTbody.innerHTML += `<tr><td>Total Sinpe</td><td>${formatearColones(resumen.sinpe || 0)}₡</td></tr>`;
+  resumenTbody.innerHTML += `<tr><td>Propinas registradas</td><td>${formatearColones(resumen.propinas || 0)}₡</td></tr>`;
   for (let p in resumen.productos) {
     resumenTbody.innerHTML += `<tr><td>Ventas de ${html(p)}</td><td>${resumen.productos[p]}</td></tr>`;
     const vars = resumen.variantes[p];
@@ -2685,7 +2925,8 @@ function actualizarTabla() {
   ultimoResumen = {
     efectivo: resumen.efectivo || 0,
     sinpe: resumen.sinpe || 0,
-    total: resumen.total || 0
+    total: resumen.total || 0,
+    propinas: resumen.propinas || 0
   };
   renderPendientesPago();
   renderCasas();
@@ -2711,6 +2952,41 @@ function registrarPago(fecha, metodo) {
     orden.casa = null;
     orden.pagoFecha = new Date().toISOString();
   }
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+
+function actualizarPropinaDesdeBillete(fecha, billete) {
+  if (!fecha) return;
+  let ordenes = cargarTabla();
+  const idx = ordenes.findIndex(o => o.fecha === fecha);
+  if (idx === -1) return;
+  const orden = ordenes[idx];
+  const baseMonto = Number(orden.cantidad) || 0;
+  const billeteNormalizado = normalizarBilletePropina(billete);
+  if (billeteNormalizado === null || billeteNormalizado < baseMonto) {
+    orden.billetePropina = null;
+    orden.propina = 0;
+  } else if (orden.billetePropina === billeteNormalizado) {
+    orden.billetePropina = null;
+    orden.propina = 0;
+  } else {
+    orden.billetePropina = billeteNormalizado;
+    orden.propina = calcularPropinaDesdeBillete(baseMonto, billeteNormalizado);
+  }
+  guardarTabla(ordenes);
+  actualizarTabla();
+}
+
+function actualizarPropinaManual(fecha, valor) {
+  if (!fecha) return;
+  let ordenes = cargarTabla();
+  const idx = ordenes.findIndex(o => o.fecha === fecha);
+  if (idx === -1) return;
+  const orden = ordenes[idx];
+  const propinaNormalizada = normalizarPropina(valor);
+  orden.propina = propinaNormalizada;
+  orden.billetePropina = null;
   guardarTabla(ordenes);
   actualizarTabla();
 }
@@ -2899,6 +3175,9 @@ function renderCasas() {
       ordenados.forEach(o => {
         const li = document.createElement('li');
         li.className = 'casa-pedido';
+        const productos = resumenProductosCorto(o) || '<span class="muted">Sin detalle</span>';
+        const propinaOrden = normalizarPropina(o.propina);
+        total += (Number(o.cantidad) || 0) + propinaOrden;
         const resumenTexto = resumenProductosPlano(o);
         const iconos = construirIconosProductos(o);
         const iconosTitulo = resumenTexto ? ` title="${html(resumenTexto)}"` : '';
@@ -2907,6 +3186,12 @@ function renderCasas() {
             <span>${html(o.fecha)}</span>
             <span>${formatearColones(Number(o.cantidad) || 0)}₡</span>
           </div>
+          <div class="productos-nombre">${productos}</div>
+          ${propinaOrden > 0 ? `<div class="muted">Propina registrada: ${formatearColones(propinaOrden)}₡</div>` : ''}
+          <div class="casa-pedido-acciones">
+            <button type="button" class="pago-btn efectivo" onclick="registrarPago('${jsEsc(o.fecha)}','efectivo')">Efectivo</button>
+            <button type="button" class="pago-btn sinpe" onclick="registrarPago('${jsEsc(o.fecha)}','sinpe')">Sinpe</button>
+            <button type="button" class="pago-btn casa active" onclick="desmarcarCasa('${jsEsc(o.fecha)}')">Casa ${numero}</button>
           <div class="casa-productos-iconos"${iconosTitulo}>
             ${iconos || '<span class="casa-producto-icono">•</span>'}
           </div>
@@ -2943,8 +3228,8 @@ function liquidarCasa(numeroCasa) {
     return;
   }
 
-  const totalPendiente = pendientesTabla.reduce((sum, o) => sum + (Number(o.cantidad) || 0), 0)
-    + pendientesGuardados.reduce((sum, o) => sum + (Number(o.cantidad) || 0), 0);
+  const totalPendiente = pendientesTabla.reduce((sum, o) => sum + ((Number(o.cantidad) || 0) + normalizarPropina(o.propina)), 0)
+    + pendientesGuardados.reduce((sum, o) => sum + ((Number(o.cantidad) || 0) + normalizarPropina(o.propina)), 0);
   const confirmado = confirm(`¿Confirmas que la Casa ${casa} pagó ${formatearColones(totalPendiente)}₡? Se registrará como pago en efectivo.`);
   if (!confirmado) return;
 
@@ -3165,6 +3450,50 @@ document.addEventListener('click', event => {
   }
 });
 
+document.addEventListener('click', event => {
+  const btn = event.target.closest('[data-cambio-billete]');
+  if (!btn) return;
+  const monto = Number(btn.dataset.cambioBillete);
+  if (!Number.isFinite(monto) || monto <= 0) return;
+  const contenedor = document.getElementById('sugerenciaCambio');
+  const total = contenedor ? Number(contenedor.dataset.totalActual || 0) : 0;
+  if (!Number.isFinite(total) || total <= 0) return;
+  if (billetePropinaSeleccionado === monto) {
+    billetePropinaSeleccionado = null;
+    propinaSeleccionada = 0;
+  } else {
+    billetePropinaSeleccionado = monto;
+    propinaSeleccionada = calcularPropinaDesdeBillete(total, monto);
+  }
+  actualizarResumen();
+});
+
+document.addEventListener('click', event => {
+  const btnBillete = event.target.closest('[data-propina-billete]');
+  if (btnBillete) {
+    const fecha = btnBillete.dataset.fecha;
+    const monto = Number(btnBillete.dataset.propinaBillete);
+    if (fecha && Number.isFinite(monto) && monto > 0) {
+      actualizarPropinaDesdeBillete(fecha, monto);
+    }
+    return;
+  }
+  const btnGuardar = event.target.closest('[data-guardar-propina]');
+  if (btnGuardar) {
+    const fecha = btnGuardar.dataset.guardarPropina;
+    const panel = btnGuardar.closest('.propina-panel');
+    const input = panel ? panel.querySelector(`[data-propina-input="${fecha}"]`) : null;
+    const valor = input ? parseColones(input.value) : 0;
+    actualizarPropinaManual(fecha, valor);
+    return;
+  }
+  const btnReset = event.target.closest('[data-reset-propina]');
+  if (btnReset) {
+    const fecha = btnReset.dataset.resetPropina;
+    if (fecha) actualizarPropinaManual(fecha, 0);
+  }
+});
+
 /* Enviar / recoger selección */
 function recogerSeleccionProductosBase() {
   const out = {};
@@ -3191,6 +3520,8 @@ function enviar() {
     cliente,
     productos: productosVendidos,
     variantes: variantesVendidas,
+    propina: propinaSeleccionada,
+    billetePropina: billetePropinaSeleccionado,
     estado: ESTADOS_ORDEN.PENDIENTE,
     casa: null,
     entregasServidas: false
@@ -3215,6 +3546,8 @@ function enviar() {
 
 /* Limpiar selección */
 function borrar() {
+  billetePropinaSeleccionado = null;
+  propinaSeleccionada = 0;
   seleccionActual = {};
   productosNodos.forEach(p => {
     const c = p.querySelector('.contador'), r = p.querySelector('.restar');
@@ -3283,10 +3616,13 @@ function cerrarCaja() {
   const subject = `Ignis Latte - Cierre de caja ${fecha}`;
   const message = `Cierre automático generado el ${fecha}`;
 
-  let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {} };
+  let resumen = { efectivo: 0, sinpe: 0, total: 0, productos: {}, variantes: {}, propinas: 0 };
   pagadas.forEach(o => {
-    resumen[o.metodo] = (resumen[o.metodo] || 0) + o.cantidad;
-    resumen.total += o.cantidad;
+    const propinaOrden = normalizarPropina(o.propina);
+    const totalCobrado = (Number(o.cantidad) || 0) + propinaOrden;
+    resumen[o.metodo] = (resumen[o.metodo] || 0) + totalCobrado;
+    resumen.total += totalCobrado;
+    resumen.propinas += propinaOrden;
     for (let p in o.productos) {
       resumen.productos[p] = (resumen.productos[p] || 0) + o.productos[p];
     }
@@ -3306,9 +3642,10 @@ function cerrarCaja() {
   const diferenciaConteo = efectivoContado - efectivoEsperado;
 
   let tablaResumenTexto = "Resumen;Valor\n";
-  tablaResumenTexto += `Total Recaudado;${resumen.total}₡\n`;
-  tablaResumenTexto += `Total Efectivo;${resumen.efectivo || 0}₡\n`;
-  tablaResumenTexto += `Total Sinpe;${resumen.sinpe || 0}₡\n`;
+  tablaResumenTexto += `Total Recaudado;${formatearColones(resumen.total)}₡\n`;
+  tablaResumenTexto += `Total Efectivo;${formatearColones(resumen.efectivo || 0)}₡\n`;
+  tablaResumenTexto += `Total Sinpe;${formatearColones(resumen.sinpe || 0)}₡\n`;
+  tablaResumenTexto += `Propinas registradas;${formatearColones(resumen.propinas || 0)}₡\n`;
   tablaResumenTexto += `Fondo de caja;${fondo}₡\n`;
   tablaResumenTexto += `Efectivo real contado;${efectivoContado}₡\n`;
   tablaResumenTexto += `Efectivo esperado;${efectivoEsperado}₡\n`;
@@ -3321,9 +3658,10 @@ function cerrarCaja() {
     }
   }
 
-  let tablaHistoricaTexto = "Fecha;Cliente;Cantidad;Método\n";
+  let tablaHistoricaTexto = "Fecha;Cliente;Cantidad;Propina;Método\n";
   pagadas.forEach(o => {
-    tablaHistoricaTexto += `${o.fecha};${o.cliente || ''};${o.cantidad}₡;${o.metodo}\n`;
+    const propinaOrden = normalizarPropina(o.propina);
+    tablaHistoricaTexto += `${o.fecha};${o.cliente || ''};${o.cantidad}₡;${formatearColones(propinaOrden)}₡;${o.metodo}\n`;
   });
 
   emailjs.send("service_kmko3hp", "template_7xn4zvs", {
