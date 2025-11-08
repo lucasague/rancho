@@ -1694,7 +1694,8 @@ function guardarProductosDesdeTabla() {
   const nombres = new Set();
   for (const r of rows) {
     const nombre = (r.querySelector('.nombre-input')?.value || '').trim();
-    const precio = Number(r.querySelector('.number')?.value || 0);
+    const precioRaw = r.querySelector('.number')?.value;
+    const precio = Number(precioRaw);
     const tipo = r.querySelector('.tipo-select')?.value === 'bebida' ? 'bebida' : 'comida';
     const icono = (r.querySelector('.icono-input')?.value || '').trim();
     const variantesStr = (r.querySelector('.variantes-input')?.value || '').trim();
@@ -1702,9 +1703,13 @@ function guardarProductosDesdeTabla() {
 
     if (!nombre) continue;
     if (nombres.has(nombre)) { alert(`Nombre duplicado: "${nombre}". Cambia alguno antes de guardar.`); return; }
+    if (!Number.isFinite(precio) || precio <= 0) {
+      alert(`Precio inválido para "${nombre || 'producto sin nombre'}". Ingresa un valor mayor que cero.`);
+      return;
+    }
     nombres.add(nombre);
 
-    nuevos.push({ nombre, precio: Math.max(0, Math.floor(precio)), tipo, icono, variantes });
+    nuevos.push({ nombre, precio: Math.max(1, Math.floor(precio)), tipo, icono, variantes });
   }
   guardarProductos(nuevos);
   setEstadoGuardado('Cambios guardados.');

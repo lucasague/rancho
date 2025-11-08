@@ -17,8 +17,8 @@ La interfaz está dividida en pestañas que se ajustan según el flujo de trabaj
 - **Apertura**: permite configurar el fondo inicial en caja. El desglose por denominaciones está siempre visible para documentar con cuánto efectivo se empieza el día y, si se edita el total manualmente, limpia automáticamente los campos del desglose.
 - **Pedidos**: muestra la grilla de productos vendibles, el resumen del pedido actual, sugerencias de cambio y el historial de órdenes registradas. Cada pedido se crea sin pago y desde la misma tabla se marcan los cobros (efectivo o Sinpe) y el estado de entrega de cada producto. El botón flotante abre el panel de pendientes por cliente o por producto.
 - **Cierre**: calcula la diferencia entre el efectivo esperado y el efectivo contado, reutilizando el desglose por denominaciones. Además del resumen clásico incorpora una tabla con todas las órdenes sin pagar para registrarlas o moverlas a una casa antes de enviar el correo automático (vía EmailJS) con el resumen del día; los pedidos que se envían a cuentas abiertas se trasladan automáticamente y se conservan entre turnos.
-- **Productos**: expone un editor para mantener el catálogo. Cada fila permite cambiar nombre, precio, tipo (bebida/comida), icono y variantes. Los cambios se guardan en `localStorage` y se reflejan inmediatamente en la pestaña de pedidos.
-- **Cuentas abiertas**: agrupa las casas 1 a 6 en una cuadrícula 3×2, mostrando los pedidos arrastrados entre turnos con un encabezado que centra el conteo y resalta el total adeudado. Cada pedido se resume únicamente con los iconos de los productos y se mantiene el botón para liquidar toda la cuenta cuando se recibe el pago.
+- **Productos**: expone un editor para mantener el catálogo. Cada fila permite cambiar nombre, precio, tipo (bebida/comida), icono y variantes. Los cambios se guardan en `localStorage` y se reflejan inmediatamente en la pestaña de pedidos; para guardar es obligatorio asignar un precio mayor a cero.
+- **Cuentas abiertas**: agrupa las casas 1 a 6 en una cuadrícula 3×2, mostrando los pedidos arrastrados entre turnos, el total pendiente y un único botón para liquidar toda la cuenta cuando se recibe el pago.
 
 ## Lógica destacada en `rancho.html`
 
@@ -35,7 +35,7 @@ La interfaz está dividida en pestañas que se ajustan según el flujo de trabaj
 1. **Configura la apertura**: revisa o actualiza el fondo de caja si cambió desde el último turno, ya sea escribiendo el total directamente o ajustándolo con el desglose por denominaciones.
 2. **Registra pedidos** desde la pestaña principal. Cada orden se almacena sin pago; marca los productos entregados y registra el cobro cuando corresponda. Tras escribir el nombre del cliente puedes pulsar Enter para registrar el pedido sin tocar el ratón.
 3. **Clasifica los pedidos por casa** desde la pestaña de cierre (botones “Casa n”) o directamente en la pestaña final de cuentas abiertas para seguir el saldo de cada una.
-4. **Mantén el catálogo al día** en la pestaña de productos cuando haya cambios de precios, iconografía o variantes.
+4. **Mantén el catálogo al día** en la pestaña de productos cuando haya cambios de precios, iconografía o variantes; recuerda que cada producto debe conservar un precio mayor a cero antes de guardar.
 5. **Realiza el cierre de caja** al finalizar la jornada: cuenta el efectivo, revisa las órdenes sin pagar desde la tabla dedicada, marca los cobros que falten o envíalos a una casa y, finalmente, envía el correo automático. Las órdenes pagadas se depuran, las pendientes permanecen y las asignadas a casas pasan a la pestaña de cuentas abiertas para esperar el pago global.
 
 ## Almacenamiento local y dependencias
