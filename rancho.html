@@ -3521,11 +3521,11 @@ function recogerSeleccionVariantes() {
   return out;
 }
 function enviar() {
-  const totalNum = +document.getElementById('total').innerText.replace(/[^\d]/g, '');
-  if (totalNum == 0) { alert('Añade productos'); return; }
-
   const productosVendidos = recogerSeleccionProductosBase();
   const variantesVendidas = recogerSeleccionVariantes();
+  const totalNum = calcularTotalDesdeMapa(productosVendidos).total;
+  if (totalNum <= 0) { alert('Añade productos'); return; }
+
   const cliente = (document.getElementById('cliente').value || '').trim();
 
   const nuevaOrden = crearOrdenRegistro({
