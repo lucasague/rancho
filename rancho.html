@@ -833,27 +833,28 @@
     flex-direction:column;
     gap:12px;
   }
+  .casa-card-header {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+  }
   .casa-card-titulo {
     margin:0;
-    display:grid;
-    grid-template-columns:auto 1fr auto;
+    display:flex;
     align-items:center;
-    font-size:18px;
     gap:12px;
+    font-size:18px;
   }
   .casa-card-titulo .casa-titulo {
     display:flex;
     align-items:center;
     gap:8px;
   }
-  .casa-card-titulo .casa-conteo {
-    text-align:center;
-    font-size:14px;
-    color:#3949ab;
-    font-weight:600;
-  }
   .casa-card-titulo .casa-total-h3 {
     font-weight:700;
+    margin-left:auto;
   }
   .casa-productos-iconos {
     display:flex;
@@ -906,16 +907,31 @@
     font-size:20px;
     line-height:1;
   }
-  .casa-total {
+  .casa-conteo {
+    font-size:14px;
+    color:#3949ab;
+    font-weight:600;
+  }
+  .casa-resumen {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-top:4px;
+  }
+  .casa-resumen .casa-total {
     font-weight:600;
     text-align:right;
-    margin-top:4px;
   }
   .casa-acciones {
     display:flex;
     justify-content:flex-end;
     gap:8px;
     margin-top:4px;
+  }
+  .casa-acciones-header {
+    margin-top:0;
   }
 
   @media (max-width: 1024px) {
@@ -1829,6 +1845,43 @@ function jsEsc(s){
 function fechaTextoToMs(texto) {
   const ms = new Date(texto).getTime();
   return Number.isFinite(ms) ? ms : Date.now();
+}
+function formatearFechaCuenta(fechaTexto) {
+  if (!fechaTexto) return '';
+  const fecha = new Date(fechaTexto);
+  if (!Number.isFinite(fecha.getTime()) || typeof Intl !== 'object' || typeof Intl.DateTimeFormat !== 'function') {
+    return String(fechaTexto);
+  }
+  try {
+    const formato = new Intl.DateTimeFormat('es-CR', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const partes = formato.formatToParts(fecha);
+    const obtener = (tipo) => {
+      const entrada = partes.find(p => p.type === tipo);
+      return entrada ? entrada.value : '';
+    };
+    let weekday = obtener('weekday');
+    let day = obtener('day');
+    let month = obtener('month');
+    let hour = obtener('hour');
+    let minute = obtener('minute');
+    const limpiar = (texto) => String(texto || '').replace(/\./g, '').trim();
+    weekday = limpiar(weekday).toLowerCase();
+    month = limpiar(month).toLowerCase();
+    day = limpiar(day);
+    hour = limpiar(hour).padStart(2, '0');
+    minute = limpiar(minute).padStart(2, '0');
+    if (!weekday || !day || !month || !hour || !minute) return String(fechaTexto);
+    return `${weekday} ${day} de ${month} ${hour}:${minute}`;
+  } catch (error) {
+    return String(fechaTexto);
+  }
 }
 function formatearColones(valor) {
   const numero = Number(valor || 0);
@@ -2882,17 +2935,35 @@ function renderCasas() {
     const ordenados = lista.slice().sort((a, b) => fechaTextoToMs(a.fecha) - fechaTextoToMs(b.fecha));
     const totalPedidos = ordenados.length;
     const totalMonto = ordenados.reduce((sum, o) => sum + (Number(o.cantidad) || 0), 0);
-    const headerHTML = `
-      <h3 class="casa-card-titulo">
-        <span class="casa-titulo">${titulo}</span>
-        <span class="casa-conteo">${totalPedidos === 1 ? '1 pedido' : `${totalPedidos} pedidos`}</span>
-        <span class="casa-total-h3">${formatearColones(totalMonto)}₡</span>
-      </h3>
+    const totalMontoTexto = formatearColones(totalMonto);
+
+    const header = document.createElement('div');
+    header.className = 'casa-card-header';
+    const tituloEl = document.createElement('h3');
+    tituloEl.className = 'casa-card-titulo';
+    tituloEl.innerHTML = `
+      <span class="casa-titulo">${titulo}</span>
+      <span class="casa-total-h3">${totalMontoTexto}₡</span>
     `;
-    card.innerHTML = headerHTML;
+    header.appendChild(tituloEl);
+
+    if (totalPedidos > 0) {
+      const accionesHeader = document.createElement('div');
+      accionesHeader.className = 'casa-acciones casa-acciones-header';
+      accionesHeader.innerHTML = `
+        <button type="button" class="pago-btn efectivo" onclick="liquidarCasa(${numero},'efectivo')">Pagó en efectivo</button>
+        <button type="button" class="pago-btn sinpe" onclick="liquidarCasa(${numero},'sinpe')">Pagó por Sinpe</button>
+      `;
+      header.appendChild(accionesHeader);
+    }
+
+    card.appendChild(header);
 
     if (!totalPedidos) {
-      card.innerHTML += '<div class="casa-vacia">Sin pedidos asignados.</div>';
+      const vacio = document.createElement('div');
+      vacio.className = 'casa-vacia';
+      vacio.textContent = 'Sin pedidos asignados.';
+      card.appendChild(vacio);
     } else {
       const ul = document.createElement('ul');
       ul.className = 'casa-pedidos-list';
@@ -2902,9 +2973,10 @@ function renderCasas() {
         const resumenTexto = resumenProductosPlano(o);
         const iconos = construirIconosProductos(o);
         const iconosTitulo = resumenTexto ? ` title="${html(resumenTexto)}"` : '';
+        const fechaBonita = formatearFechaCuenta(o.fecha);
         li.innerHTML = `
           <div class="casa-pedido-header">
-            <span>${html(o.fecha)}</span>
+            <span>${html(fechaBonita || o.fecha || '')}</span>
             <span>${formatearColones(Number(o.cantidad) || 0)}₡</span>
           </div>
           <div class="casa-productos-iconos"${iconosTitulo}>
@@ -2914,24 +2986,24 @@ function renderCasas() {
         ul.appendChild(li);
       });
       card.appendChild(ul);
-
-      const totalDiv = document.createElement('div');
-      totalDiv.className = 'casa-total';
-      totalDiv.innerHTML = `Total adeudado: <strong>${formatearColones(totalMonto)}₡</strong>`;
-      card.appendChild(totalDiv);
-
-      const accionesDiv = document.createElement('div');
-      accionesDiv.className = 'casa-acciones';
-      accionesDiv.innerHTML = `<button type="button" class="pago-btn simple" onclick="liquidarCasa(${numero})">Marcar como pagada</button>`;
-      card.appendChild(accionesDiv);
     }
+
+    const resumenDiv = document.createElement('div');
+    resumenDiv.className = 'casa-resumen';
+    const conteoTexto = totalPedidos === 1 ? '1 pedido' : `${totalPedidos} pedidos`;
+    resumenDiv.innerHTML = `
+      <span class="casa-conteo">${conteoTexto}</span>
+      <span class="casa-total">Total adeudado: <strong>${totalMontoTexto}₡</strong></span>
+    `;
+    card.appendChild(resumenDiv);
 
     grid.appendChild(card);
   });
 }
 
-function liquidarCasa(numeroCasa) {
+function liquidarCasa(numeroCasa, metodo = 'efectivo') {
   const casa = normalizarNumeroCasa(numeroCasa);
+  const metodoNormalizado = metodo === 'sinpe' ? 'sinpe' : 'efectivo';
   if (!casa) return;
   let ordenes = cargarTabla();
   const cuentas = cargarCuentasAbiertas();
@@ -2945,18 +3017,19 @@ function liquidarCasa(numeroCasa) {
 
   const totalPendiente = pendientesTabla.reduce((sum, o) => sum + (Number(o.cantidad) || 0), 0)
     + pendientesGuardados.reduce((sum, o) => sum + (Number(o.cantidad) || 0), 0);
-  const confirmado = confirm(`¿Confirmas que la Casa ${casa} pagó ${formatearColones(totalPendiente)}₡? Se registrará como pago en efectivo.`);
+  const metodoTexto = metodoNormalizado === 'sinpe' ? 'por Sinpe' : 'en efectivo';
+  const confirmado = confirm(`¿Confirmas que la Casa ${casa} pagó ${formatearColones(totalPendiente)}₡ ${metodoTexto}?`);
   if (!confirmado) return;
 
   const fechaPago = new Date().toISOString();
   pendientesTabla.forEach(o => {
     o.estado = ESTADOS_ORDEN.PAGADO;
-    o.metodo = 'efectivo';
+    o.metodo = metodoNormalizado;
     o.casa = null;
     o.pagoFecha = fechaPago;
   });
 
-  const nuevasPagadas = pendientesGuardados.map(o => crearOrdenPagadaDesdeCuenta(o, 'efectivo', fechaPago)).filter(Boolean);
+  const nuevasPagadas = pendientesGuardados.map(o => crearOrdenPagadaDesdeCuenta(o, metodoNormalizado, fechaPago)).filter(Boolean);
   cuentas[clave] = [];
 
   if (nuevasPagadas.length) {
