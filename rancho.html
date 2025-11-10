@@ -3263,12 +3263,13 @@ function renderCasas() {
       card.innerHTML += construirMenuPagoCasa(numero, conteoTexto);
       const ul = document.createElement('ul');
       ul.className = 'casa-pedidos-list';
+      let totalAdeudado = 0;
       ordenados.forEach(o => {
         const li = document.createElement('li');
         li.className = 'casa-pedido';
         const productos = resumenProductosCorto(o) || '<span class="muted">Sin detalle</span>';
         const propinaOrden = normalizarPropina(o.propina);
-        total += (Number(o.cantidad) || 0) + propinaOrden;
+        totalAdeudado += (Number(o.cantidad) || 0) + propinaOrden;
         const resumenTexto = resumenProductosPlano(o);
         const iconos = construirIconosProductos(o);
         const iconosTitulo = resumenTexto ? ` title="${html(resumenTexto)}"` : '';
@@ -3293,7 +3294,7 @@ function renderCasas() {
 
       const totalDiv = document.createElement('div');
       totalDiv.className = 'casa-total';
-      totalDiv.innerHTML = `Total adeudado: <strong>${formatearColones(totalMonto)}₡</strong>`;
+      totalDiv.innerHTML = `Total adeudado: <strong>${formatearColones(totalAdeudado)}₡</strong>`;
       card.appendChild(totalDiv);
     }
 
