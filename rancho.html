@@ -961,22 +961,17 @@
   }
   .casa-card-titulo {
     margin:0;
-    display:grid;
-    grid-template-columns:auto 1fr auto;
+    display:flex;
+    justify-content:space-between;
     align-items:center;
     font-size:18px;
     gap:12px;
+    flex-wrap:wrap;
   }
   .casa-card-titulo .casa-titulo {
     display:flex;
     align-items:center;
     gap:8px;
-  }
-  .casa-card-titulo .casa-conteo {
-    text-align:center;
-    font-size:14px;
-    color:#3949ab;
-    font-weight:600;
   }
   .casa-card-titulo .casa-total-h3 {
     font-weight:700;
@@ -1039,9 +1034,22 @@
   }
   .casa-acciones {
     display:flex;
-    justify-content:flex-end;
-    gap:8px;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
     margin-top:4px;
+    flex-wrap:wrap;
+  }
+  .casa-acciones .casa-conteo {
+    font-size:14px;
+    color:#3949ab;
+    font-weight:600;
+  }
+  .casa-acciones-botones {
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
   }
 
   @media (max-width: 1024px) {
@@ -3173,7 +3181,6 @@ function renderCasas() {
     const headerHTML = `
       <h3 class="casa-card-titulo">
         <span class="casa-titulo">${titulo}</span>
-        <span class="casa-conteo">${totalPedidos === 1 ? '1 pedido' : `${totalPedidos} pedidos`}</span>
         <span class="casa-total-h3">${formatearColones(totalMonto)}₡</span>
       </h3>
     `;
@@ -3219,7 +3226,14 @@ function renderCasas() {
 
       const accionesDiv = document.createElement('div');
       accionesDiv.className = 'casa-acciones';
-      accionesDiv.innerHTML = `<button type="button" class="pago-btn simple" onclick="liquidarCasa(${numero})">Marcar como pagada</button>`;
+      const conteoTexto = totalPedidos === 1 ? '1 pedido pendiente' : `${totalPedidos} pedidos pendientes`;
+      accionesDiv.innerHTML = `
+        <span class="casa-conteo">${conteoTexto}</span>
+        <div class="casa-acciones-botones">
+          <button type="button" class="pago-btn efectivo" onclick="liquidarCasa(${numero}, 'efectivo')">Marcar pagada (Efectivo)</button>
+          <button type="button" class="pago-btn sinpe" onclick="liquidarCasa(${numero}, 'sinpe')">Marcar pagada (Sinpe)</button>
+        </div>
+      `;
       card.appendChild(accionesDiv);
     }
 
@@ -3227,9 +3241,10 @@ function renderCasas() {
   });
 }
 
-function liquidarCasa(numeroCasa) {
+function liquidarCasa(numeroCasa, metodo) {
   const casa = normalizarNumeroCasa(numeroCasa);
   if (!casa) return;
+  const metodoNormalizado = metodo === 'sinpe' ? 'sinpe' : 'efectivo';
   let ordenes = cargarTabla();
   const cuentas = cargarCuentasAbiertas();
   const clave = String(casa);
@@ -3242,18 +3257,19 @@ function liquidarCasa(numeroCasa) {
 
   const totalPendiente = pendientesTabla.reduce((sum, o) => sum + ((Number(o.cantidad) || 0) + normalizarPropina(o.propina)), 0)
     + pendientesGuardados.reduce((sum, o) => sum + ((Number(o.cantidad) || 0) + normalizarPropina(o.propina)), 0);
-  const confirmado = confirm(`¿Confirmas que la Casa ${casa} pagó ${formatearColones(totalPendiente)}₡? Se registrará como pago en efectivo.`);
+  const metodoTexto = metodoNormalizado === 'sinpe' ? 'pago por Sinpe' : 'pago en efectivo';
+  const confirmado = confirm(`¿Confirmas que la Casa ${casa} pagó ${formatearColones(totalPendiente)}₡? Se registrará como ${metodoTexto}.`);
   if (!confirmado) return;
 
   const fechaPago = new Date().toISOString();
   pendientesTabla.forEach(o => {
     o.estado = ESTADOS_ORDEN.PAGADO;
-    o.metodo = 'efectivo';
+    o.metodo = metodoNormalizado;
     o.casa = null;
     o.pagoFecha = fechaPago;
   });
 
-  const nuevasPagadas = pendientesGuardados.map(o => crearOrdenPagadaDesdeCuenta(o, 'efectivo', fechaPago)).filter(Boolean);
+  const nuevasPagadas = pendientesGuardados.map(o => crearOrdenPagadaDesdeCuenta(o, metodoNormalizado, fechaPago)).filter(Boolean);
   cuentas[clave] = [];
 
   if (nuevasPagadas.length) {
