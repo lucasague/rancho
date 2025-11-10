@@ -1522,7 +1522,15 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>(function(){ emailjs.init({ publicKey: "rzMljmZB066lvsYyE" }); })();</script>
+<script>
+(function(){
+  if (window.emailjs && typeof window.emailjs.init === 'function') {
+    window.emailjs.init({ publicKey: "rzMljmZB066lvsYyE" });
+  } else {
+    console.warn('EmailJS no está disponible; el cierre de caja no enviará correos automáticamente.');
+  }
+})();
+</script>
 
 <script>
 /* =================== CONFIG / ALMACEN =================== */
