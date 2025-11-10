@@ -1032,24 +1032,52 @@
     text-align:right;
     margin-top:4px;
   }
-  .casa-acciones {
+  .casa-pago-rapido {
     display:flex;
-    justify-content:space-between;
+    flex-direction:column;
     align-items:center;
-    gap:12px;
-    margin-top:4px;
-    flex-wrap:wrap;
+    gap:6px;
+    margin:12px 0 8px;
   }
-  .casa-acciones .casa-conteo {
+  .casa-pago-dropdown {
+    position:relative;
+    display:inline-flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .casa-dropdown-btn {
+    min-width:160px;
+  }
+  .casa-dropdown-btn .casa-dropdown-icono {
+    font-size:10px;
+    margin-left:6px;
+  }
+  .casa-dropdown-menu {
+    position:absolute;
+    top:calc(100% + 8px);
+    left:50%;
+    transform:translateX(-50%);
+    background:#ffffff;
+    border-radius:10px;
+    box-shadow:0 10px 24px rgba(0,0,0,0.18);
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    z-index:30;
+  }
+  .casa-dropdown-menu[hidden] {
+    display:none;
+  }
+  .casa-dropdown-menu .pago-btn {
+    width:160px;
+    justify-content:center;
+  }
+  .casa-pago-rapido .casa-conteo {
     font-size:14px;
     color:#3949ab;
     font-weight:600;
-  }
-  .casa-acciones-botones {
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    justify-content:flex-end;
+    text-align:center;
   }
 
   @media (max-width: 1024px) {
@@ -3090,6 +3118,40 @@ function construirIconosProductos(o) {
   }).join('');
 }
 
+function formatearFechaCuenta(fechaTexto) {
+  if (!fechaTexto) return '';
+  const fecha = new Date(fechaTexto);
+  if (!Number.isFinite(fecha.getTime())) return String(fechaTexto);
+  const dias = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
+  const diaSemana = dias[fecha.getDay()] || '';
+  const diaMes = fecha.getDate();
+  const mes = meses[fecha.getMonth()] || '';
+  const horas = String(fecha.getHours()).padStart(2, '0');
+  const minutos = String(fecha.getMinutes()).padStart(2, '0');
+  return `${diaSemana} ${diaMes} de ${mes} ${horas}:${minutos}`.trim();
+}
+
+function construirMenuPagoCasa(numero, conteoTexto) {
+  const menuId = `casaDropdown${numero}`;
+  const btnId = `casaDropdownBtn${numero}`;
+  const conteoHtml = conteoTexto ? `<span class="casa-conteo">${html(conteoTexto)}</span>` : '';
+  return `
+    <div class="casa-pago-rapido" data-casa="${numero}">
+      <div class="casa-pago-dropdown">
+        <button type="button" class="pago-btn casa casa-dropdown-btn" id="${btnId}" data-dropdown-casa="${numero}" aria-haspopup="true" aria-expanded="false" aria-controls="${menuId}">
+          Pagar ahora<span class="casa-dropdown-icono" aria-hidden="true">▾</span>
+        </button>
+        <div class="casa-dropdown-menu" id="${menuId}" data-dropdown-menu="${numero}" role="menu" hidden>
+          <button type="button" class="pago-btn efectivo" data-dropdown-opcion="${numero}" data-metodo="efectivo" role="menuitem">Efectivo</button>
+          <button type="button" class="pago-btn sinpe" data-dropdown-opcion="${numero}" data-metodo="sinpe" role="menuitem">Sinpe</button>
+        </div>
+      </div>
+      ${conteoHtml}
+    </div>
+  `;
+}
+
 function renderPendientesPago() {
   const tbody = document.querySelector('#tablaPendientesPago tbody');
   if (!tbody) return;
@@ -3189,6 +3251,8 @@ function renderCasas() {
     if (!totalPedidos) {
       card.innerHTML += '<div class="casa-vacia">Sin pedidos asignados.</div>';
     } else {
+      const conteoTexto = totalPedidos === 1 ? '1 pedido pendiente' : `${totalPedidos} pedidos pendientes`;
+      card.innerHTML += construirMenuPagoCasa(numero, conteoTexto);
       const ul = document.createElement('ul');
       ul.className = 'casa-pedidos-list';
       ordenados.forEach(o => {
@@ -3202,7 +3266,7 @@ function renderCasas() {
         const iconosTitulo = resumenTexto ? ` title="${html(resumenTexto)}"` : '';
         li.innerHTML = `
           <div class="casa-pedido-header">
-            <span>${html(o.fecha)}</span>
+            <span>${html(formatearFechaCuenta(o.fecha))}</span>
             <span>${formatearColones(Number(o.cantidad) || 0)}₡</span>
           </div>
           <div class="productos-nombre">${productos}</div>
@@ -3223,22 +3287,32 @@ function renderCasas() {
       totalDiv.className = 'casa-total';
       totalDiv.innerHTML = `Total adeudado: <strong>${formatearColones(totalMonto)}₡</strong>`;
       card.appendChild(totalDiv);
-
-      const accionesDiv = document.createElement('div');
-      accionesDiv.className = 'casa-acciones';
-      const conteoTexto = totalPedidos === 1 ? '1 pedido pendiente' : `${totalPedidos} pedidos pendientes`;
-      accionesDiv.innerHTML = `
-        <span class="casa-conteo">${conteoTexto}</span>
-        <div class="casa-acciones-botones">
-          <button type="button" class="pago-btn efectivo" onclick="liquidarCasa(${numero}, 'efectivo')">Marcar pagada (Efectivo)</button>
-          <button type="button" class="pago-btn sinpe" onclick="liquidarCasa(${numero}, 'sinpe')">Marcar pagada (Sinpe)</button>
-        </div>
-      `;
-      card.appendChild(accionesDiv);
     }
 
     grid.appendChild(card);
   });
+}
+
+function cerrarDropdownPagos() {
+  document.querySelectorAll('.casa-dropdown-menu').forEach(menu => {
+    if (!menu.hidden) menu.hidden = true;
+  });
+  document.querySelectorAll('.casa-dropdown-btn').forEach(btn => {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function alternarDropdownPago(casa) {
+  const menu = document.querySelector(`.casa-dropdown-menu[data-dropdown-menu="${casa}"]`);
+  const btn = document.querySelector(`.casa-dropdown-btn[data-dropdown-casa="${casa}"]`);
+  if (!menu || !btn) return;
+  const estabaAbierto = !menu.hidden;
+  cerrarDropdownPagos();
+  if (estabaAbierto) return;
+  menu.hidden = false;
+  btn.classList.add('active');
+  btn.setAttribute('aria-expanded', 'true');
 }
 
 function liquidarCasa(numeroCasa, metodo) {
@@ -3519,6 +3593,41 @@ document.addEventListener('click', event => {
   if (btnReset) {
     const fecha = btnReset.dataset.resetPropina;
     if (fecha) actualizarPropinaManual(fecha, 0);
+  }
+});
+
+document.addEventListener('click', event => {
+  const toggle = event.target.closest('[data-dropdown-casa]');
+  if (toggle) {
+    const casa = toggle.dataset.dropdownCasa;
+    if (casa) {
+      alternarDropdownPago(casa);
+    }
+    event.preventDefault();
+    return;
+  }
+  const opcion = event.target.closest('[data-dropdown-opcion]');
+  if (opcion) {
+    const casa = Number(opcion.dataset.dropdownOpcion);
+    const metodo = opcion.dataset.metodo;
+    cerrarDropdownPagos();
+    if (Number.isFinite(casa) && metodo) {
+      liquidarCasa(casa, metodo);
+    }
+    return;
+  }
+  if (!event.target.closest('.casa-pago-dropdown')) {
+    cerrarDropdownPagos();
+  }
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    const abierto = Array.from(document.querySelectorAll('.casa-dropdown-menu')).some(menu => !menu.hidden);
+    if (abierto) {
+      cerrarDropdownPagos();
+      event.stopPropagation();
+    }
   }
 });
 
